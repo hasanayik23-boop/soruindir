@@ -17,7 +17,7 @@ class OSC_Evrak {
     public static function yayinda() { return get_option('osc_ev_yayinda', '0') === '1'; }
     public static function gorebilir() { return self::yayinda() || current_user_can('manage_options'); }
     public static function url() { $id = (int) get_option('osc_ev_sayfa'); return $id && get_post_status($id) === 'publish' ? get_permalink($id) : home_url('/evrak-hazirla/'); }
-    public static function surum() { return substr(md5((string) @filemtime(__FILE__) . '|' . DB_NAME . '|ev2'), 0, 10); }
+    public static function surum() { return substr(md5((string) @filemtime(__FILE__) . '|' . DB_NAME . '|ev3|' . get_option('osc_senaryo_surum', '')), 0, 10); }
     public static function kaynak_url($t) { return add_query_arg(array('osc_ev_kaynak' => $t, 'v' => self::surum()), home_url('/')); }
     private function ogretmen_mi() { return is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci'; }
     public function yayin_kontrol() {
@@ -44,7 +44,7 @@ class OSC_Evrak {
         $t = $_GET['osc_ev_kaynak'] === 'css' ? 'css' : 'js';
         header('Content-Type: ' . ($t === 'css' ? 'text/css' : 'application/javascript') . '; charset=utf-8');
         header('Cache-Control: public, max-age=2592000'); header('X-Robots-Tag: noindex');
-        if ($t === 'css') self::css_cikti(); else self::js_cikti();
+        if ($t === 'css') self::css_cikti(); else { if (class_exists('OSC_Havuz')) echo 'window.OSC_SNR=' . wp_json_encode(OSC_Havuz::senaryolar()) . ";\n"; self::js_cikti(); }
         exit;
     }
     public static function css_cikti() { ?>/*__EVRAK_CSS__*/<?php }
@@ -91,7 +91,7 @@ class OSC_Evrak {
     /* ---------- yapay zekâ ---------- */
     private static $tanim = array(
         'zumre' => 'zümre öğretmenler kurulu toplantı tutanağı', 'sok' => 'şube öğretmenler kurulu (ŞÖK) toplantı tutanağı', 'veli' => 'sınıf veli toplantısı tutanağı',
-        'bep' => 'bireyselleştirilmiş eğitim programı (BEP)', 'ogr_kurul' => 'öğretmenler kurulu toplantı tutanağı', 'egzersiz' => 'ders dışı egzersiz çalışma planı', 'gezi' => 'okul gezisi planı', 'kulup_aylik' => 'öğrenci kulübü aylık çalışma raporu', 'dilekce' => 'öğretmen dilekçesi', 'kulup_plan' => 'öğrenci kulübü yıllık çalışma planı', 'kulup_tutanak' => 'öğrenci kulübü ilk toplantı tutanağı', 'kulup_rapor' => 'öğrenci kulübü dönem sonu çalışma raporu');
+        'bep' => 'bireyselleştirilmiş eğitim programı (BEP)', 'ogr_kurul' => 'öğretmenler kurulu toplantı tutanağı', 'egzersiz' => 'ders dışı egzersiz çalışma planı', 'gezi' => 'okul gezisi planı', 'kulup_aylik' => 'öğrenci kulübü aylık çalışma raporu', 'dilekce' => 'öğretmen dilekçesi', 'belirli_gun' => 'okul kutlama/anma programı', 'kulup_plan' => 'öğrenci kulübü yıllık çalışma planı', 'kulup_tutanak' => 'öğrenci kulübü ilk toplantı tutanağı', 'kulup_rapor' => 'öğrenci kulübü dönem sonu çalışma raporu');
     private function kota() {
         if (current_user_can('manage_options')) return true;
         $lim = (int) get_option('osc_ev_gunluk', 20); if ($lim <= 0) return false;
@@ -110,7 +110,7 @@ class OSC_Evrak {
         $tur = isset($d['tur']) ? (string) $d['tur'] : ''; if (!isset(self::$tanim[$tur]) || !in_array($tur, self::acik_turler(), true)) wp_send_json_error('Geçersiz evrak türü.');
         $v = isset($d['veri']) && is_array($d['veri']) ? $d['veri'] : array();
         if (!$this->kota()) wp_send_json_error('Bugünkü yapay zekâ ile evrak hakkınız doldu. Hazır taslakla devam edebilirsiniz.');
-        $bilgi = array(); $etiket = array('ders' => 'Ders/zümre', 'siniflar' => 'Sınıf seviyeleri', 'toplanti' => 'Toplantı zamanı', 'sube' => 'Şube', 'mevcut' => 'Öğrenci sayısı', 'katilim' => 'Katılan veli', 'kademe' => 'Okul kademesi', 'kulup' => 'Kulüp', 'donem' => 'Dönem', 'uye' => 'Üye sayısı', 'ay' => 'Ay', 'egz' => 'Egzersiz', 'alan' => 'Alanı', 'grup' => 'Öğrenci grubu', 'sure' => 'Haftalık ders saati', 'gezi' => 'Gezilecek yer', 'tur' => 'Gezi türü', 'siniflar' => 'Sınıflar', 'dtur' => 'Dilekçe türü', 'gorev' => 'Unvan/branş', 'aciklama' => 'Açıklama', 'makam' => 'Makam', 'tani' => 'Eğitsel ihtiyaç', 'sinif' => 'Sınıf', 'performans' => 'Öğrencinin mevcut performansı', 'yapilanlar' => 'Yapılan çalışmalar', 'not' => 'Öğretmenin notu');
+        $bilgi = array(); $etiket = array('ders' => 'Ders/zümre', 'siniflar' => 'Sınıf seviyeleri', 'toplanti' => 'Toplantı zamanı', 'sube' => 'Şube', 'mevcut' => 'Öğrenci sayısı', 'katilim' => 'Katılan veli', 'kademe' => 'Okul kademesi', 'kulup' => 'Kulüp', 'donem' => 'Dönem', 'uye' => 'Üye sayısı', 'ay' => 'Ay', 'egz' => 'Egzersiz', 'alan' => 'Alanı', 'grup' => 'Öğrenci grubu', 'sure' => 'Haftalık ders saati', 'gezi' => 'Gezilecek yer', 'tur' => 'Gezi türü', 'siniflar' => 'Sınıflar', 'dtur' => 'Dilekçe türü', 'gun' => 'Belirli gün', 'siirler' => 'Şiirler ve okuyanlar', 'gosteriler' => 'Gösteriler', 'sunucu' => 'Sunucu', 'konusmaci' => 'Konuşmacı', 'gorev' => 'Unvan/branş', 'aciklama' => 'Açıklama', 'makam' => 'Makam', 'tani' => 'Eğitsel ihtiyaç', 'sinif' => 'Sınıf', 'performans' => 'Öğrencinin mevcut performansı', 'yapilanlar' => 'Yapılan çalışmalar', 'not' => 'Öğretmenin notu');
         $tp = array('donem_basi' => 'eğitim-öğretim yılı başı', 'donem_ara' => '1. dönem ara değerlendirme', 'ikinci_donem' => '2. dönem başı', 'yil_sonu' => 'eğitim-öğretim yılı sonu');
         foreach ($etiket as $k => $e) { $x = self::temiz(isset($v[$k]) ? $v[$k] : '', 900); if ($k === 'toplanti' && isset($tp[$x])) $x = $tp[$x]; if ($x !== '') $bilgi[] = '- ' . $e . ': ' . $x; }
         $sema = array(
@@ -124,6 +124,7 @@ class OSC_Evrak {
             'egzersiz' => '{"aylar":[{"ay":"Ekim","etkinlikler":["çalışma konusu",...],"hedef":"","yontem":""}, ... Mayıs\'a kadar 8 ay]}',
             'gezi' => '{"amac":"2-3 cümle","kazanimlar":["...",...],"guvenlik":["alınacak güvenlik önlemi",...]}',
             'kulup_aylik' => '{"yapilanlar":["gg.aa.yyyy - etkinlik",...],"degerlendirme":"3-4 cümle"}',
+            'belirli_gun' => '{"akis":["program akışındaki her bölüm, görevlisiyle",...],"konusma":"günün anlam ve önemini anlatan 6-8 cümlelik özgün konuşma metni"}',
             'dilekce' => '{"metin":"dilekçenin hitap ve imza dışındaki gövde metni; arz ederim ile biter"}');
         $p = 'Türkiye’de MEB’e bağlı bir okulda görev yapan deneyimli bir öğretmen gibi resmi yazışma diliyle bir ' . self::$tanim[$tur] . ' içeriği yaz.' . "\n" . implode("\n", $bilgi) . "\nKurallar:\n- Türkiye Yüzyılı Maarif Modeli, güncel ölçme-değerlendirme uygulamaları (senaryolara uygun ortak yazılılar, performans görevi) ve okulun gerçek işleyişine uygun, somut ve uygulanabilir ifadeler kullan.\n- Kişi adı uydurma; öğretmenin verdiği bilgileri ve notu içeriğe yerleştir.\n- Kalıp ve klişe cümlelerden kaçın, her maddeyi bu bilgilere özgü yaz.\n"
             . ($tur === 'kulup_plan' || $tur === 'kulup_rapor' || $tur === 'kulup_tutanak' ? "- 2026’da yayımlanan Sosyal Etkinlikler Politika Belgesi’ne göre kulüpler 5 tema altında (Kültür Dünyamız, Sanat, Spor, Bilim, Doğa-Çevre-Toplum) okul temelli sosyal etkinlikler eylem planıyla uyumlu yürütülür; etkinlikler e-Okul Sosyal Etkinlik Modülü’ne işlenir.\n" : '')
@@ -134,8 +135,8 @@ class OSC_Evrak {
         if (!is_array($r)) wp_send_json_error(is_string($r) ? $r : 'Yapay zekâ yanıt vermedi.');
         if (in_array($tur, array('kulup_plan', 'egzersiz'), true) && isset($r[0])) $r = array('aylar' => $r);
         $c = array();
-        foreach (array('gundem', 'gorusmeler', 'kararlar', 'uyarlamalar', 'aile', 'yapilanlar', 'oneriler', 'kazanimlar', 'guvenlik') as $k) if (isset($r[$k])) $c[$k] = self::liste($r[$k], 16, 1200);
-        foreach (array('performans', 'degerlendirme', 'amac', 'metin') as $k) if (isset($r[$k])) $c[$k] = self::temiz($r[$k], 2000);
+        foreach (array('gundem', 'gorusmeler', 'kararlar', 'uyarlamalar', 'aile', 'yapilanlar', 'oneriler', 'kazanimlar', 'guvenlik', 'akis') as $k) if (isset($r[$k])) $c[$k] = self::liste($r[$k], 16, 1200);
+        foreach (array('performans', 'degerlendirme', 'amac', 'metin', 'konusma') as $k) if (isset($r[$k])) $c[$k] = self::temiz($r[$k], 2000);
         if (isset($r['hedefler']) && is_array($r['hedefler'])) foreach (array_slice($r['hedefler'], 0, 6) as $h) if (is_array($h) && !empty($h['uda'])) $c['hedefler'][] = array('uda' => self::temiz($h['uda']), 'kda' => self::liste(isset($h['kda']) ? $h['kda'] : array(), 8, 300), 'yontem' => self::temiz(isset($h['yontem']) ? $h['yontem'] : ''), 'materyal' => self::temiz(isset($h['materyal']) ? $h['materyal'] : ''), 'degerlendirme' => self::temiz(isset($h['degerlendirme']) ? $h['degerlendirme'] : ''));
         if (isset($r['aylar']) && is_array($r['aylar'])) foreach (array_slice($r['aylar'], 0, 12) as $a) if (is_array($a) && !empty($a['ay'])) $c['aylar'][] = array('ay' => self::temiz($a['ay'], 20), 'etkinlikler' => self::liste(isset($a['etkinlikler']) ? $a['etkinlikler'] : array(), 5, 300), 'hedef' => self::temiz(isset($a['hedef']) ? $a['hedef'] : ''), 'yontem' => self::temiz(isset($a['yontem']) ? $a['yontem'] : ''));
         if (isset($c['gundem'], $c['gorusmeler'])) $c['gorusmeler'] = array_slice(array_pad($c['gorusmeler'], count($c['gundem']), ''), 0, count($c['gundem']));

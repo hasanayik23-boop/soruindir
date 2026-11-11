@@ -68,3 +68,28 @@
 .osc-rk{max-width:1180px;margin:18px auto;text-align:center;min-height:50px;overflow:hidden}.osc-rk-et{display:block;font:600 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}
 .ev-yan .osc-rk{margin:14px 0 0}
 @media print{.osc-rk{display:none!important}}
+.ev-oys{margin-top:18px;border-top:1px solid var(--ev-c);padding-top:6px}
+.ev-oys h3{margin:14px 0 10px;font-size:16px}
+.ev-oy-plan{margin-top:12px;overflow-x:auto}
+.ev-oy-plan table,.ev-oy-izgara table{border-collapse:collapse;width:100%;font-size:13px}
+.ev-oy-plan th,.ev-oy-plan td,.ev-oy-izgara th,.ev-oy-izgara td{border:1px solid var(--ev-c);padding:4px 6px;text-align:left;vertical-align:middle}
+.ev-oy-plan th,.ev-oy-izgara th{background:#f1f5f9;font-weight:700;white-space:nowrap}
+.ev-oy-plan td:first-child{width:46px;text-align:center;font-weight:700}
+.ev-oy-plan select{width:100%;font:inherit;font-size:13px;border:1px solid #cfd8e3;border-radius:8px;padding:6px}
+.ev-oy-plan input{width:70px;font:inherit;border:1px solid #cfd8e3;border-radius:8px;padding:6px}
+.ev-oy-alt{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 4px}
+.ev-oy-top{margin-left:auto;font-size:14px;color:#0f766e}.ev-oy-top.uyari{color:#b91c1c}
+.ev-oy-yap{border:1px dashed #94a3b8;border-radius:12px;padding:10px 12px;margin-bottom:12px;background:#f8fafc}
+.ev-oy-yap summary{cursor:pointer;font-weight:700}
+.ev-oy-yap textarea{width:100%;font:13px ui-monospace,monospace;border:1px solid #cfd8e3;border-radius:10px;padding:8px;margin:8px 0;box-sizing:border-box}
+.ev-oy-izgara{overflow-x:auto;max-height:560px;overflow-y:auto;border:1px solid var(--ev-c);border-radius:12px}
+.ev-oy-izgara th{position:sticky;top:0;z-index:1;text-align:center}
+.ev-oy-izgara th small{display:block;font-weight:500;color:#64748b;font-size:10px}
+.ev-oy-izgara td{padding:2px}
+.ev-oy-izgara input{border:1px solid transparent;border-radius:6px;padding:5px;font:inherit;font-size:13px;background:transparent;box-sizing:border-box}
+.ev-oy-izgara input:focus{border-color:#2dd4bf;background:#ecfeff;outline:0}
+.ev-oy-izgara input.no{width:64px}.ev-oy-izgara input.ad{width:190px}.ev-oy-izgara input.pn{width:46px;text-align:center}
+.ev-oy-izgara input.pn::-webkit-inner-spin-button{display:none}
+.ev-oy-izgara td.tp{font-weight:800;text-align:center;min-width:52px;color:#0f766e}
+#osc-ev .ev-x{border:0;background:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px 6px;line-height:1;box-shadow:none}
+#osc-ev .ev-x:hover{color:#b91c1c}
