@@ -59,3 +59,12 @@
 
 #osc-ev .ev-turler button{display:block;width:100%;font-size:inherit;font-weight:400;line-height:1.4}
 #osc-ev .ev-turler small{display:block;line-height:1.5}
+.ev-kagit .ev-sag{text-align:right;margin:0 0 6px}
+.ev-coklu{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#334155}
+.ev-secimler{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 12px;border:1px solid #cfd8e3;border-radius:12px;padding:10px 12px;max-height:280px;overflow:auto;background:#fbfcfe}
+.ev-secimler>div{grid-column:1/-1}
+.osc-ev .ev-secimler label{flex-direction:row;align-items:center;gap:6px;font-weight:500;font-size:13px}
+.osc-ev .ev-secimler input{width:auto}
+.osc-rk{max-width:1180px;margin:18px auto;text-align:center;min-height:50px;overflow:hidden}.osc-rk-et{display:block;font:600 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}
+.ev-yan .osc-rk{margin:14px 0 0}
+@media print{.osc-rk{display:none!important}}
