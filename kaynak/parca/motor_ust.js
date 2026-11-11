@@ -1,0 +1,11 @@
+                const OSC_AJAX = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
+                const N = config.questions.length;
+                const EXAM = config.exam || { kural: 4, ad: 'Genel test' };
+                const OT = config.oturum || null;
+                let state = { idx: 0, answers: new Array(N).fill(null), flags: {}, timeLeft: (parseInt(config.settings && config.settings.duration, 10) || 0) * 60, deadline: 0, timer: null, finished: false, started: false, navCount: 0, pendingNav: null, history: [], correct: 0, wrong: 0, empty: 0 };
+                const sfxFinish = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
+                const byId = function (s) { return document.getElementById(s); };
+                const oscEsc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+                const oscBosMu = function (v) { return v === null || v === undefined || String(v).trim() === ''; };
+                const oscSay = function (x) { return Math.round(x * 100) / 100; };
+                window.OSCX = window.OSCX || {};

@@ -1,0 +1,27 @@
+*{box-sizing:border-box}
+body.osc-ogr-body{margin:0;min-height:100vh;background:radial-gradient(1200px 500px at 10% -10%,#e0e7ff 0,transparent 60%),radial-gradient(900px 400px at 110% 10%,#fce7f3 0,transparent 55%),#f6f7fb;font-family:'Segoe UI',Roboto,system-ui,-apple-system,sans-serif;color:#0f172a;display:flex;flex-direction:column}
+.osc-ogr-ust{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;max-width:1240px;width:100%;margin:0 auto}
+.osc-ogr-logo{font-weight:900;font-size:22px;color:#0f172a;text-decoration:none;letter-spacing:-.02em}.osc-ogr-logo span{color:#4f46e5}.osc-ogr-logo small{font-size:14px;color:#64748b}
+.osc-ogr-rozet{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px}
+.osc-ogr-ana{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:20px 16px 40px;width:100%;max-width:1240px;margin:0 auto}
+.osc-ogr-ana.genis{display:block;padding-top:0}
+.osc-ogr-kart{background:#fff;border:1px solid #e5e7eb;border-radius:26px;padding:30px 26px;max-width:440px;width:100%;text-align:center;box-shadow:0 30px 60px -30px rgba(15,23,42,.35);margin-top:4vh;position:relative}
+.osc-ogr-ikon{font-size:48px;line-height:1}
+.osc-ogr-kart h1{font-size:24px;margin:10px 0 4px}
+.osc-ogr-kart p{color:#64748b;margin:0 0 18px}
+.osc-ogr-alt{font-size:14px}
+.osc-ogr-bilgi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 14px}
+.osc-ogr-bilgi span{background:#f1f5f9;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700;color:#334155}
+.osc-ogr-son{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:8px;font-size:14px;margin-bottom:12px}
+.osc-ogr-hata{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;font-weight:700;font-size:14px;margin-bottom:12px}
+.osc-ogr-etiket{display:block;text-align:left;font-weight:700;font-size:13.5px;color:#475569;margin-bottom:6px}
+.osc-ogr-inp,.osc-ogr-kod{width:100%;padding:15px 16px;border:2px solid #c7d2fe;border-radius:14px;font-size:17px;font-family:inherit;outline:none;transition:.15s}
+.osc-ogr-kod{font-size:30px;letter-spacing:.22em;text-align:center;text-transform:uppercase;font-weight:900;font-family:ui-monospace,Menlo,monospace}
+.osc-ogr-inp:focus,.osc-ogr-kod:focus{border-color:#4f46e5;box-shadow:0 0 0 5px rgba(79,70,229,.14)}
+.osc-ogr-btn{margin-top:12px;width:100%;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;font-size:17px;cursor:pointer;box-shadow:0 14px 30px -12px rgba(79,70,229,.7);font-family:inherit}
+.osc-ogr-btn:hover{filter:brightness(1.06)}
+.osc-ogr-kucuk{display:block;margin-top:10px;color:#94a3b8;font-size:12.5px}
+.osc-ogr-alt-bilgi{text-align:center;color:#94a3b8;font-size:12.5px;padding:16px}
+.osc-ogr-ana .osc-wrapper{margin-top:0}
+
+.osc-ogr-logo img{height:36px;width:auto;display:block}
