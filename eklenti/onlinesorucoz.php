@@ -7692,7 +7692,8 @@ class OSC_Havuz {
     public function __construct() {
         add_action('init', array($this, 'db_kur'), 6);
         add_action('admin_menu', array($this, 'menu'));
-        foreach (array('kaynaklar', 'dosya', 'ekle', 'isaretle', 'liste', 'guncelle', 'ozet', 'sifirla', 'senaryo_kaydet', 'senaryo_sil') as $a) add_action('wp_ajax_osc_hv_' . $a, array($this, 'ajax_' . $a));
+        add_action('admin_init', function () { if (get_option('osc_hv_d2_ayir') !== '1' && current_user_can('manage_options')) { self::donem_beklet(); update_option('osc_hv_d2_ayir', '1'); } }, 40);
+        foreach (array('kaynaklar', 'dosya', 'ekle', 'isaretle', 'liste', 'guncelle', 'ozet', 'sifirla', 'senaryo_kaydet', 'senaryo_sil', 'donem_beklet') as $a) add_action('wp_ajax_osc_hv_' . $a, array($this, 'ajax_' . $a));
         add_action('transition_post_status', array($this, 'ogretmen_testi'), 20, 3);
     }
     public static function tablo() { global $wpdb; return $wpdb->prefix . 'osc_havuz'; }
@@ -7751,6 +7752,23 @@ class OSC_Havuz {
         }
         return $bir;
     }
+    /** arşiv eşleştirmesi için: dönemi bilinen soru yalnızca o dönemin tablosuyla eşleşir (tablo yoksa beklemede kalır) */
+    public static function tablo_donem($sinif, $ders, $donem) {
+        $donem = (int) $donem;
+        if ($donem && in_array($donem, self::senaryolar()['donemler'], true)) return self::tablo_bul($sinif, $ders, $donem);
+        if ($donem && !in_array($donem, self::senaryolar()['donemler'], true)) return null;
+        return self::tablo_bul($sinif, $ders);
+    }
+    /** senaryosu henüz olmayan dönemin arşiv soruları: yanlış (başka dönem) çıktılardan ayrılıp beklemeye alınır */
+    public static function donem_beklet() {
+        global $wpdb; $t = self::tablo(); $dn = self::senaryolar()['donemler']; $n = 0;
+        foreach (array(1, 2) as $d) {
+            if (in_array($d, $dn, true)) continue;
+            $n += (int) $wpdb->query($wpdb->prepare("UPDATE $t SET cikti_kod = '', cikti_puan = 0, durum = 'eslesmedi' WHERE donem = %d AND kaynak NOT LIKE 'yz%%' AND kaynak NOT IN ('yonetici','ogretmen') AND (cikti_kod <> '' OR durum <> 'eslesmedi')", $d));
+        }
+        return $n;
+    }
+    public function ajax_donem_beklet() { $this->yetki(); wp_send_json_success(array('n' => self::donem_beklet())); }
     public function ajax_senaryo_kaydet() {
         $this->yetki();
         $l = json_decode(wp_unslash(isset($_POST['tablolar']) ? $_POST['tablolar'] : '[]'), true); if (!is_array($l)) wp_send_json_error('Veri okunamadı.');
@@ -7954,6 +7972,7 @@ class OSC_Havuz {
         if (!empty($_POST['sinif'])) { $w[] = 'sinif = %d'; $a[] = (int) $_POST['sinif']; }
         if (!empty($_POST['ders'])) { $w[] = 'ders = %s'; $a[] = sanitize_text_field(wp_unslash($_POST['ders'])); }
         if (!empty($_POST['durum'])) { $w[] = 'durum = %s'; $a[] = sanitize_key($_POST['durum']); }
+        if (isset($_POST['donem']) && $_POST['donem'] !== '') { $w[] = 'donem = %d'; $a[] = (int) $_POST['donem']; }
         if (isset($_POST['cikti']) && $_POST['cikti'] !== '') { $w[] = 'cikti_kod = %s'; $a[] = sanitize_text_field(wp_unslash($_POST['cikti'])); }
         if (!empty($_POST['ara'])) { $w[] = 'soru LIKE %s'; $a[] = '%' . $wpdb->esc_like(sanitize_text_field(wp_unslash($_POST['ara']))) . '%'; }
         $lim = min(500, max(1, (int) (isset($_POST['adet']) ? $_POST['adet'] : 40))); $off = max(0, (int) (isset($_POST['bas']) ? $_POST['bas'] : 0));
@@ -8117,8 +8136,17 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
   }
   function kullanilan(x, yazili) { var s = x.sayi || {}; if (yazili) return !!(s[String(yazili)] && Object.keys(s[String(yazili)]).length); return !!(s['1'] && Object.keys(s['1']).length) || !!(s['2'] && Object.keys(s['2']).length); }
   /** Soruyu öğrenme çıktısına eşleştir: {kod, puan, guven} */
+  /** dönemi bilinen soru yalnızca o dönemin senaryo tablosuyla eşleşir; o dönemin tablosu yoksa eşleşmez (beklemede kalır) */
+  function tabloD(sinif, ders, donem) {
+    donem = +donem || 0; var dn = SNR.donemler || [1];
+    if (donem && dn.indexOf(donem) < 0) return null;
+    if (!donem) return tablo(sinif, ders);
+    var d = DERS_ES[ders] ? DERS_ES[ders](sinif) : ders, bir = null;
+    SNR.tablolar.forEach(function (t) { if (t.sinif === +sinif && t.ders === d && (t.donem || 1) === donem) bir = t; });
+    return bir;
+  }
   function eslestir(soru, meta, tumu) {
-    var t = tablo(meta.sinif, meta.ders); if (!t) return null;
+    var t = tabloD(meta.sinif, meta.ders, meta.donem); if (!t) return null;
     var D = dizin(t), q = {}; kelimeler((soru.paragraph || '') + ' ' + (soru.root || '') + ' ' + Object.keys(soru.options || {}).map(function (k) { return soru.options[k]; }).join(' ')).forEach(function (w) { q[w] = 1; });
     var sonuc = D.docs.map(function (d) {
       var s = 0; Object.keys(q).forEach(function (w) { if (d.tf[w]) s += D.idf[w] || 0; });
@@ -8356,7 +8384,7 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
   }
   /** Bir belgedeki soruları sıraya duyarlı eşleştirir: yazılılar müfredat sırasını izler. */
   function siraliEslestir(sorular, meta) {
-    var t = tablo(meta.sinif, meta.ders); if (!t) return sorular.map(function () { return null; });
+    var t = tabloD(meta.sinif, meta.ders, meta.donem); if (!t) return sorular.map(function () { return null; });
     var tek = sorular.map(function (q) { return eslestir(q, meta, true); });
     var J = t.satirlar.length, n = sorular.length; if (!n) return [];
     var S = tek.map(function (e) { return e ? e.tum : new Array(J).fill(0); });
@@ -8403,7 +8431,7 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
         if (tt) tt.satirlar.forEach(function (x) { if (x.kod) kodlar[x.kod.replace(/\.$/, '')] = x.kod; });
         return sorular.map(function (soru, i) {
           var e = es[i], kk = qs[i] && qs[i].kod && kodlar[String(qs[i].kod).replace(/\.$/, '')]; if (kk) e = { kod: kk, puan: 1, guven: 1 };
-          return { elle: kk ? 1 : null, kaynak: kaynak.kaynak, kaynak_url: kaynak.url, kaynak_baslik: (kaynak.baslik || '') + ' · ' + ad.split('/').pop(), sinif: meta.sinif, ders: meta.ders, donem: meta.donem, yazili: meta.yazili, cikti_kod: e ? e.kod : '', cikti_puan: e ? e.guven : 0, durum: !e ? (meta.sinif && meta.ders ? 'inceleme' : 'eslesmedi') : (e.guven >= esik ? 'onayli' : 'inceleme'), soru: soru };
+          return { elle: kk ? 1 : null, kaynak: kaynak.kaynak, kaynak_url: kaynak.url, kaynak_baslik: (kaynak.baslik || '') + ' · ' + ad.split('/').pop(), sinif: meta.sinif, ders: meta.ders, donem: meta.donem, yazili: meta.yazili, cikti_kod: e ? e.kod : '', cikti_puan: e ? e.guven : 0, durum: !e ? (meta.sinif && meta.ders && (!meta.donem || (SNR.donemler || [1]).indexOf(+meta.donem) >= 0) ? 'inceleme' : 'eslesmedi') : (e.guven >= esik ? 'onayli' : 'inceleme'), soru: soru };
         });
       });
     });
@@ -8467,7 +8495,7 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
   }
 
   /* ================= havuzu inceleme ================= */
-  var filtre = { sinif: '', ders: '', durum: 'inceleme', cikti: '', ara: '' }, sayfa = 0, son = null;
+  var filtre = { sinif: '', ders: '', donem: '', durum: 'inceleme', cikti: '', ara: '' }, sayfa = 0, son = null;
   function dersler() { var o = {}; SNR.tablolar.forEach(function (t) { o[t.ders] = 1; }); o['T.C. İnkılap Tarihi ve Atatürkçülük'] = 1; return Object.keys(o).sort(function (a, b) { return a.localeCompare(b, 'tr'); }); }
   function ciktiSecenek(sinif, ders, sec) {
     var t = tablo(sinif, ders); if (!t) return '<option value="">— senaryo tablosu yok —</option>';
@@ -8476,18 +8504,20 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
   function vHavuz() {
     kok.innerHTML = '<div class="osc-hv-k osc-hv-filtre"><label>Sınıf <select data-f="sinif"><option value="">Tümü</option>' + [5, 6, 7, 8, 9, 10, 11, 12, 4, 3, 2, 1].map(function (s) { return '<option' + (+filtre.sinif === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '<option value="0"' + (filtre.sinif === 0 ? ' selected' : '') + '>Belirsiz</option></select></label>' +
       '<label>Ders <select data-f="ders"><option value="">Tümü</option>' + dersler().map(function (d) { return '<option' + (filtre.ders === d ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('') + '</select></label>' +
+      '<label>Dönem <select data-f="donem"><option value="">Tümü</option><option value="1"' + (filtre.donem === '1' ? ' selected' : '') + '>1. dönem</option><option value="2"' + (filtre.donem === '2' ? ' selected' : '') + '>2. dönem</option></select></label>' +
       '<label>Durum <select data-f="durum"><option value="">Tümü</option><option value="inceleme"' + (filtre.durum === 'inceleme' ? ' selected' : '') + '>İnceleme bekliyor</option><option value="eslesmedi"' + (filtre.durum === 'eslesmedi' ? ' selected' : '') + '>Eşleşmedi</option><option value="onayli"' + (filtre.durum === 'onayli' ? ' selected' : '') + '>Onaylı</option></select></label>' +
       '<label>Ara <input data-f="ara" value="' + esc(filtre.ara) + '" placeholder="soru metninde"></label><button class="button" id="hv-uygula">Listele</button>' +
-      '<span class="sag"><button class="button" id="hv-oto" title="Seçili filtredeki sorular için öğrenme çıktısını yeniden hesaplar">Otomatik eşleştir</button> <button class="button button-primary" id="hv-hepsi">Görünenleri onayla</button></span></div><div id="hv-sonuc"></div>';
+      '<span class="sag">' + ((SNR.donemler || [1]).indexOf(2) < 0 ? '<button class="button" id="hv-d2" title="2. dönem senaryoları henüz yüklenmedi; bu dönemin arşiv soruları 1. dönem çıktılarından ayrılır ve senaryolar gelene kadar beklemede kalır">2. dönem sorularını beklemeye al</button> ' : '') + '<button class="button" id="hv-oto" title="Seçili filtredeki sorular için öğrenme çıktısını yeniden hesaplar">Otomatik eşleştir</button> <button class="button button-primary" id="hv-hepsi">Görünenleri onayla</button></span></div><div id="hv-sonuc"></div>';
     kok.querySelectorAll('[data-f]').forEach(function (e) { e.onchange = function () { filtre[e.dataset.f] = e.dataset.f === 'sinif' ? (e.value === '' ? '' : +e.value) : e.value; }; });
     document.getElementById('hv-uygula').onclick = function () { var a = kok.querySelector('[data-f=ara]'); filtre.ara = a.value; sayfa = 0; listele(); };
     document.getElementById('hv-hepsi').onclick = function () { if (!son || !son.satirlar.length) return; var ids = son.satirlar.filter(function (r) { return r.cikti_kod; }).map(function (r) { return r.id; }); if (!ids.length) return alert('Görünen sorularda çıktısı seçilmiş soru yok.'); if (!confirm(ids.length + ' soru onaylansın mı?')) return; api('guncelle', { ids: ids, durum: 'onayli' }).then(listele); };
     document.getElementById('hv-oto').onclick = otoEslestir;
+    var d2 = document.getElementById('hv-d2'); if (d2) d2.onclick = function () { if (!confirm('2. dönem senaryoları yüklenene kadar, 2. dönem yazılılarından gelen arşiv soruları 1. dönem çıktılarından ayrılıp “Eşleşmedi”de bekletilsin mi? (Sorular silinmez.)')) return; api('donem_beklet', {}).then(function (r) { alert(r.n + ' soru beklemeye alındı. 2. dönem senaryolarını yükleyince otomatik eşleştirilir.'); listele(); }); };
     listele();
   }
   function listele() {
     var el = document.getElementById('hv-sonuc'); el.innerHTML = '<div class="osc-hv-k">Yükleniyor…</div>';
-    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, durum: filtre.durum, ara: filtre.ara, bas: sayfa * 40, adet: 40 }).then(function (d) {
+    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, donem: filtre.donem, durum: filtre.durum, ara: filtre.ara, bas: sayfa * 40, adet: 40 }).then(function (d) {
       son = d;
       if (!d.satirlar.length) { el.innerHTML = '<div class="osc-hv-k">Bu filtrede soru yok.</div>'; return; }
       el.innerHTML = '<p class="osc-hv-alt">' + d.toplam + ' soru · ' + (sayfa * 40 + 1) + '–' + Math.min(d.toplam, sayfa * 40 + 40) + ' arası gösteriliyor</p>' + d.satirlar.map(function (r) {
@@ -8515,10 +8545,30 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
       });
     }).catch(function (e) { el.innerHTML = '<div class="notice notice-error"><p>' + esc(e.message) + '</p></div>'; });
   }
+  /** yeni yüklenen dönemin bekleyen (eşleşmemiş) sorularını o dönemin çıktılarıyla eşleştir */
+  function bekleyenEslestir(dns) {
+    var top = { n: 0, on: 0 }, p = Promise.resolve();
+    dns.forEach(function (dn) {
+      var bas = 0, tur = function () {
+        return api('liste', { donem: dn, durum: 'eslesmedi', bas: bas, adet: 300 }).then(function (d) {
+          var q = Promise.resolve(), yeni = 0;
+          d.satirlar.forEach(function (r) {
+            if (!r.sinif || !r.ders) return;
+            var e = eslestir(r.soru || {}, { sinif: +r.sinif, ders: r.ders, donem: dn, yazili: +r.yazili }); if (!e || !e.kod) return;
+            var durum = e.guven >= 0.45 ? 'onayli' : 'inceleme'; top.n++; yeni++; if (durum === 'onayli') top.on++;
+            q = q.then(function () { return api('guncelle', { ids: [r.id], cikti_kod: e.kod, cikti_puan: e.guven, durum: durum }); });
+          });
+          return q.then(function () { bas += 300 - yeni; if (d.satirlar.length === 300) return tur(); });
+        });
+      };
+      p = p.then(tur);
+    });
+    return p.then(function () { return top; });
+  }
   function otoEslestir() {
     var b = document.getElementById('hv-oto'); b.disabled = true; b.textContent = 'Eşleştiriliyor…';
     var esik = 0.45, n = 0, on = 0;
-    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, durum: filtre.durum, ara: filtre.ara, bas: 0, adet: 500 }).then(function (d) {
+    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, donem: filtre.donem, durum: filtre.durum, ara: filtre.ara, bas: 0, adet: 500 }).then(function (d) {
       var p = Promise.resolve();
       d.satirlar.forEach(function (r) {
         var meta = (r.sinif && r.ders) ? { sinif: +r.sinif, ders: r.ders, donem: +r.donem, yazili: +r.yazili } : metaTahmin(r.kaynak_baslik + ' ' + r.ders);
@@ -8740,7 +8790,7 @@ details.osc-hv-k summary{cursor:pointer;font-size:14px}
         }).join('') + '</tbody></table><p><button class="button button-primary" id="s-kaydet">' + tum.length + ' tabloyu kaydet</button></p>' : '') + (uy.length ? '<div class="notice notice-warning inline"><p>' + uy.map(esc).join('<br>') + '</p></div>' : '');
         on.querySelectorAll('[data-sd]').forEach(function (s) { s.onchange = function () { tum[+s.dataset.sd].donem = +s.value; }; });
         on.querySelectorAll('[data-sders]').forEach(function (s) { s.onchange = function () { tum[+s.dataset.sders].ders = s.value.trim(); }; });
-        var k = document.getElementById('s-kaydet'); if (k) k.onclick = function () { k.disabled = true; api('senaryo_kaydet', { tablolar: JSON.stringify(tum) }).then(function (r) { SNR = r.snr; vSenaryo(); document.getElementById('s-msj').innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi. Yazılı Hazırla’da hemen kullanılabilir; “🤖 Yapay zekâ ile doldur” sekmesinden bu dönem için soru üretebilirsiniz.</b>'; }).catch(function (er) { k.disabled = false; alert(er.message); }); };
+        var k = document.getElementById('s-kaydet'); if (k) k.onclick = function () { k.disabled = true; api('senaryo_kaydet', { tablolar: JSON.stringify(tum) }).then(function (r) { SNR = r.snr; vSenaryo(); var dns = []; tum.forEach(function (t) { if (dns.indexOf(t.donem) < 0) dns.push(t.donem); }); var m = document.getElementById('s-msj'); m.innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi.</b> Bekleyen arşiv soruları eşleştiriliyor…'; return bekleyenEslestir(dns).then(function (x) { m.innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi. Beklemedeki ' + x.n + ' arşiv sorusu yeni çıktılarla eşleştirildi (' + x.on + ' onaylı, kalanlar “İnceleme”de).</b> Yazılı Hazırla’da hemen kullanılabilir; “🤖 Yapay zekâ ile doldur” sekmesinden bu dönem için soru üretebilirsiniz.'; }); }).catch(function (er) { k.disabled = false; alert(er.message); }); };
       });
     };
   }
@@ -9647,10 +9697,10 @@ class OSC_Havuz_Arka {
     }
 
     /* ---------------- öğrenme çıktısı eşleştirme ---------------- */
-    private static function tablo_bul($sinif, $ders) {
+    private static function tablo_bul($sinif, $ders, $donem = 0) {
         if (!$sinif || !$ders) return null;
         if ($ders === 'T.C. İnkılap Tarihi ve Atatürkçülük') $ders = $sinif <= 8 ? 'Sosyal Bilgiler' : 'Tarih';
-        $t = OSC_Havuz::tablo_bul($sinif, $ders); if ($t) return $t;
+        $t = OSC_Havuz::tablo_donem($sinif, $ders, $donem); if ($t) return $t;
         return null;
     }
     private static $DUR = null;
@@ -9732,13 +9782,13 @@ class OSC_Havuz_Arka {
             $q['paragraph'] = $html($q['paragraph']); $q['root'] = $html($q['root']); foreach ($q['options'] as $h => $v) $q['options'][$h] = $html($v);
         } unset($q);
         $meta = self::meta(basename($ad) . ' ' . mb_substr($metin, 0, 400) . ' ' . $k['baslik'] . ' ' . $k['kategori'], isset($k['etiket']) ? $k['etiket'] : array());
-        $t = self::tablo_bul($meta['sinif'], $meta['ders']);
+        $t = self::tablo_bul($meta['sinif'], $meta['ders'], isset($meta['donem']) ? (int) $meta['donem'] : 0);
         $es = $t ? self::sirali($sorular, $meta, $t) : array();
         $esik = (float) get_option('osc_hv_esik', 0.45); if ($esik <= 0) $esik = 0.45;
         $o = array();
         foreach ($sorular as $i => $q) {
             $e = isset($es[$i]) ? $es[$i] : null; unset($q['puan']); $eksik = !empty($q['_eksik']); unset($q['_eksik']); if ($eksik) $q['gorsel_eksik'] = 1;
-            $o[] = array('kaynak' => isset($k['kaynak']) ? $k['kaynak'] : 'arsiv', 'kaynak_url' => $k['url'], 'kaynak_baslik' => mb_substr($k['baslik'] . ' · ' . basename($ad), 0, 250), 'sinif' => $meta['sinif'], 'ders' => $meta['ders'], 'donem' => $meta['donem'], 'yazili' => $meta['yazili'], 'cikti_kod' => $e ? $e['kod'] : '', 'cikti_puan' => $e ? $e['guven'] : 0, 'durum' => !$e || !$e['kod'] ? ($meta['sinif'] && $meta['ders'] ? 'inceleme' : 'eslesmedi') : ($e['guven'] >= $esik && !$eksik ? 'onayli' : 'inceleme'), 'soru' => $q);
+            $o[] = array('kaynak' => isset($k['kaynak']) ? $k['kaynak'] : 'arsiv', 'kaynak_url' => $k['url'], 'kaynak_baslik' => mb_substr($k['baslik'] . ' · ' . basename($ad), 0, 250), 'sinif' => $meta['sinif'], 'ders' => $meta['ders'], 'donem' => $meta['donem'], 'yazili' => $meta['yazili'], 'cikti_kod' => $e ? $e['kod'] : '', 'cikti_puan' => $e ? $e['guven'] : 0, 'durum' => !$e || !$e['kod'] ? ($meta['sinif'] && $meta['ders'] && (empty($meta['donem']) || in_array((int) $meta['donem'], OSC_Havuz::senaryolar()['donemler'], true)) ? 'inceleme' : 'eslesmedi') : ($e['guven'] >= $esik && !$eksik ? 'onayli' : 'inceleme'), 'soru' => $q);
         }
         return array('sorular' => $o, 'meta' => trim(($meta['sinif'] ? $meta['sinif'] . '. sınıf ' : '') . $meta['ders']));
     }
@@ -10620,6 +10670,53 @@ class OSC_Yazili {
     return o;
   };
 
+  /* ---------- genel evrak (tutanak, plan, rapor) ---------- */
+  function evrakBelge(m) {
+    var SP0 = '<w:spacing w:after="0"/>', GENI = m.yatay ? 15240 : GEN, g = '';
+    var sat = function (t, f, ppr) { return p(metinParca(String(t == null ? '' : t), f || {}), ppr || SP0); };
+    var cokSatir = function (t, f, ppr) { return String(t == null ? '' : t).split('\n').map(function (l) { return sat(l, f, ppr); }).join('') || p(''); };
+    (m.bloklar || []).forEach(function (b) {
+      switch (b.t) {
+        case 'baslik': g += ortala(wr(b.s, { b: true, sz: b.sz || 24 }), '<w:spacing w:after="' + (b.after || 40) + '"/>'); break;
+        case 'alt': g += ortala(wr(b.s, { sz: 21 }), '<w:spacing w:after="120"/>'); break;
+        case 'h': g += p(wr(b.s, { b: true, sz: 22, renk: MAVI }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>'); break;
+        case 'p': g += cokSatir(b.s, {}, '<w:spacing w:after="80"/><w:jc w:val="both"/>'); break;
+        case 'liste': (b.l || []).forEach(function (x, i) { g += p(wr((b.numara === false ? '•' : (i + 1) + '.') + ' ', { b: true }) + metinParca(String(x), {}), '<w:spacing w:after="50"/><w:ind w:left="360" w:hanging="360"/><w:jc w:val="both"/>'); }); break;
+        case 'bilgi': { var w1 = Math.round(GENI * 0.3); g += tablo([w1, GENI - w1], (b.satirlar || []).map(function (r) { return [{ x: sat(r[0], { b: true, sz: 21 }), dolgu: 'F1F4F9' }, sat(r[1], { sz: 21 })]; }), { kenar: 'single', sz: 4, renk: '9CA3AF', ust: 50, alt: 50 }); g += p('', '<w:spacing w:after="80"/>'); break; }
+        case 'tablo': {
+          var n = (b.bas || b.sat[0] || []).length, top = (b.gen || []).reduce(function (a, c) { return a + c; }, 0), gen = b.gen ? b.gen.map(function (x) { return Math.round(x / top * GENI); }) : (function () { var o = [], w = Math.floor(GENI / n); for (var i = 0; i < n; i++) o.push(w); return o; })();
+          var rows = []; if (b.bas) rows.push(b.bas.map(function (h) { return { x: sat(h, { b: true, sz: 20 }, SP0), dolgu: 'E8EDF6' }; }));
+          (b.sat || []).forEach(function (r) { rows.push(r.map(function (c) { return { x: cokSatir(c, { sz: 20 }) }; })); });
+          g += tablo(gen, rows, { kenar: 'single', sz: 4, renk: '6B7280', ust: 50, alt: 50, baslik: !!b.bas }); g += p('', '<w:spacing w:after="80"/>'); break;
+        }
+        case 'imza': {
+          var k = b.kisiler || [], sut = Math.min(b.sutun || 3, Math.max(1, k.length)), w = Math.floor(GENI / sut), sat2 = [];
+          for (var i = 0; i < k.length; i += sut) { var r = []; for (var j = 0; j < sut; j++) { var x = k[i + j]; r.push(x ? ortala(wr(x.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(x.gorev || '', { sz: 20 }), SP0) + ortala(wr('İmza', { sz: 18, renk: '888888' }), '<w:spacing w:before="160" w:after="200"/>') : p('')); } sat2.push(r); }
+          if (b.baslik) g += p(wr(b.baslik, { b: true, sz: 22 }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>');
+          var ws = []; for (var c = 0; c < sut; c++) ws.push(w);
+          g += tablo(ws, sat2, {}); break;
+        }
+        case 'onay': g += p('', '<w:spacing w:after="120"/>') + ortala(wr('UYGUNDUR', { b: true, sz: 22 }), SP0) + ortala(wr(b.tarih || '…/…/20…', { sz: 21 }), SP0) + p('', '<w:spacing w:after="360"/>') + ortala(wr(b.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(b.gorev || 'Okul Müdürü', { sz: 21 }), SP0); break;
+        case 'sayfa': g += p('<w:r><w:br w:type="page"/></w:r>'); break;
+        default: g += p('');
+      }
+    });
+    return g;
+  }
+  window.OSC_DOCX_EVRAK = function (m) {
+    var g = evrakBelge(m), y = !!m.yatay;
+    var sect = '<w:sectPr><w:pgSz w:w="' + (y ? 16838 : 11906) + '" w:h="' + (y ? 11906 : 16838) + '"' + (y ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>';
+    var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + g + sect + '</w:body></w:document>';
+    var stil = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
+    var z = new window.JSZip();
+    z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
+    z.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>' + x(m.baslik || 'Evrak') + '</dc:title><dc:creator>' + x(m.site || 'soruindir.net') + '</dc:creator></cp:coreProperties>');
+    z.file('word/document.xml', doc);
+    z.file('word/styles.xml', stil);
+    z.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStil" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    return z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+  };
   window.OSC_DOCX = {
     omml: omml,
     /**
@@ -11894,4 +11991,848 @@ body.osc-yz-tam .osc-yz-seo{max-width:none}
     }
 }
 $GLOBALS['osc_yazili'] = new OSC_Yazili();
+}
+
+
+/* =====================================================================
+ * Evrak Hazırla: öğretmen evrakları (tutanaklar, BEP, kulüp evrakları)
+ * ===================================================================== */
+if (!class_exists('OSC_Evrak')) {
+class OSC_Evrak {
+    public function __construct() {
+        add_action('admin_init', array($this, 'sayfa_kur'));
+        add_shortcode('osc_evrak_hazirla', array($this, 'kisa_kod'));
+        add_action('wp_ajax_osc_ev_yz', array($this, 'ajax_yz'));
+        add_action('template_redirect', array($this, 'kaynak_servis'), 0);
+        add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
+        add_action('template_redirect', array($this, 'tam_sayfa'), 20);
+        add_action('admin_menu', array($this, 'ayar_menu'), 31);
+        add_action('admin_init', array($this, 'ayar_kayit'));
+    }
+    public static function yayinda() { return get_option('osc_ev_yayinda', '0') === '1'; }
+    public static function gorebilir() { return self::yayinda() || current_user_can('manage_options'); }
+    public static function url() { $id = (int) get_option('osc_ev_sayfa'); return $id && get_post_status($id) === 'publish' ? get_permalink($id) : home_url('/evrak-hazirla/'); }
+    public static function surum() { return substr(md5((string) @filemtime(__FILE__) . '|' . DB_NAME . '|ev2'), 0, 10); }
+    public static function kaynak_url($t) { return add_query_arg(array('osc_ev_kaynak' => $t, 'v' => self::surum()), home_url('/')); }
+    private function ogretmen_mi() { return is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci'; }
+    public function yayin_kontrol() {
+        if (self::yayinda() || is_admin()) return;
+        $id = (int) get_option('osc_ev_sayfa');
+        if ($id && is_page($id)) {
+            if (!current_user_can('manage_options')) { wp_safe_redirect(home_url('/')); exit; }
+            add_action('wp_head', function () { echo '<meta name="robots" content="noindex,nofollow">' . "\n"; }, 1);
+        }
+    }
+    public function sayfa_kur() {
+        if (!current_user_can('manage_options') || get_option('osc_ev_kur') === '1') return;
+        $id = (int) get_option('osc_ev_sayfa');
+        if (!$id || get_post_status($id) !== 'publish') {
+            $var = get_page_by_path('evrak-hazirla');
+            if ($var) { $id = $var->ID; if ($var->post_status !== 'publish' || strpos($var->post_content, '[osc_evrak_hazirla') === false) wp_update_post(array('ID' => $id, 'post_status' => 'publish', 'post_content' => '[osc_evrak_hazirla]')); }
+            else $id = wp_insert_post(array('post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Evrak Hazırla', 'post_name' => 'evrak-hazirla', 'post_content' => '[osc_evrak_hazirla]'));
+            if ($id && !is_wp_error($id)) update_option('osc_ev_sayfa', $id);
+        }
+        update_option('osc_ev_kur', '1');
+    }
+    public function kaynak_servis() {
+        if (empty($_GET['osc_ev_kaynak'])) return;
+        $t = $_GET['osc_ev_kaynak'] === 'css' ? 'css' : 'js';
+        header('Content-Type: ' . ($t === 'css' ? 'text/css' : 'application/javascript') . '; charset=utf-8');
+        header('Cache-Control: public, max-age=2592000'); header('X-Robots-Tag: noindex');
+        if ($t === 'css') self::css_cikti(); else self::js_cikti();
+        exit;
+    }
+    public static function css_cikti() { ?>.osc-ev{--ev-a:#0f766e;--ev-b:#2563eb;--ev-k:#0b1220;--ev-g:#475569;--ev-c:#e3e8f0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ev-k);max-width:1200px;margin:0 auto 40px;box-sizing:border-box}
+.osc-ev *{box-sizing:border-box}
+.ev-yuk{padding:60px;text-align:center;color:var(--ev-g)}
+.ev-hero{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;border-radius:26px;padding:30px 30px 24px;margin-bottom:18px;color:#fff;background:radial-gradient(600px 240px at 92% -20%,rgba(45,212,191,.35),transparent 60%),linear-gradient(135deg,#062a2f,#0f3d56 55%,#1e3a8a)}
+.ev-hero h1{margin:8px 0 8px;font-size:clamp(26px,3.6vw,38px);line-height:1.12;letter-spacing:-.02em;color:#fff}
+.ev-hero h1 em{font-style:normal;color:#5eead4}
+.ev-hero p{margin:0;max-width:640px;color:#cbd5e1;line-height:1.6;font-size:15px}
+.ev-et{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.12);border-radius:99px;padding:5px 12px}
+.ev-hero nav{display:flex;gap:6px;background:rgba(255,255,255,.1);padding:5px;border-radius:14px}
+#osc-ev .ev-hero nav button{border:0;background:transparent;color:#e2e8f0;font-family:inherit;font-weight:700;font-size:14px;line-height:1.25;letter-spacing:normal;text-transform:none;box-shadow:none;min-height:0;text-decoration:none;padding:9px 14px;border-radius:10px;cursor:pointer}
+#osc-ev .ev-hero nav button.on{background:#fff;color:#0f3d56}
+.ev-kart{background:#fff;border:1px solid var(--ev-c);border-radius:20px;padding:22px;box-shadow:0 20px 40px -34px rgba(15,23,42,.45)}
+.ev-kart h2{margin:0 0 16px;font-size:20px}.ev-kart h3{margin:0 0 8px;font-size:16px}
+.ev-turler{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+#osc-ev .ev-turler button{text-align:left;border:1px solid var(--ev-c);background:#fbfcfe;border-radius:16px;padding:16px;cursor:pointer;font-family:inherit;color:inherit;transition:transform .15s,border-color .15s,box-shadow .15s}
+#osc-ev .ev-turler button:hover{transform:translateY(-2px);border-color:#5eead4;box-shadow:0 14px 30px -22px rgba(15,118,110,.6)}
+.ev-turler span{font-size:26px;display:block;margin-bottom:8px}.ev-turler b{display:block;font-size:15px;margin-bottom:4px}.ev-turler small{color:var(--ev-g);font-size:13px;line-height:1.5}
+.ev-not{color:var(--ev-g);font-size:13px;margin:14px 0 0;line-height:1.5}
+.ev-ust{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}.ev-ust h2{margin:0}
+.ev-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px 14px}
+.ev-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;color:#334155}
+.ev-form label.gen{grid-column:1/-1}
+.ev-form input,.ev-form select,.ev-form textarea{font-family:inherit;font-weight:500;font-size:14px;line-height:1.25;letter-spacing:normal;text-transform:none;box-shadow:none;min-height:0;text-decoration:none;border:1px solid #cfd8e3;border-radius:11px;padding:10px 12px;background:#fff;color:var(--ev-k);width:100%}
+.ev-form input:focus,.ev-form select:focus,.ev-form textarea:focus{outline:2px solid #99f6e4;border-color:var(--ev-a)}
+.ev-cubuk{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--ev-c);color:var(--ev-g);font-size:13px}
+.ev-cubuk>div{display:flex;gap:8px;flex-wrap:wrap}
+#osc-ev .ev-btn{border:1px solid #cfd8e3;background:#fff;color:#0f172a;font-family:inherit;font-weight:700;font-size:14px;line-height:1.25;letter-spacing:normal;text-transform:none;box-shadow:none;min-height:0;text-decoration:none;padding:10px 16px;border-radius:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#osc-ev .ev-btn:hover{border-color:#94a3b8}#osc-ev .ev-btn:disabled{opacity:.6;cursor:wait}
+#osc-ev .ev-btn.ana{border:0;color:#fff;background:linear-gradient(135deg,var(--ev-a),var(--ev-b))}
+#osc-ev .ev-btn.hafif{background:#f1f5f9;border-color:transparent}#osc-ev .ev-btn.tam{width:100%;margin-top:8px}
+.ev-don{width:14px;height:14px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:evd .8s linear infinite}@keyframes evd{to{transform:rotate(360deg)}}
+.ev-izgara{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+.ev-yan{position:sticky;top:20px}
+.ev-kagit{background:#fff;border:1px solid var(--ev-c);border-radius:6px;box-shadow:0 30px 60px -40px rgba(15,23,42,.55);padding:48px 52px;font:11pt/1.5 Calibri,Arial,sans-serif;color:#111;min-height:600px;overflow-x:auto}
+.ev-kagit.yatay{padding:36px 40px}
+.ev-kagit .ev-b{text-align:center;font-weight:700;margin:0 0 3px}.ev-kagit .ev-alt{text-align:center;margin-bottom:8px}
+.ev-kagit h4{color:#1e3a8a;margin:16px 0 6px;font-size:11.5pt}
+.ev-kagit p{text-align:justify;margin:0 0 6px}.ev-kagit ol{margin:0 0 4px;padding-left:22px}.ev-kagit li{margin-bottom:3px}
+.ev-kagit table{border-collapse:collapse;width:100%;margin:6px 0 10px}
+.ev-kagit td,.ev-kagit th{border:1px solid #6b7280;padding:4px 6px;vertical-align:top;font-size:10pt;text-align:left}
+.ev-kagit th{background:#e8edf6}.ev-kagit .ev-bilgi th{width:30%;background:#f1f4f9}
+.ev-kagit [contenteditable]{border-radius:4px;transition:background .15s}
+.ev-kagit [contenteditable]:hover{background:#f0fdfa;outline:1px dashed #5eead4}
+.ev-kagit [contenteditable]:focus{background:#ecfeff;outline:2px solid #2dd4bf}
+#osc-ev .ev-ekle{border:0;background:none;color:var(--ev-a);font-family:inherit;font-weight:700;font-size:12px;line-height:1.25;letter-spacing:normal;text-transform:none;box-shadow:none;min-height:0;text-decoration:none;cursor:pointer;padding:2px 0 8px}
+.ev-imza{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center;margin-top:10px}
+.ev-imza b,.ev-imza small,.ev-imza i{display:block}.ev-imza i{color:#888;font-style:normal;margin-top:14px;font-size:9pt}
+.ev-onay{text-align:center;margin-top:20px}.ev-onay b,.ev-onay span{display:block}.ev-onay span{margin-bottom:6px}
+.ev-sayfa{border:0;border-top:2px dashed #cbd5e1;margin:26px 0}
+.ev-liste{display:flex;flex-direction:column;gap:8px}
+.ev-li{display:flex;align-items:center;gap:12px;border:1px solid var(--ev-c);border-radius:14px;padding:10px 12px}
+.ev-li>span{font-size:22px}.ev-li>div{flex:1;min-width:0}.ev-li b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-li small{color:var(--ev-g)}
+.ev-bos{padding:40px;text-align:center;color:var(--ev-g);background:#f8fafc;border-radius:14px}
+.ev-tost{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);opacity:0;z-index:99999;background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;font:600 14px system-ui,sans-serif;transition:.25s;max-width:min(560px,92vw)}
+.ev-tost.on{opacity:1;transform:translate(-50%,0)}.ev-tost.hata{background:#b91c1c}.ev-tost.ok{background:#0f766e}
+@media(max-width:900px){.ev-izgara{grid-template-columns:1fr}.ev-yan{position:static}.ev-kagit{padding:26px 18px}.ev-imza{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.ev-hero{padding:22px 18px}.ev-kart{padding:16px}}
+@media print{.ev-hero,.ev-yan,#osc-ev .ev-ekle{display:none!important}.ev-izgara{display:block}.ev-kagit{border:0;box-shadow:none;padding:0}}
+
+#osc-ev .ev-turler button{display:block;width:100%;font-size:inherit;font-weight:400;line-height:1.4}
+#osc-ev .ev-turler small{display:block;line-height:1.5}
+<?php }
+    public static function js_cikti() { ?>/* =====================================================================
+ * OSC_DOCX — yazılı kâğıdını gerçek Word (.docx) dosyası olarak üretir.
+ *   - $…$ LaTeX formülleri Word'ün kendi denklemlerine (OMML) çevrilir
+ *   - resimler dosyanın içine gömülür
+ *   Gerekli: JSZip (window.JSZip)
+ * ===================================================================== */
+(function () {
+  'use strict';
+  if (window.OSC_DOCX) return;
+  var NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"';
+  function x(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function varlik(t) { return String(t).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&'); }
+
+  /* ---------------- LaTeX → OMML ---------------- */
+  var SEMBOL = { times: '×', div: '÷', cdot: '·', pi: 'π', le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', pm: '±', mp: '∓', infty: '∞', circ: '°', degree: '°', angle: '∠', triangle: '△', perp: '⊥', parallel: '∥', 'in': '∈', notin: '∉', subset: '⊂', subseteq: '⊆', supset: '⊃', cup: '∪', cap: '∩', emptyset: '∅', varnothing: '∅', Rightarrow: '⇒', rightarrow: '→', to: '→', Leftrightarrow: '⇔', leftarrow: '←', approx: '≈', equiv: '≡', sim: '∼', cong: '≅', propto: '∝', ldots: '…', dots: '…', cdots: '⋯', square: '□', alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', Delta: 'Δ', theta: 'θ', lambda: 'λ', mu: 'μ', sigma: 'σ', Sigma: 'Σ', omega: 'ω', Omega: 'Ω', phi: 'φ', varphi: 'φ', epsilon: 'ε', rho: 'ρ', tau: 'τ', sum: '∑', prod: '∏', int: '∫', forall: '∀', exists: '∃', neg: '¬', wedge: '∧', vee: '∨', mid: '|', lfloor: '⌊', rfloor: '⌋', lceil: '⌈', rceil: '⌉', langle: '⟨', rangle: '⟩', '%': '%', '{': '{', '}': '}', '$': '$', '#': '#', '&': '&', '_': '_', ',': ' ', ';': ' ', ':': ' ', quad: ' ', qquad: '  ', '!': '', ' ': ' ' };
+  var BB = { R: 'ℝ', N: 'ℕ', Z: 'ℤ', Q: 'ℚ', C: 'ℂ', I: '𝕀' };
+  var FONK = { log: 1, ln: 1, sin: 1, cos: 1, tan: 1, cot: 1, sec: 1, csc: 1, lim: 1, max: 1, min: 1, exp: 1 };
+  function mr(t, normal) { return '<m:r>' + (normal ? '<m:rPr><m:nor/></m:rPr>' : '') + '<m:t xml:space="preserve">' + x(t) + '</m:t></m:r>'; }
+  function omml(tex) {
+    var s = varlik(tex), i = 0; if (window.OSC_TEX_DUZELT) s = window.OSC_TEX_DUZELT(s);
+    function bosluk() { while (i < s.length && /\s/.test(s[i])) i++; }
+    function komut() { var m = /^\\([a-zA-Z]+|.)/.exec(s.slice(i)); if (!m) { i++; return ''; } i += m[0].length; return m[1]; }
+    function arguman() { bosluk(); if (s[i] === '{') { i++; var r = dizi('}'); i++; return r; } if (s[i] === '\\') { var p = i; var c = komut(); i = p; return dizi(null, 1); } var ch = s[i++] || ''; return ch ? mr(ch) : ''; }
+    function secenek() { bosluk(); if (s[i] !== '[') return null; i++; var r = dizi(']'); i++; return r; }
+    function sinirlayici() { bosluk(); if (s[i] === '\\') { var c = komut(); return c === '{' ? '{' : c === '}' ? '}' : c === '|' ? '‖' : (SEMBOL[c] !== undefined ? SEMBOL[c] : c === 'lbrace' ? '{' : c === 'rbrace' ? '}' : ''); } var ch = s[i++]; return ch === '.' ? '' : ch; }
+    function oge(stop) {
+      bosluk(); if (i >= s.length) return null;
+      var c = s[i];
+      if (stop && c === stop) return null;
+      if (c === '}' || c === ']' && stop === ']') return null;
+      if (c === '{') { i++; var g = dizi('}'); i++; return g; }
+      if (c === '^' || c === '_') return null;
+      if (c === '&') { i++; return mr(' '); }
+      if (c === '\\') {
+        var save = i, k = komut();
+        if (k === 'right') { i = save; return null; }
+        if (k === 'frac' || k === 'dfrac' || k === 'tfrac' || k === 'cfrac') { var a = arguman(), b = arguman(); return '<m:f><m:num>' + a + '</m:num><m:den>' + b + '</m:den></m:f>'; }
+        if (k === 'binom') { var a2 = arguman(), b2 = arguman(); return '<m:d><m:e><m:f><m:fPr><m:type m:val="noBar"/></m:fPr><m:num>' + a2 + '</m:num><m:den>' + b2 + '</m:den></m:f></m:e></m:d>'; }
+        if (k === 'sqrt') { var d = secenek(), e = arguman(); return '<m:rad><m:radPr>' + (d ? '' : '<m:degHide m:val="1"/>') + '</m:radPr><m:deg>' + (d || '') + '</m:deg><m:e>' + e + '</m:e></m:rad>'; }
+        if (k === 'overline' || k === 'bar' && s[i] === '{') { return '<m:bar><m:barPr><m:pos m:val="top"/></m:barPr><m:e>' + arguman() + '</m:e></m:bar>'; }
+        if (k === 'underline') return '<m:bar><m:barPr><m:pos m:val="bot"/></m:barPr><m:e>' + arguman() + '</m:e></m:bar>';
+        var AKS = { vec: '⃗', hat: '̂', widehat: '̂', dot: '̇', tilde: '̃', bar: '̄', overrightarrow: '⃗' };
+        if (AKS[k]) return '<m:acc><m:accPr><m:chr m:val="' + AKS[k] + '"/></m:accPr><m:e>' + arguman() + '</m:e></m:acc>';
+        if (k === 'left') { var bc = sinirlayici(), ic = dizi('\\right'); var ec = ''; if (s.slice(i, i + 6) === '\\right') { i += 6; ec = sinirlayici(); } return '<m:d><m:dPr><m:begChr m:val="' + x(bc) + '"/><m:endChr m:val="' + x(ec) + '"/></m:dPr><m:e>' + ic + '</m:e></m:d>'; }
+        if (k === 'text' || k === 'mathrm' || k === 'textrm' || k === 'operatorname' || k === 'mbox') { bosluk(); var t = ''; if (s[i] === '{') { var dz = 1; i++; while (i < s.length && dz) { if (s[i] === '{') dz++; else if (s[i] === '}') { dz--; if (!dz) break; } t += s[i++]; } i++; } return mr(t, true); }
+        if (k === 'mathbb') { bosluk(); var l = ''; if (s[i] === '{') { i++; while (i < s.length && s[i] !== '}') l += s[i++]; i++; } else l = s[i++]; return mr(BB[l] || l, true); }
+        if (k === 'mathbf' || k === 'boldsymbol' || k === 'mathit' || k === 'boxed' || k === 'displaystyle' || k === 'textstyle') { return k === 'displaystyle' || k === 'textstyle' ? '' : arguman(); }
+        if (k === 'begin' || k === 'end') { arguman(); return ''; }
+        if (k === '\\') return mr(' ');
+        if (FONK[k]) return mr(k, true);
+        if (SEMBOL[k] !== undefined) return SEMBOL[k] ? mr(SEMBOL[k]) : '';
+        return mr(k);
+      }
+      i++;
+      if (/\s/.test(c)) return '';
+      if (/\d/.test(c)) { while (i < s.length && /\d/.test(s[i])) c += s[i++]; }
+      return mr(c);
+    }
+    function dizi(stop, tek) {
+      var parcalar = [];
+      while (i < s.length) {
+        if (stop === '\\right' && s.slice(i, i + 6) === '\\right') break;
+        if (stop && stop.length === 1 && s[i] === stop) break;
+        if (!stop && s[i] === '}') { i++; continue; }
+        if (s[i] === '^' || s[i] === '_') {
+          var taban = parcalar.length ? parcalar.pop() : mr(''), alt = null, ust = null;
+          while (s[i] === '^' || s[i] === '_') { var tur = s[i++]; var arg = arguman(); if (tur === '^') ust = arg; else alt = arg; bosluk(); }
+          if (alt !== null && ust !== null) parcalar.push('<m:sSubSup><m:e>' + taban + '</m:e><m:sub>' + alt + '</m:sub><m:sup>' + ust + '</m:sup></m:sSubSup>');
+          else if (ust !== null) parcalar.push('<m:sSup><m:e>' + taban + '</m:e><m:sup>' + ust + '</m:sup></m:sSup>');
+          else parcalar.push('<m:sSub><m:e>' + taban + '</m:e><m:sub>' + alt + '</m:sub></m:sSub>');
+          if (tek) break; continue;
+        }
+        var o = oge(stop && stop.length === 1 ? stop : null); if (o === null) { if (i < s.length && (s[i] === '}' || s[i] === ']') && !stop) { i++; continue; } if (stop === '\\right') { if (s.slice(i, i + 6) === '\\right') break; i++; continue; } break; }
+        if (o !== '') parcalar.push(o); if (tek && o !== '') break;
+      }
+      return parcalar.join('');
+    }
+    var sonuc = '';
+    try { sonuc = dizi(null); } catch (e) { sonuc = mr(s); }
+    return '<m:oMath>' + sonuc + '</m:oMath>';
+  }
+
+  /* ---------------- HTML → Word paragraf içeriği ---------------- */
+  function rpr(f) { var o = ''; if (f.b) o += '<w:b/>'; if (f.i) o += '<w:i/>'; if (f.u) o += '<w:u w:val="single"/>'; if (f.sz) o += '<w:sz w:val="' + f.sz + '"/><w:szCs w:val="' + f.sz + '"/>'; if (f.renk) o += '<w:color w:val="' + f.renk + '"/>'; if (f.sup) o += '<w:vertAlign w:val="superscript"/>'; if (f.sub) o += '<w:vertAlign w:val="subscript"/>'; return o ? '<w:rPr>' + o + '</w:rPr>' : ''; }
+  function wr(t, f) { return t === '' ? '' : '<w:r>' + rpr(f || {}) + '<w:t xml:space="preserve">' + x(t) + '</w:t></w:r>'; }
+  function metinParca(t, f) {
+    // $…$, $$…$$, \(…\) formülleri OMML'e
+    var o = '', re = /\$\$([\s\S]+?)\$\$|\\\(([\s\S]+?)\\\)|\$([^$\n]+?)\$/g, son = 0, m;
+    while ((m = re.exec(t))) { o += wr(t.slice(son, m.index), f); o += omml(m[1] || m[2] || m[3]); son = re.lastIndex; }
+    return o + wr(t.slice(son), f);
+  }
+  function Belge() { this.resimler = []; this.harita = {}; this.id = 1; }
+  Belge.prototype.icerik = function (html, f0) {
+    var self = this, d = new DOMParser().parseFromString('<div>' + String(html || '') + '</div>', 'text/html').body.firstChild, o = '';
+    // metin düğümleri ayrık gelse bile $…$ tek parça işlensin diye: önce satır içi düğümleri birleştir
+    function yuru(n, f) {
+      if (n.nodeType === 3) { o += metinParca(n.nodeValue.replace(/\s+/g, ' '), f); return; }
+      if (n.nodeType !== 1) return;
+      var t = n.tagName.toLowerCase(), g = Object.assign({}, f);
+      if (t === 'br') { o += '<w:r><w:br/></w:r>'; return; }
+      if (t === 'img') { o += self.resim(n.getAttribute('src')); return; }
+      if (t === 'b' || t === 'strong') g.b = true;
+      if (t === 'i' || t === 'em') g.i = true;
+      if (t === 'u') g.u = true;
+      if (t === 'sup') g.sup = true;
+      if (t === 'sub') g.sub = true;
+      if (t === 'tr' && n.previousElementSibling) o += '<w:r><w:br/></w:r>';
+      if ((t === 'td' || t === 'th') && n.previousElementSibling) o += wr('  |  ', g);
+      if ((t === 'p' || t === 'div' || t === 'li') && n.previousSibling && o) o += '<w:r><w:br/></w:r>';
+      if (t === 'span' && /okunamad/.test(n.textContent || '')) g.renk = '999999';
+      // birleşik metin: alt düğümler yalnızca metin ise tek parça (formül bölünmesin)
+      var yalin = [].every.call(n.childNodes, function (c) { return c.nodeType === 3; });
+      if (yalin) { o += metinParca((n.textContent || '').replace(/\s+/g, ' '), g); return; }
+      [].forEach.call(n.childNodes, function (c) { yuru(c, g); });
+    }
+    var hepsiMetin = [].every.call(d.childNodes, function (c) { return c.nodeType === 3 || (c.nodeType === 1 && /^(b|strong|i|em|u|span)$/i.test(c.tagName) && ![].some.call(c.childNodes, function (z) { return z.nodeType === 1; })); });
+    if (hepsiMetin && /\$/.test(d.textContent || '') && d.querySelector('b,strong,i,em,u') === null) { o = metinParca((d.textContent || '').replace(/\s+/g, ' '), f0 || {}); return o; }
+    [].forEach.call(d.childNodes, function (c) { yuru(c, f0 || {}); });
+    return o;
+  };
+  Belge.prototype.resim = function (src) {
+    var r = this.harita[src];
+    if (!r) return wr('[görsel]', { i: true, renk: '999999' });
+    var id = this.id++, cx = Math.round(r.w * 9525), cy = Math.round(r.h * 9525);
+    return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + id + '" name="Resim ' + id + '"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="' + id + '" name="Resim ' + id + '"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + r.rid + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+  };
+  /** Resimleri indir, boyutlarını bul (en fazla 14 cm x 9 cm) */
+  Belge.prototype.resimleriHazirla = function (srcler) {
+    var self = this, n = 0;
+    return Promise.all(srcler.filter(function (s, i, a) { return s && a.indexOf(s) === i; }).map(function (src) {
+      return fetch(src, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
+        return new Promise(function (ok, no) {
+          var u = URL.createObjectURL(b), im = new Image();
+          im.onload = function () {
+            var w = im.naturalWidth, h = im.naturalHeight, tur = (b.type || '').split('/')[1] || 'png';
+            var mx = 529, my = 340, k = Math.min(1, mx / w, my / h); // px (96 dpi): 14 cm, 9 cm
+            var bitir = function (veri, uz) { n++; var rid = 'rIdImg' + n; self.resimler.push({ ad: 'image' + n + '.' + uz, veri: veri, rid: rid }); self.harita[src] = { rid: rid, w: Math.max(8, Math.round(w * k)), h: Math.max(8, Math.round(h * k)) }; URL.revokeObjectURL(u); ok(); };
+            if (/^(png|jpeg|jpg|gif)$/.test(tur)) b.arrayBuffer().then(function (ab) { bitir(ab, tur === 'jpeg' ? 'jpg' : tur); });
+            else { var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0); c.toBlob(function (pb) { pb.arrayBuffer().then(function (ab) { bitir(ab, 'png'); }); }, 'image/png'); }
+          };
+          im.onerror = function () { URL.revokeObjectURL(u); no(); };
+          im.src = u;
+        });
+      }).catch(function () {});
+    }));
+  };
+
+  /* ---------------- belge düzeni ---------------- */
+  var GEN = 10318; // içerik genişliği (twip): A4 - 2 x 1,4 cm
+  var MAVI = '1E3A8A';
+  function p(icerik, ppr) { return '<w:p>' + (ppr ? '<w:pPr>' + ppr + '</w:pPr>' : '') + icerik + '</w:p>'; }
+  function kenarlik(v, sz, renk) { var t = ''; ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].forEach(function (k) { t += '<w:' + k + ' w:val="' + v + '" w:sz="' + (sz || 4) + '" w:space="0" w:color="' + (renk || '000000') + '"/>'; }); return '<w:tblBorders>' + t + '</w:tblBorders>'; }
+  /** satirlar: [[hucre, ...]]; hucre: xml ya da {x: xml, span: 2, dolgu: 'RRGGBB'} */
+  function tablo(sutunlar, satirlar, opt) {
+    opt = opt || {}; var gen = sutunlar.reduce(function (a, b) { return a + b; }, 0);
+    return '<w:tbl><w:tblPr><w:tblW w:w="' + gen + '" w:type="dxa"/><w:tblLayout w:type="fixed"/>' + kenarlik(opt.kenar || 'none', opt.sz, opt.renk) + '<w:tblCellMar><w:top w:w="' + (opt.ust || 40) + '" w:type="dxa"/><w:left w:w="' + (opt.sol === undefined ? 90 : opt.sol) + '" w:type="dxa"/><w:bottom w:w="' + (opt.alt || 40) + '" w:type="dxa"/><w:right w:w="90" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' + sutunlar.map(function (w) { return '<w:gridCol w:w="' + w + '"/>'; }).join('') + '</w:tblGrid>' +
+      satirlar.map(function (r, ri) {
+        var col = 0;
+        return '<w:tr><w:trPr><w:cantSplit/>' + (opt.baslik && ri === 0 ? '<w:tblHeader/>' : '') + '</w:trPr>' + r.map(function (h) {
+          var o = typeof h === 'object' && h !== null ? h : { x: h }, sp = o.span || 1, w = 0; for (var k = 0; k < sp; k++) w += sutunlar[col + k] || 0; col += sp;
+          var dolgu = o.dolgu || (opt.dolgu && ri === 0 ? opt.dolgu : '');
+          return '<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/>' + (sp > 1 ? '<w:gridSpan w:val="' + sp + '"/>' : '') + (dolgu ? '<w:shd w:val="clear" w:color="auto" w:fill="' + dolgu + '"/>' : '') + '<w:vAlign w:val="' + (opt.dikey || 'top') + '"/></w:tcPr>' + (o.x || '<w:p/>') + '</w:tc>';
+        }).join('') + '</w:tr>';
+      }).join('') + '</w:tbl>';
+  }
+  function ortala(ic, ek) { return p(ic, '<w:jc w:val="center"/>' + (ek || '')); }
+  /** HTML içeriği paragraflara ve (varsa) tablolara çevir */
+  Belge.prototype.blok = function (html, f0, ppr, genislik) {
+    var self = this, o = '', parca = String(html || '').split(/(<table[\s\S]*?<\/table>)/i);
+    parca.forEach(function (h) {
+      if (!h) return;
+      if (/^<table/i.test(h)) {
+        var d = new DOMParser().parseFromString(h, 'text/html'), sat = [].slice.call(d.querySelectorAll('tr'));
+        var n = Math.max.apply(null, sat.map(function (r) { return r.children.length; }).concat([1])), w = Math.floor((genislik || GEN) / n), sut = []; for (var i = 0; i < n; i++) sut.push(w);
+        o += tablo(sut, sat.map(function (r, ri) { var hs = [].slice.call(r.children); while (hs.length < n) hs.push(null); return hs.map(function (c) { return { x: p(c ? self.icerik(c.innerHTML, c.tagName === 'TH' ? { b: true, sz: 20 } : { sz: 20 }) : '', '<w:spacing w:after="0"/>'), dolgu: c && c.tagName === 'TH' ? 'EEF2F7' : '' }; }); }), { kenar: 'single', sz: 4, renk: '9CA3AF', ust: 30, alt: 30 });
+        o += p('', '<w:spacing w:after="60"/>');
+        return;
+      }
+      // tek başına satırda duran formüller ayrı, büyük (display) denklem paragrafı olsun
+      var satirlar = h.split(/<br\s*\/?>/i), grup = [];
+      var bosalt = function () { if (!grup.length) return; var ic = self.icerik(grup.join('<br>'), f0); grup = []; if (ic.replace(/<w:r><w:br\/><\/w:r>/g, '').trim() !== '') o += p(ic.replace(/^(<w:r><w:br\/><\/w:r>)+|(<w:r><w:br\/><\/w:r>)+$/g, ''), ppr); };
+      satirlar.forEach(function (l) {
+        var m1 = /^\s*\$([^$]+)\$\s*$/.exec(l.replace(/<[^>]+>/g, '') === l ? varlik(l) : '');
+        if (m1) { bosalt(); o += p('<m:oMathPara><m:oMathParaPr><m:jc m:val="left"/></m:oMathParaPr>' + omml(m1[1]) + '</m:oMathPara>', ppr); }
+        else grup.push(l);
+      });
+      bosalt();
+    });
+    return o;
+  };
+
+  /* ---------- genel evrak (tutanak, plan, rapor) ---------- */
+  function evrakBelge(m) {
+    var SP0 = '<w:spacing w:after="0"/>', GENI = m.yatay ? 15240 : GEN, g = '';
+    var sat = function (t, f, ppr) { return p(metinParca(String(t == null ? '' : t), f || {}), ppr || SP0); };
+    var cokSatir = function (t, f, ppr) { return String(t == null ? '' : t).split('\n').map(function (l) { return sat(l, f, ppr); }).join('') || p(''); };
+    (m.bloklar || []).forEach(function (b) {
+      switch (b.t) {
+        case 'baslik': g += ortala(wr(b.s, { b: true, sz: b.sz || 24 }), '<w:spacing w:after="' + (b.after || 40) + '"/>'); break;
+        case 'alt': g += ortala(wr(b.s, { sz: 21 }), '<w:spacing w:after="120"/>'); break;
+        case 'h': g += p(wr(b.s, { b: true, sz: 22, renk: MAVI }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>'); break;
+        case 'p': g += cokSatir(b.s, {}, '<w:spacing w:after="80"/><w:jc w:val="both"/>'); break;
+        case 'liste': (b.l || []).forEach(function (x, i) { g += p(wr((b.numara === false ? '•' : (i + 1) + '.') + ' ', { b: true }) + metinParca(String(x), {}), '<w:spacing w:after="50"/><w:ind w:left="360" w:hanging="360"/><w:jc w:val="both"/>'); }); break;
+        case 'bilgi': { var w1 = Math.round(GENI * 0.3); g += tablo([w1, GENI - w1], (b.satirlar || []).map(function (r) { return [{ x: sat(r[0], { b: true, sz: 21 }), dolgu: 'F1F4F9' }, sat(r[1], { sz: 21 })]; }), { kenar: 'single', sz: 4, renk: '9CA3AF', ust: 50, alt: 50 }); g += p('', '<w:spacing w:after="80"/>'); break; }
+        case 'tablo': {
+          var n = (b.bas || b.sat[0] || []).length, top = (b.gen || []).reduce(function (a, c) { return a + c; }, 0), gen = b.gen ? b.gen.map(function (x) { return Math.round(x / top * GENI); }) : (function () { var o = [], w = Math.floor(GENI / n); for (var i = 0; i < n; i++) o.push(w); return o; })();
+          var rows = []; if (b.bas) rows.push(b.bas.map(function (h) { return { x: sat(h, { b: true, sz: 20 }, SP0), dolgu: 'E8EDF6' }; }));
+          (b.sat || []).forEach(function (r) { rows.push(r.map(function (c) { return { x: cokSatir(c, { sz: 20 }) }; })); });
+          g += tablo(gen, rows, { kenar: 'single', sz: 4, renk: '6B7280', ust: 50, alt: 50, baslik: !!b.bas }); g += p('', '<w:spacing w:after="80"/>'); break;
+        }
+        case 'imza': {
+          var k = b.kisiler || [], sut = Math.min(b.sutun || 3, Math.max(1, k.length)), w = Math.floor(GENI / sut), sat2 = [];
+          for (var i = 0; i < k.length; i += sut) { var r = []; for (var j = 0; j < sut; j++) { var x = k[i + j]; r.push(x ? ortala(wr(x.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(x.gorev || '', { sz: 20 }), SP0) + ortala(wr('İmza', { sz: 18, renk: '888888' }), '<w:spacing w:before="160" w:after="200"/>') : p('')); } sat2.push(r); }
+          if (b.baslik) g += p(wr(b.baslik, { b: true, sz: 22 }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>');
+          var ws = []; for (var c = 0; c < sut; c++) ws.push(w);
+          g += tablo(ws, sat2, {}); break;
+        }
+        case 'onay': g += p('', '<w:spacing w:after="120"/>') + ortala(wr('UYGUNDUR', { b: true, sz: 22 }), SP0) + ortala(wr(b.tarih || '…/…/20…', { sz: 21 }), SP0) + p('', '<w:spacing w:after="360"/>') + ortala(wr(b.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(b.gorev || 'Okul Müdürü', { sz: 21 }), SP0); break;
+        case 'sayfa': g += p('<w:r><w:br w:type="page"/></w:r>'); break;
+        default: g += p('');
+      }
+    });
+    return g;
+  }
+  window.OSC_DOCX_EVRAK = function (m) {
+    var g = evrakBelge(m), y = !!m.yatay;
+    var sect = '<w:sectPr><w:pgSz w:w="' + (y ? 16838 : 11906) + '" w:h="' + (y ? 11906 : 16838) + '"' + (y ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>';
+    var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + g + sect + '</w:body></w:document>';
+    var stil = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
+    var z = new window.JSZip();
+    z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
+    z.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>' + x(m.baslik || 'Evrak') + '</dc:title><dc:creator>' + x(m.site || 'soruindir.net') + '</dc:creator></cp:coreProperties>');
+    z.file('word/document.xml', doc);
+    z.file('word/styles.xml', stil);
+    z.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStil" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    return z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+  };
+  window.OSC_DOCX = {
+    omml: omml,
+    /**
+     * @param {object} m { yil, okul, baslik, ogretmen, ders, tarih, sure, site, marka, yonerge, anahtar,
+     *                    sorular:[{paragraph,root,type,options,correct,cozum,puan,satir,bosluk,kod,konu}] }
+     * @return Promise<Blob>
+     */
+    olustur: function (m) {
+      var B = new Belge(), srcler = [];
+      m.sorular.forEach(function (q) { var h = (q.paragraph || '') + (q.root || '') + Object.keys(q.options || {}).map(function (k) { return q.options[k]; }).join(''); h.replace(/<img[^>]+src="([^"]+)"/g, function (_, s) { srcler.push(varlik(s)); return _; }); });
+      return B.resimleriHazirla(srcler).then(function () {
+        var g = '', SP0 = '<w:spacing w:after="0"/>';
+        // başlık kutusu
+        g += tablo([GEN], [[ortala(wr('T.C.', { b: true, sz: 22 }), SP0) + ortala(wr((m.okul || '……………………… OKULU').toLocaleUpperCase('tr'), { b: true, sz: 24 }), SP0) + ortala(wr(m.baslik, { b: true, sz: 21 }), SP0)]], { kenar: 'single', sz: 12, ust: 60, alt: 60 });
+        g += p('', '<w:spacing w:after="60"/>');
+        var ks = [3500, 2350, 1950, 1550, GEN - 3500 - 2350 - 1950 - 1550], bh = function (t) { return p(wr(t, { sz: 21 }), SP0); };
+        g += tablo(ks, [[bh('Adı Soyadı:'), bh('Sınıfı / No:'), bh('Tarih: ' + (m.tarih || '')), bh('Süre: ' + (m.sure || '') + ' dk'), ortala(wr('PUAN', { b: true, sz: 21 }), SP0) + p('')]], { kenar: 'single', sz: 12, ust: 70, alt: 200 });
+        g += p('', '<w:spacing w:after="120"/>');
+        // sorular: [no | içerik | puan]
+        var SN = 480, SPN = 900, SM = GEN - SN - SPN;
+        m.sorular.forEach(function (q, i) {
+          var hucre = '', op = q.options || {};
+          if (q.paragraph) hucre += B.blok(q.paragraph, {}, '<w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="999999"/><w:left w:val="single" w:sz="4" w:space="4" w:color="999999"/><w:bottom w:val="single" w:sz="4" w:space="4" w:color="999999"/><w:right w:val="single" w:sz="4" w:space="4" w:color="999999"/></w:pBdr><w:spacing w:after="100"/><w:ind w:left="80" w:right="80"/>', SM);
+          hucre += B.blok(q.root || '', { b: true }, '<w:spacing w:after="80"/>', SM);
+          if (q.type === 'multiple' || q.type === 'truefalse') {
+            var ks2 = Object.keys(op).filter(function (k) { return op[k]; });
+            var kisa = ks2.every(function (k) { return String(op[k]).replace(/<[^>]+>/g, '').replace(/\$[^$]*\$/g, 'xxxx').length < 24 && op[k].indexOf('<img') < 0; });
+            if (kisa) { var tab = Math.floor(SM / Math.max(4, ks2.length)); hucre += p(ks2.map(function (k, j) { return (j ? '<w:r><w:tab/></w:r>' : '') + wr(k + ') ', { b: true }) + B.icerik(op[k]); }).join(''), '<w:tabs>' + ks2.map(function (k, j) { return j ? '<w:tab w:val="left" w:pos="' + (tab * j) + '"/>' : ''; }).join('') + '</w:tabs><w:spacing w:after="60"/>'); }
+            else ks2.forEach(function (k) { hucre += p(wr(k + ') ', { b: true }) + B.icerik(op[k]), '<w:spacing w:after="40"/><w:ind w:left="284" w:hanging="284"/>'); });
+          }
+          for (var j = 0; j < (q.satir || 0); j++) hucre += p('', '<w:pBdr><w:bottom w:val="dotted" w:sz="6" w:space="1" w:color="' + (j % 2 ? '8A8A8A' : '8B8B8B') + '"/></w:pBdr><w:spacing w:before="0" w:after="0" w:line="420" w:lineRule="exact"/>');
+          for (var k = 0; k < Math.round((q.bosluk || 0) / 20); k++) hucre += p('', '<w:spacing w:before="0" w:after="0" w:line="300" w:lineRule="exact"/>');
+          if (!hucre) hucre = p('');
+          g += tablo([SN, SM, SPN], [[p(wr((i + 1) + '.', { b: true })), hucre, p(wr('(' + (q.puan || 0) + ' P)', { b: true, sz: 20 }), '<w:jc w:val="right"/>')]], { sol: 0 });
+          g += p('', '<w:spacing w:after="80"/>');
+        });
+        g += p(wr('Başarılar dilerim.', { sz: 21 }), '<w:jc w:val="right"/><w:spacing w:before="240" w:after="0"/>');
+        if (m.ogretmen) g += p(wr(m.ogretmen, { b: true, sz: 21 }), '<w:jc w:val="right"/><w:spacing w:after="0"/>');
+        g += p(wr((m.ders || '') + ' Öğretmeni', { sz: 21 }), '<w:jc w:val="right"/><w:spacing w:after="200"/>');
+        g += ortala(wr(m.site || 'soruindir.net', { sz: 16, renk: '888888' }));
+        // cevap anahtarı tablosu
+        if (m.anahtar) {
+          g += p('<w:r><w:br w:type="page"/></w:r>');
+          g += ortala(wr('CEVAP ANAHTARI', { b: true, sz: 28 }), '<w:spacing w:after="40"/>');
+          g += ortala(wr(m.baslik, { sz: 19 }), '<w:spacing w:after="160"/>');
+          var hs = [650, 2400, GEN - 650 - 2400 - 850, 850], hb = function (t) { return p(wr(t, { b: true, sz: 21 }), SP0); }, CW = hs[2];
+          var sat = [[hb('No'), hb('Öğrenme çıktısı'), hb('Cevap'), hb('Puan')]];
+          m.sorular.forEach(function (q, i) {
+            var op = q.options || {}, cv;
+            if (q.type === 'multiple' || q.type === 'truefalse') cv = p(wr((q.correct || '?') + (q.correct && op[q.correct] ? ') ' : ''), { b: true }) + (q.correct && op[q.correct] ? B.icerik(op[q.correct]) : ''), SP0) + (q.cozum ? B.blok(q.cozum, { sz: 20 }, SP0, CW) : '');
+            else cv = op.A ? B.blok(op.A, {}, SP0, CW) : p(wr('—'), SP0);
+            sat.push([ortala(wr(String(i + 1), { sz: 21 }), SP0), p(wr(q.kod || '', { sz: 18 }) + (q.konu ? '<w:r><w:br/></w:r>' + wr(q.konu, { sz: 16, renk: '555555' }) : ''), SP0), cv || p(''), ortala(wr(String(q.puan || 0), { sz: 21 }), SP0)]);
+          });
+          g += tablo(hs, sat, { kenar: 'single', sz: 6, ust: 60, alt: 60, baslik: true, dolgu: 'EEF0F6' });
+        }
+        var footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ' + NS + '>' + p(wr((m.site || 'soruindir.net') + '   ·   Sayfa ', { sz: 16, renk: '9CA3AF' }) + '<w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>' + wr(' / ', { sz: 16, renk: '9CA3AF' }) + '<w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:instrText xml:space="preserve"> NUMPAGES </w:instrText></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="9CA3AF"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>', '<w:jc w:val="right"/>') + '</w:ftr>';
+        var sect = '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="737" w:right="794" w:bottom="737" w:left="794" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>';
+        var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + g + sect + '</w:body></w:document>';
+        var stil = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="23"/><w:szCs w:val="23"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
+        var ayar = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"><m:mathPr><m:mathFont m:val="Cambria Math"/><m:dispDef/></m:mathPr><w:defaultTabStop w:val="708"/><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>';
+        var z = new window.JSZip();
+        z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="gif" ContentType="image/gif"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+        z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
+        z.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>' + x(m.baslik) + '</dc:title><dc:creator>' + x(m.site || 'soruindir.net') + '</dc:creator></cp:coreProperties>');
+        z.file('word/document.xml', doc);
+        z.file('word/styles.xml', stil);
+        z.file('word/settings.xml', ayar);
+        z.file('word/footer1.xml', footer);
+        z.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStil" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdAyar" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/><Relationship Id="rIdAlt" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' + B.resimler.map(function (r) { return '<Relationship Id="' + r.rid + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' + r.ad + '"/>'; }).join('') + '</Relationships>');
+        B.resimler.forEach(function (r) { z.file('word/media/' + r.ad, r.veri); });
+        return z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+      });
+    }
+  };
+})();
+
+/* =====================================================================
+ * Evrak Hazırla: zümre / veli / ŞÖK tutanakları, BEP planı, öğrenci
+ * kulübü evrakları. Taslak metinler bize özgüdür; isteğe bağlı olarak
+ * yapay zekâ ile kişiselleştirilir. Evraklar yalnızca bu tarayıcıda
+ * saklanır (öğrenci bilgileri sunucuya kaydedilmez).
+ * ===================================================================== */
+(function () {
+  function BASLAT() {
+  var C = window.OSC_EV || {}, kok = document.getElementById('osc-ev'); if (!kok) return;
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function trUp(s) { return String(s || '').replace(/i/g, 'İ').replace(/ı/g, 'I').toUpperCase(); }
+  function bugun() { var d = new Date(); return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear(); }
+  function yil() { var d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? y + '-' + (y + 1) : (y - 1) + '-' + y; }
+  function satirlar(s) { return String(s || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function bildir(m, t) { var e = document.createElement('div'); e.className = 'ev-tost ' + (t || ''); e.textContent = m; document.body.appendChild(e); setTimeout(function () { e.classList.add('on'); }, 10); setTimeout(function () { e.remove(); }, 4200); }
+  function sunucu(a, d) {
+    var fd = new FormData(); fd.append('action', 'osc_ev_' + a); fd.append('nonce', C.nonce); fd.append('veri', JSON.stringify(d || {}));
+    return fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { if (!j || !j.success) throw new Error((j && j.data) || 'Bir hata oluştu'); return j.data; });
+  }
+
+  /* ---------------- öğrenci kulüpleri (Sosyal Etkinlikler Politika Belgesi, 2026) ---------------- */
+  var KULUP = {
+    'Zorunlu kulüpler': ['Kızılay Kulübü', 'Yeşilay Kulübü', 'Beyazay Kulübü', 'Siberay Kulübü', 'Tarih ve Kültürel Miras Kulübü', 'Tabiat ve Yaşanabilir Çevre Kulübü', 'Sağlıklı Yaşam ve Fiziksel Aktivite Kulübü', 'Yaşam Becerileri Kulübü'],
+    'Kültür Dünyamız': ['Kültür ve Yayıncılık Kulübü', 'Medeniyet ve Düşünce Kulübü', 'Felsefe ve Münazara Kulübü', 'Dil, Hitabet ve İletişim Kulübü', 'Gezi ve Turizm Kulübü', 'Kapsayıcı Yaşam Kulübü', 'Ahilik ve Fütüvvet Kulübü'],
+    'Sanat': ['Fotoğrafçılık ve Film Kulübü', 'Görsel Sanatlar Kulübü', 'Dijital Sanatlar Kulübü', 'Müzik Kulübü', 'Sahne Sanatları Kulübü', 'Geleneksel Sanatlar Kulübü', 'Edebiyat ve Yazarlık Kulübü'],
+    'Spor': ['Spor Kulübü', 'Ata Sporları Kulübü', 'Halk Oyunları Kulübü', 'İzcilik ve Doğa Sporları Kulübü', 'Akıl ve Zekâ Oyunları Kulübü', 'Çocuk Oyunları Kulübü'],
+    'Bilim': ['Medya ve Bilgi Okuryazarlığı Kulübü', 'Dijital Vatandaşlık, Güvenli İnternet ve Sosyal Medya Kulübü', 'Bilim ve Teknoloji Kulübü', 'Analoji ve Tasarım Kulübü', 'Sosyal Bilimler Kulübü', 'Matematik Kulübü', 'Proje ve Araştırma Kulübü', 'Yapay Zekâ Kulübü', 'Dijital Beceriler Kulübü', 'Girişimcilik ve Üretkenlik Kulübü', 'Havacılık ve Uzay Kulübü', 'Tasarım ve Mühendislik Kulübü'],
+    'Doğa-Çevre-Toplum': ['Meslekî Tanıtım ve Meslekî Gelişim Kulübü', 'Nezaket Hareketi Kulübü', 'Demokrasi ve İnsan Hakları Kulübü', 'Trafik ve İlk Yardım Kulübü', 'Afet Farkındalığı Kulübü', 'Diplomasi ve Müzakere Kulübü', 'Sıfır Atık Kulübü', 'İyilik Hareketi Kulübü']
+  };
+  var TEMA_KULUP = { 'Kızılay Kulübü': 'Doğa-Çevre-Toplum', 'Yeşilay Kulübü': 'Doğa-Çevre-Toplum', 'Beyazay Kulübü': 'Doğa-Çevre-Toplum', 'Siberay Kulübü': 'Bilim', 'Tarih ve Kültürel Miras Kulübü': 'Kültür Dünyamız', 'Tabiat ve Yaşanabilir Çevre Kulübü': 'Doğa-Çevre-Toplum', 'Sağlıklı Yaşam ve Fiziksel Aktivite Kulübü': 'Spor', 'Yaşam Becerileri Kulübü': 'Doğa-Çevre-Toplum' };
+  function kulupTema(k) { if (TEMA_KULUP[k]) return TEMA_KULUP[k]; for (var t in KULUP) if (t !== 'Zorunlu kulüpler' && KULUP[t].indexOf(k) >= 0) return t; return ''; }
+  var DERSLER = ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Din Kültürü ve Ahlak Bilgisi', 'T.C. İnkılap Tarihi ve Atatürkçülük', 'Türk Dili ve Edebiyatı', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Beden Eğitimi ve Spor', 'Görsel Sanatlar', 'Müzik', 'Teknoloji ve Tasarım', 'Bilişim Teknolojileri ve Yazılım', 'Hayat Bilgisi', 'Sınıf Öğretmenliği', 'Rehberlik', 'Özel Eğitim', 'Okul Öncesi', 'Meslek Dersleri'];
+  var AYLAR = ['Eylül', 'Ekim', 'Kasım', 'Aralık', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'];
+
+  /* ---------------- evrak türleri ve form alanları ---------------- */
+  var ORTAK = [{ k: 'okul', ad: 'Okul adı', ph: 'Atatürk Ortaokulu' }, { k: 'il', ad: 'İl / ilçe', ph: 'Ankara / Çankaya' }, { k: 'yil', ad: 'Eğitim-öğretim yılı', v: yil }];
+  var TOPLANTI = { donem_basi: 'Eğitim-öğretim yılı başı', donem_ara: '1. dönem ara (değerlendirme)', ikinci_donem: '2. dönem başı', yil_sonu: 'Eğitim-öğretim yılı sonu' };
+  var TURLER = [
+    { id: 'zumre', ad: 'Zümre öğretmenler kurulu tutanağı', ik: '👥', ac: 'Ders zümresi toplantısı: gündem, görüşmeler, kararlar ve imzalar', alan: ORTAK.concat([
+      { k: 'ders', ad: 'Ders / zümre', tip: 'secim', l: DERSLER }, { k: 'siniflar', ad: 'Sınıf seviyeleri', ph: '5, 6, 7 ve 8. sınıflar' },
+      { k: 'toplanti', ad: 'Toplantı', tip: 'secim', l: TOPLANTI, v: 'donem_basi' }, { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'saat', ad: 'Saat', v: '15:00' }, { k: 'yer', ad: 'Yer', v: 'Öğretmenler odası' },
+      { k: 'baskan', ad: 'Zümre başkanı', ph: 'Ad Soyad' }, { k: 'uyeler', ad: 'Zümre öğretmenleri (her satıra bir kişi)', tip: 'uzun', ph: 'Ayşe Yılmaz\nMehmet Kaya' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }, { k: 'not', ad: 'Eklemek istedikleriniz (isteğe bağlı)', tip: 'uzun', ph: 'Ör. Okulumuzda laboratuvar yenilendi; 8. sınıflar için ek kaynak kullanılacak…' }]) },
+    { id: 'sok', ad: 'Şube öğretmenler kurulu (ŞÖK) tutanağı', ik: '🏫', ac: 'Bir şubenin öğretmenlerinin dönem toplantısı', alan: ORTAK.concat([
+      { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'rehber', ad: 'Sınıf rehber öğretmeni', ph: 'Ad Soyad' }, { k: 'toplanti', ad: 'Toplantı', tip: 'secim', l: TOPLANTI, v: 'donem_basi' },
+      { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'saat', ad: 'Saat', v: '15:00' }, { k: 'yer', ad: 'Yer', v: 'Öğretmenler odası' }, { k: 'mevcut', ad: 'Öğrenci sayısı', ph: '28' },
+      { k: 'ogretmenler', ad: 'Şube öğretmenleri (her satıra “Ders - Ad Soyad”)', tip: 'uzun', ph: 'Türkçe - Ayşe Yılmaz\nMatematik - Mehmet Kaya' }, { k: 'mudur', ad: 'Okul müdürü / müdür yardımcısı', ph: 'Ad Soyad' }, { k: 'not', ad: 'Şubeye özel durumlar (isteğe bağlı)', tip: 'uzun', ph: 'Ör. Devamsızlığı artan 2 öğrenci; okuma hızı düşük öğrenciler…' }]) },
+    { id: 'veli', ad: 'Veli toplantısı tutanağı', ik: '👨‍👩‍👧', ac: 'Sınıf veli toplantısı: gündem, görüşmeler, kararlar, katılım listesi', alan: ORTAK.concat([
+      { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'ogretmen', ad: 'Sınıf öğretmeni / rehber öğretmen', ph: 'Ad Soyad' }, { k: 'toplanti', ad: 'Toplantı', tip: 'secim', l: TOPLANTI, v: 'donem_basi' },
+      { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'saat', ad: 'Saat', v: '16:00' }, { k: 'yer', ad: 'Yer', ph: '7/A sınıfı' }, { k: 'katilim', ad: 'Katılan veli sayısı', ph: '21' },
+      { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }, { k: 'not', ad: 'Konuşulacak özel konular (isteğe bağlı)', tip: 'uzun', ph: 'Ör. Okul gezisi, kitap okuma kampanyası…' }]) },
+    { id: 'bep', ad: 'BEP planı (Bireyselleştirilmiş Eğitim Programı)', ik: '🧩', ac: 'Kaynaştırma / özel eğitim öğrencisi için ders bazlı uzun ve kısa dönemli amaçlar', alan: ORTAK.concat([
+      { k: 'ogrenci', ad: 'Öğrencinin adı (baş harfleri yeterli)', ph: 'A. Y.' }, { k: 'sinif', ad: 'Sınıf / şube', ph: '6/B' }, { k: 'tani', ad: 'Eğitsel tanı / ihtiyaç', tip: 'secim', l: ['Öğrenme güçlüğü', 'Hafif düzeyde zihinsel yetersizlik', 'Dikkat eksikliği ve hiperaktivite bozukluğu', 'Otizm spektrum bozukluğu', 'İşitme yetersizliği', 'Görme yetersizliği', 'Dil ve konuşma güçlüğü', 'Bedensel yetersizlik', 'Özel yetenek', 'Diğer'] },
+      { k: 'ders', ad: 'Ders', tip: 'secim', l: DERSLER }, { k: 'performans', ad: 'Öğrencinin şu anki performansı (bildikleri ve güçlük çektikleri)', tip: 'uzun', ph: 'Ör. 100’e kadar sayıları okuyup yazabiliyor; toplama işlemini yapabiliyor, eldeli çıkarmada güçlük çekiyor…' },
+      { k: 'baslama', ad: 'BEP başlama tarihi', v: bugun }, { k: 'bitis', ad: 'BEP bitiş tarihi', ph: '…/06/20…' }, { k: 'birim', ad: 'BEP geliştirme birimi üyeleri (her satıra “Görev - Ad Soyad”)', tip: 'uzun', ph: 'Müdür yardımcısı - …\nRehber öğretmen - …\nSınıf öğretmeni - …\nDers öğretmeni - …\nVeli - …' }]) },
+    { id: 'kulup_plan', ad: 'Öğrenci kulübü yıllık çalışma planı', ik: '📅', yatay: true, ac: 'Yeni kulüp yapısına göre (48 kulüp, 5 tema) aylara göre etkinlik planı', alan: ORTAK.concat([
+      { k: 'kulup', ad: 'Kulüp', tip: 'kulup' }, { k: 'kademe', ad: 'Okul kademesi', tip: 'secim', l: ['İlkokul', 'Ortaokul', 'Lise'], v: 'Ortaokul' }, { k: 'danisman', ad: 'Danışman öğretmen(ler) (her satıra bir kişi)', tip: 'uzun' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }, { k: 'not', ad: 'Planlanan özel etkinlikler (isteğe bağlı)', tip: 'uzun', ph: 'Ör. Mart’ta il genelinde proje yarışmasına katılım…' }]) },
+    { id: 'kulup_tutanak', ad: 'Öğrenci kulübü ilk toplantı ve seçim tutanağı', ik: '🗳️', ac: 'Kulübün kuruluş toplantısı, görev dağılımı ve üye listesi', alan: ORTAK.concat([
+      { k: 'kulup', ad: 'Kulüp', tip: 'kulup' }, { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'yer', ad: 'Yer', ph: 'Konferans salonu' }, { k: 'danisman', ad: 'Danışman öğretmen(ler) (her satıra bir kişi)', tip: 'uzun' },
+      { k: 'baskan', ad: 'Kulüp başkanı (öğrenci)', ph: 'Ad Soyad - Sınıf' }, { k: 'baskanyrd', ad: 'Başkan yardımcısı', ph: 'Ad Soyad - Sınıf' }, { k: 'sekreter', ad: 'Sekreter', ph: 'Ad Soyad - Sınıf' }, { k: 'uyeler', ad: 'Üye öğrenciler (her satıra “Ad Soyad - Sınıf - No”)', tip: 'uzun' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
+    { id: 'kulup_rapor', ad: 'Öğrenci kulübü dönem sonu çalışma raporu', ik: '📊', ac: 'Dönem boyunca yapılan kulüp çalışmalarının raporu', alan: ORTAK.concat([
+      { k: 'kulup', ad: 'Kulüp', tip: 'kulup' }, { k: 'donem', ad: 'Dönem', tip: 'secim', l: ['1. dönem', '2. dönem'], v: '1. dönem' }, { k: 'danisman', ad: 'Danışman öğretmen(ler)', tip: 'uzun' }, { k: 'uye', ad: 'Üye sayısı', ph: '24' },
+      { k: 'yapilanlar', ad: 'Yapılan çalışmalar (her satıra bir etkinlik; boş bırakırsanız örnek içerik oluşturulur)', tip: 'uzun' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) }
+  ];
+  function tur(id) { return TURLER.filter(function (t) { return t.id === id; })[0]; }
+
+  /* ---------------- hazır taslak içerikler ---------------- */
+  function zumreIcerik(v) {
+    var d = v.ders || 'ilgili ders', s = v.siniflar || 'tüm sınıf seviyeleri', t = v.toplanti;
+    var g = [], gr = [], k = [];
+    var ekle = function (baslik, metin, karar) { g.push(baslik); gr.push(metin); if (karar) k.push(karar); };
+    ekle('Açılış, yoklama ve gündemin okunması', 'Zümre başkanı ' + (v.baskan || '') + ' toplantıyı açarak katılımcıları selamladı; yoklama yapıldı ve gündem maddeleri okunarak oy birliğiyle kabul edildi.');
+    if (t === 'donem_basi' || t === 'ikinci_donem') {
+      ekle('Bir önceki toplantıda alınan kararların değerlendirilmesi', 'Önceki zümre toplantısında alınan kararların uygulanma düzeyi gözden geçirildi. Kararların büyük ölçüde hayata geçirildiği, eksik kalan konuların bu dönem içinde tamamlanacağı belirtildi.', 'Önceki dönemden kalan eksiklikler bu dönemin ilk ayı içinde tamamlanacaktır.');
+      ekle('Türkiye Yüzyılı Maarif Modeli öğretim programının incelenmesi ve yıllık planlar', d + ' öğretim programının ' + s + ' için öğrenme çıktıları, beceriler, eğilimler ve değerler boyutuyla incelendiği; ünitelendirilmiş yıllık planların programa ve okulun çalışma takvimine uygun olarak hazırlandığı ifade edildi. Programdaki disiplinler arası ilişkilere ve okuryazarlık becerilerine derslerde yer verilmesinin önemi vurgulandı.', 'Yıllık planlar Türkiye Yüzyılı Maarif Modeli öğretim programına göre hazırlanmış olup ' + s + ' için zümrece ortak uygulanacaktır.');
+      ekle('Ölçme ve değerlendirme: ortak yazılı sınavlar, performans görevi ve projeler', 'Yazılı sınavların MEB tarafından yayımlanan konu-soru dağılım tablolarına (senaryolara) uygun hazırlanacağı; açık uçlu, beceri temelli ve gerçek yaşamla ilişkili soruların tercih edileceği belirtildi. Performans görevlerinde dereceli puanlama anahtarı kullanılacağı, proje ödevlerinin öğrenci ilgi ve ihtiyaçlarına göre verileceği konuşuldu. Sınav tarihlerinin e-Okul takvimi ve okul ortak sınav planına göre belirleneceği kararlaştırıldı.', 'Yazılı sınavlar senaryolara uygun, ortak ve açık uçlu ağırlıklı hazırlanacak; performans görevlerinde dereceli puanlama anahtarı kullanılacaktır.');
+      ekle('Öğrenci başarısının artırılması ve bireysel farklılıklar', 'Önceki yılın sınav sonuçları ve gözlemler doğrultusunda öğrencilerin güçlük çektiği konular belirlendi. Destekleme ve yetiştirme çalışmaları, ek etkinlikler ve farklılaştırılmış öğretim yöntemleriyle bu konuların pekiştirileceği; kaynaştırma ve BEP öğrencileri için ders içi uyarlamaların yapılacağı belirtildi.', 'Güçlük çekilen konular için destekleme çalışmaları yapılacak; BEP öğrencileri için ölçme-değerlendirmede gerekli uyarlamalar uygulanacaktır.');
+      ekle('Ders araç-gereçleri, kaynaklar ve dijital içerik', 'Ders kitaplarının yanında EBA ve MEB onaylı dijital içeriklerden yararlanılacağı; laboratuvar, atölye ve sınıf kitaplığı imkânlarının etkin kullanılacağı, öğrencilere ek mali yük getirecek kaynak istenmeyeceği belirtildi.', 'Ders kitabı ve MEB onaylı dijital içerikler esas alınacak; velilerden ek kaynak alınması istenmeyecektir.');
+      ekle('Belirli gün ve haftalar, değerler eğitimi ve diğer zümrelerle iş birliği', 'Dersle ilgili belirli gün ve haftalarda yapılacak etkinlikler planlandı. Değerler eğitimi kapsamında ders içi etkinliklerde sorumluluk, saygı, yardımlaşma gibi değerlere yer verileceği; diğer ders zümreleriyle ortak proje ve etkinlikler yapılabileceği konuşuldu.', 'Belirli gün ve haftalara ait etkinlikler yıllık planda gösterilen tarihlerde zümrece ortak yürütülecektir.');
+    } else if (t === 'donem_ara') {
+      ekle('Dönem başında alınan kararların uygulanma durumu', 'Dönem başında alınan kararların uygulanma düzeyi görüşüldü; yıllık plana uygun ilerlendiği, planın gerisinde kalınan konuların telafi edileceği belirtildi.', 'Plana göre geride kalınan konular telafi çalışmalarıyla tamamlanacaktır.');
+      ekle('Ortak yazılı sınav sonuçlarının analizi', 'Yapılan ortak yazılı sınavların sonuçları soru ve öğrenme çıktısı bazında incelendi. Başarının düşük kaldığı çıktılar belirlenerek bu konularda pekiştirme çalışmaları yapılmasına karar verildi.', 'Başarı düzeyi düşük öğrenme çıktıları için pekiştirme ve yeniden öğretim etkinlikleri yapılacaktır.');
+      ekle('Performans görevleri ve projelerin değerlendirilmesi', 'Verilen performans görevlerinin teslim ve değerlendirme süreçleri görüşüldü; dereceli puanlama anahtarlarının öğrencilerle önceden paylaşılmasının olumlu sonuç verdiği belirtildi.');
+      ekle('Destekleme ve yetiştirme çalışmaları', 'Güçlük çeken öğrenciler için yürütülen çalışmalar değerlendirildi; BEP öğrencilerinin gelişimlerinin izlenmeye devam edileceği belirtildi.', 'Destekleme ve yetiştirme kursları ile bireysel çalışmalar dönem sonuna kadar sürdürülecektir.');
+    } else {
+      ekle('Yıl boyunca yapılan çalışmaların değerlendirilmesi', d + ' dersinde yıl başında alınan kararların uygulandığı, yıllık planların büyük ölçüde tamamlandığı; tamamlanamayan konuların gelecek yıl dikkate alınacağı belirtildi.');
+      ekle('Öğrenci başarısının değerlendirilmesi', 'Yıl içinde yapılan yazılı sınavlar, performans görevleri ve proje sonuçları değerlendirildi. Başarılı olunan ve güçlük çekilen öğrenme çıktıları belirlendi; sonuçların yeni yıl planlamasında kullanılması kararlaştırıldı.', 'Yıl sonu başarı analizi gelecek eğitim-öğretim yılı planlamasında dikkate alınacaktır.');
+      ekle('Gelecek yıl için öneriler ve ihtiyaçlar', 'Ders araç-gereci, laboratuvar ve kaynak ihtiyaçları belirlendi; okul idaresine iletilmesi kararlaştırıldı. Mesleki gelişim için hizmet içi eğitim ihtiyaçları da görüşüldü.', 'Belirlenen araç-gereç ve eğitim ihtiyaçları yazılı olarak okul idaresine bildirilecektir.');
+      ekle('Yaz tatili önerileri', 'Öğrencilere yaz tatilinde okuma alışkanlığını ve öğrendiklerini sürdürmeleri için öneriler verilmesi kararlaştırıldı.', 'Öğrencilere yaz tatili için kitap ve etkinlik önerileri verilecektir.');
+    }
+    if (v.not) ekle('Diğer konular', v.not);
+    ekle('Dilek, temenniler ve kapanış', 'Zümre öğretmenleri yeni dönemde başarı dileklerini paylaştı. Toplantı ' + (v.baskan ? 'zümre başkanı ' + v.baskan + ' tarafından ' : '') + 'iyi dileklerle sona erdirildi.');
+    return { gundem: g, gorusmeler: gr, kararlar: k };
+  }
+  function sokIcerik(v) {
+    var g = [], gr = [], k = [], sb = v.sube || 'şube', ekle = function (a, b, c) { g.push(a); gr.push(b); if (c) k.push(c); };
+    ekle('Açılış ve yoklama', 'Toplantı ' + (v.rehber ? 'sınıf rehber öğretmeni ' + v.rehber + ' tarafından ' : '') + 'açıldı; şube öğretmenlerinin katılımıyla yoklama yapıldı ve gündem kabul edildi.');
+    ekle(sb + ' öğrencilerinin genel durumu ve sınıf iklimi', sb + ' şubesinin ' + (v.mevcut ? v.mevcut + ' öğrenciden oluştuğu ' : '') + 've derslere katılımın genel olarak olumlu olduğu belirtildi. Öğretmenler sınıfın güçlü yönlerini ve dikkat edilmesi gereken durumları paylaştı.');
+    ekle('Akademik başarı ve dersler arası ortak çalışmalar', 'Öğrencilerin derslere göre başarı durumları karşılaştırıldı; birden fazla derste güçlük çeken öğrenciler belirlenerek ortak bir destek planı yapılması kararlaştırıldı. Okuma-anlama ve problem çözme becerilerinin tüm derslerde desteklenmesi önerildi.', 'Birden fazla derste güçlük çeken öğrenciler için ortak destek planı uygulanacak ve rehberlik servisiyle paylaşılacaktır.');
+    ekle('Devam-devamsızlık ve davranış durumu', 'Devamsızlığı artan öğrenciler belirlendi; velileriyle görüşülmesi ve rehberlik servisine bildirilmesi kararlaştırıldı. Okul ve sınıf kurallarına uyum genel olarak iyi değerlendirildi.', 'Devamsızlığı artan öğrencilerin velileriyle sınıf rehber öğretmeni görüşecektir.');
+    ekle('Özel eğitim gereksinimi olan ve BEP uygulanan öğrenciler', 'Kaynaştırma eğitimi alan öğrencilerin BEP hedeflerine ulaşma durumları ve ölçme-değerlendirmede yapılacak uyarlamalar görüşüldü.', 'BEP öğrencileri için ders öğretmenleri gerekli uyarlamaları yapacak, gelişim durumu dönem sonunda değerlendirilecektir.');
+    ekle('Rehberlik ihtiyaçları ve öğrencilerin ödüllendirilmesi', 'Rehberlik desteğine ihtiyaç duyan öğrencilerin rehberlik servisine yönlendirilmesi; olumlu davranış ve başarı gösteren öğrencilerin teşvik edilmesi kararlaştırıldı.', 'Başarılı ve örnek davranış gösteren öğrenciler okul ödül yönetmeliğine göre teşvik edilecektir.');
+    if (v.not) ekle('Şubeye özel konular', v.not);
+    ekle('Dilek ve temenniler', 'Öğretmenler iş birliğinin sürdürülmesi dileğiyle görüşlerini paylaştı ve toplantı sona erdi.');
+    return { gundem: g, gorusmeler: gr, kararlar: k };
+  }
+  function veliIcerik(v) {
+    var g = [], gr = [], k = [], ekle = function (a, b, c) { g.push(a); gr.push(b); if (c) k.push(c); }, t = v.toplanti;
+    ekle('Açılış, tanışma ve gündemin sunulması', 'Sınıf öğretmeni ' + (v.ogretmen || '') + ' velileri selamlayarak toplantıyı açtı; gündem maddeleri hakkında bilgi verdi.');
+    if (t === 'donem_basi' || t === 'ikinci_donem') {
+      ekle('Okulun işleyişi, ders programı ve önemli tarihler', 'Ders giriş-çıkış saatleri, haftalık ders programı, yazılı sınav ve tatil tarihleri hakkında bilgi verildi. Velilerin e-Okul Veli Bilgilendirme Sistemi’ni düzenli takip etmesi istendi.', 'Veliler e-Okul üzerinden devam, not ve duyuruları düzenli olarak takip edecektir.');
+      ekle('Türkiye Yüzyılı Maarif Modeli ve ölçme-değerlendirme', 'Yeni öğretim programlarının beceri ve değer odaklı yapısı, ortak yazılı sınavların MEB senaryolarına göre yapıldığı ve performans görevlerinin değerlendirilme biçimi anlatıldı.');
+      ekle('Devam-devamsızlık ve okul kuralları', 'Devamsızlık sınırları ve özürlü devamsızlıkta yapılacak işlemler açıklandı; kılık-kıyafet ve okul kurallarına uyumun önemi vurgulandı.', 'Öğrencinin devamsızlık yapacağı durumlarda veli okula zamanında bilgi verecektir.');
+    } else {
+      ekle('Dönem içi başarı durumunun değerlendirilmesi', 'Sınıfın genel başarı durumu, yazılı sınav ve performans görevlerinin sonuçları paylaşıldı; bireysel durumlar için velilerle ayrıca görüşülebileceği belirtildi.', 'Başarısı düşen öğrencilerin velileriyle bireysel görüşme yapılacaktır.');
+      ekle('Tatil dönemi önerileri', 'Tatil döneminde öğrencilerin kitap okuma, ekran süresi ve uyku düzenine dikkat etmeleri için öneriler verildi.', 'Öğrencilere tatil dönemi için okuma ve etkinlik önerileri verilecektir.');
+    }
+    ekle('Evde ders çalışma ortamı ve okul-aile iş birliği', 'Düzenli çalışma alışkanlığı, ekran süresinin sınırlandırılması, kitap okuma ve uyku düzeni konularında öneriler sunuldu. Öğrencinin başarısında aile desteğinin önemi vurgulandı.', 'Velilere evde çalışma ve okuma alışkanlığı kazandırma konusunda rehberlik servisinin hazırladığı öneriler iletilecektir.');
+    ekle('Rehberlik hizmetleri ve öğrencinin sağlığı', 'Rehberlik servisinin çalışmaları tanıtıldı; öğrencinin sağlık durumu, özel gereksinimi ya da yaşadığı önemli değişiklikler hakkında sınıf öğretmeninin bilgilendirilmesinin önemi belirtildi.');
+    if (v.not) ekle('Görüşülen diğer konular', v.not);
+    ekle('Velilerin görüş ve önerileri, kapanış', 'Velilerin soruları yanıtlandı ve önerileri not alındı. Toplantı iyi dileklerle sona erdi.');
+    return { gundem: g, gorusmeler: gr, kararlar: k };
+  }
+  var BEP_ORNEK = {
+    'Matematik': [['Doğal sayılarla toplama ve çıkarma işlemlerini yapar.', ['Eldesiz toplama işlemi yapar.', 'Eldeli toplama işlemi yapar.', 'Onluk bozmadan çıkarma işlemi yapar.', 'Onluk bozarak çıkarma işlemi yapar.']], ['Günlük yaşamda paralarımızı kullanır.', ['Kâğıt ve madenî paraları tanır.', 'Paraları birbirine dönüştürür.', 'Alışveriş problemlerini çözer.']]],
+    'Türkçe': [['Okuduğunu anlar.', ['Kısa bir metni akıcı biçimde sesli okur.', 'Metinle ilgili 5N1K sorularını cevaplar.', 'Metnin ana fikrini söyler.']], ['Duygu ve düşüncelerini yazılı olarak ifade eder.', ['Harfleri doğru ve okunaklı yazar.', 'Basit cümleler kurarak yazar.', 'Bir olayı 3-4 cümleyle anlatır.']]]
+  };
+  function bepIcerik(v) {
+    var d = v.ders || 'Ders', o = BEP_ORNEK[d] || [['' + d + ' dersindeki temel kavramları günlük yaşamla ilişkilendirir.', ['Konuyla ilgili temel kavramları tanır ve örnek verir.', 'Kavramlar arasındaki basit ilişkileri açıklar.', 'Öğrendiklerini günlük yaşamdan bir durumda kullanır.']], ['Dersin temel becerilerini destekle yerine getirir.', ['Yönergeyi dinleyerek etkinliğe başlar.', 'Etkinliği öğretmen desteğiyle tamamlar.', 'Etkinliği bağımsız olarak tamamlar.']]];
+    return { performans: v.performans || 'Öğrenci, ' + d + ' dersinde temel kavramları desteklendiğinde kullanabilmekte; çok basamaklı işlemlerde ve dikkat gerektiren etkinliklerde güçlük çekmektedir.', hedefler: o.map(function (x) { return { uda: x[0], kda: x[1], yontem: 'Doğrudan öğretim, model olma, ipucuyla öğretim, bireysel çalışma', materyal: 'Somut materyaller, çalışma yaprakları, görseller, eğitsel oyunlar', degerlendirme: 'Gözlem, kontrol listesi, çalışma yaprağı' }; }), uyarlamalar: ['Sınav süresi ihtiyaca göre uzatılır; sorular sade ve kısa yönergelerle verilir.', 'Sınav ayrı bir ortamda ve okuyucu/yazıcı desteğiyle yapılabilir.', 'Soru sayısı azaltılır, büyük punto ve bol boşluklu kâğıt kullanılır.', 'Değerlendirme BEP’teki kısa dönemli amaçlara göre yapılır.'], aile: ['Aileye her ay öğrencinin gelişimi hakkında bilgi verilir.', 'Evde tekrar edilecek basit etkinlikler aileyle paylaşılır.'] };
+  }
+  function kulupPlanIcerik(v) {
+    var k = v.kulup || 'Kulüp', t = kulupTema(k) || 'Kültür Dünyamız';
+    var genel = {
+      'Eylül': ['Kulübün tanıtılması, üye öğrencilerin belirlenmesi', 'İlk toplantı: görev dağılımı ve yıllık çalışma planının birlikte hazırlanması'],
+      'Ekim': ['Kulüp panosunun hazırlanması', k.replace(' Kulübü', '') + ' konusunda bilgilendirici sunum ve tartışma'],
+      'Kasım': ['Konuyla ilgili uzman/kurum ziyareti ya da konuk konuşmacı', 'Öğrenci araştırma ödevlerinin sunulması'],
+      'Aralık': ['Okul genelinde farkındalık etkinliği', 'Afiş, broşür ya da kısa video hazırlama'],
+      'Ocak': ['1. dönem çalışmalarının değerlendirilmesi ve dönem sonu raporunun hazırlanması'],
+      'Şubat': ['2. dönem planının gözden geçirilmesi', 'Grup çalışmasıyla küçük bir proje başlatılması'],
+      'Mart': ['Proje çalışmalarının sürdürülmesi', 'Belirli gün ve haftalarla bağlantılı etkinlik'],
+      'Nisan': ['Saha gezisi ya da uygulamalı atölye', 'Sosyal sorumluluk çalışması'],
+      'Mayıs': ['Yıl sonu sergisi / gösterisi / sunumu', 'Kulüp çalışmalarının okul topluluğuyla paylaşılması'],
+      'Haziran': ['Yıl sonu değerlendirme toplantısı', 'Yıllık çalışma raporunun hazırlanması']
+    };
+    return { tema: t, aylar: AYLAR.map(function (a) { return { ay: a, etkinlikler: genel[a], hedef: a === 'Eylül' ? 'Kulübün yapılandırılması' : (a === 'Ocak' || a === 'Haziran' ? 'Değerlendirme' : t + ' teması kapsamında farkındalık ve beceri geliştirme'), yontem: a === 'Nisan' ? 'Gezi, gözlem, uygulama' : 'Sunum, tartışma, grup çalışması' }; }) };
+  }
+  function kulupRaporIcerik(v) {
+    var l = satirlar(v.yapilanlar);
+    if (!l.length) l = ['Kulüp tanıtım toplantısı yapıldı, üyeler belirlendi ve görev dağılımı yapıldı.', 'Yıllık çalışma planı üyelerle birlikte hazırlandı.', 'Kulüp panosu hazırlanarak konuyla ilgili güncel bilgiler paylaşıldı.', 'Okul genelinde farkındalık etkinliği düzenlendi.', 'Öğrenci araştırma ve sunum çalışmaları yapıldı.'];
+    return { yapilanlar: l, degerlendirme: 'Kulüp çalışmaları yıllık plana uygun olarak yürütülmüştür. Öğrencilerin etkinliklere katılımı ve sorumluluk alma düzeyi olumlu bulunmuştur. Çalışmalar sayesinde öğrencilerin iş birliği, iletişim ve problem çözme becerilerinin geliştiği gözlemlenmiştir.', oneriler: ['Okul dışı kurumlarla iş birliği artırılabilir.', 'Etkinliklerin e-Okul Sosyal Etkinlik Modülü’ne düzenli işlenmesine devam edilecektir.'] };
+  }
+  function varsayilan(id, v) { return id === 'zumre' ? zumreIcerik(v) : id === 'sok' ? sokIcerik(v) : id === 'veli' ? veliIcerik(v) : id === 'bep' ? bepIcerik(v) : id === 'kulup_plan' ? kulupPlanIcerik(v) : id === 'kulup_rapor' ? kulupRaporIcerik(v) : {}; }
+
+  /* ---------------- içerik → belge blokları ---------------- */
+  function bloklar(id, v, ic) {
+    var Y = v.yil || yil(), O = trUp(v.okul || '………………………… OKULU'), b = [];
+    var TB = function (s) { b.push({ t: 'baslik', s: s }); };
+    if (id === 'zumre' || id === 'sok' || id === 'veli') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI'); TB(O);
+      TB(id === 'zumre' ? trUp((v.ders || '') + ' DERSİ ' + (TOPLANTI[v.toplanti] || '') + ' ZÜMRE ÖĞRETMENLER KURULU TOPLANTI TUTANAĞI') : id === 'sok' ? trUp((v.sube || '') + ' ŞUBE ÖĞRETMENLER KURULU TOPLANTI TUTANAĞI (' + (TOPLANTI[v.toplanti] || '') + ')') : trUp((v.sube || '') + ' SINIFI VELİ TOPLANTISI TUTANAĞI (' + (TOPLANTI[v.toplanti] || '') + ')'));
+      b.push({ t: 'bilgi', satirlar: [['Toplantı tarihi', v.tarih || ''], ['Toplantı saati', v.saat || ''], ['Toplantı yeri', v.yer || '']].concat(id === 'zumre' ? [['Zümre başkanı', v.baskan || ''], ['Sınıf seviyeleri', v.siniflar || '']] : id === 'sok' ? [['Sınıf rehber öğretmeni', v.rehber || ''], ['Öğrenci sayısı', v.mevcut || '']] : [['Sınıf öğretmeni', v.ogretmen || ''], ['Katılan veli sayısı', v.katilim || '']]) });
+      b.push({ t: 'h', s: 'GÜNDEM MADDELERİ' }); b.push({ t: 'liste', l: ic.gundem || [], yol: 'gundem' });
+      b.push({ t: 'h', s: 'GÜNDEM MADDELERİNİN GÖRÜŞÜLMESİ' });
+      (ic.gundem || []).forEach(function (g, i) { b.push({ t: 'p', s: (i + 1) + '. ' + g + ': ' + ((ic.gorusmeler || [])[i] || ''), yol: 'gorusmeler.' + i, onek: (i + 1) + '. ' + g + ': ' }); });
+      b.push({ t: 'h', s: 'ALINAN KARARLAR' }); b.push({ t: 'liste', l: ic.kararlar || [], yol: 'kararlar' });
+      if (id === 'zumre') { var u = satirlar(v.uyeler); if (v.baskan && u.indexOf(v.baskan) < 0) u.unshift(v.baskan); b.push({ t: 'imza', baslik: 'ZÜMRE ÖĞRETMENLERİ', kisiler: u.map(function (a) { return { ad: a, gorev: (v.ders || '') + ' Öğretmeni' + (a === v.baskan ? ' (Zümre Başkanı)' : '') }; }), sutun: 3 }); }
+      if (id === 'sok') b.push({ t: 'imza', baslik: 'ŞUBE ÖĞRETMENLERİ', kisiler: satirlar(v.ogretmenler).map(function (a) { var p = a.split(/\s*[-–]\s*/); return p.length > 1 ? { ad: p.slice(1).join(' - '), gorev: p[0] + ' Öğretmeni' } : { ad: a, gorev: '' }; }), sutun: 3 });
+      if (id === 'veli') { b.push({ t: 'imza', kisiler: [{ ad: v.ogretmen, gorev: (v.sube || '') + ' Sınıf Öğretmeni' }], sutun: 1 }); }
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: v.tarih });
+      if (id === 'veli') { b.push({ t: 'sayfa' }); TB(trUp((v.sube || '') + ' SINIFI VELİ TOPLANTISI KATILIM LİSTESİ')); b.push({ t: 'alt', s: (v.tarih || '') }); var sat = []; for (var i = 1; i <= 30; i++) sat.push([String(i), '', '', '']); b.push({ t: 'tablo', bas: ['No', 'Öğrencinin adı soyadı', 'Velinin adı soyadı', 'İmza'], gen: [6, 34, 34, 26], sat: sat }); }
+    } else if (id === 'bep') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI'); TB(O); TB('BİREYSELLEŞTİRİLMİŞ EĞİTİM PROGRAMI (BEP)');
+      b.push({ t: 'bilgi', satirlar: [['Öğrencinin adı soyadı', v.ogrenci || ''], ['Sınıfı / şubesi', v.sinif || ''], ['Eğitsel tanı / ihtiyaç', v.tani || ''], ['Ders', v.ders || ''], ['BEP başlama – bitiş tarihi', (v.baslama || '') + ' – ' + (v.bitis || '')]] });
+      b.push({ t: 'h', s: 'ÖĞRENCİNİN PERFORMANS DÜZEYİ' }); b.push({ t: 'p', s: ic.performans || '', yol: 'performans' });
+      b.push({ t: 'h', s: 'UZUN VE KISA DÖNEMLİ AMAÇLAR' });
+      b.push({ t: 'tablo', bas: ['Uzun dönemli amaç', 'Kısa dönemli amaçlar', 'Yöntem ve teknikler', 'Materyaller', 'Değerlendirme', 'Başlama / bitiş'], gen: [18, 28, 16, 14, 12, 12], sat: (ic.hedefler || []).map(function (h) { return [h.uda, (h.kda || []).map(function (x, j) { return (j + 1) + '. ' + x; }).join('\n'), h.yontem || '', h.materyal || '', h.degerlendirme || '', (v.baslama || '') + '\n' + (v.bitis || '')]; }), yol: 'hedefler' });
+      b.push({ t: 'h', s: 'ÖLÇME VE DEĞERLENDİRMEDE YAPILACAK UYARLAMALAR' }); b.push({ t: 'liste', l: ic.uyarlamalar || [], yol: 'uyarlamalar' });
+      b.push({ t: 'h', s: 'AİLE KATILIMI' }); b.push({ t: 'liste', l: ic.aile || [], yol: 'aile' });
+      b.push({ t: 'imza', baslik: 'BEP GELİŞTİRME BİRİMİ', kisiler: (satirlar(v.birim).length ? satirlar(v.birim) : ['Okul müdürü / müdür yardımcısı - ', 'Rehber öğretmen - ', 'Sınıf öğretmeni - ', 'Ders öğretmeni - ', 'Veli - ']).map(function (a) { var p = a.split(/\s*[-–]\s*/); return p.length > 1 ? { ad: p.slice(1).join(' - '), gorev: p[0] } : { ad: a, gorev: '' }; }), sutun: 3 });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: v.baslama });
+    } else if (id === 'kulup_plan') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.kulup || 'ÖĞRENCİ KULÜBÜ') + ' YILLIK ÇALIŞMA PLANI'));
+      b.push({ t: 'bilgi', satirlar: [['Tema', ic.tema || kulupTema(v.kulup)], ['Okul kademesi', v.kademe || ''], ['Danışman öğretmen(ler)', satirlar(v.danisman).join(', ')]] });
+      b.push({ t: 'tablo', bas: ['Ay', 'Planlanan etkinlikler', 'Hedef / kazanım', 'Yöntem', 'Sorumlu'], gen: [8, 46, 22, 14, 10], sat: (ic.aylar || []).map(function (a) { return [a.ay, (a.etkinlikler || []).map(function (x) { return '• ' + x; }).join('\n'), a.hedef || '', a.yontem || '', a.sorumlu || 'Danışman öğretmen ve kulüp üyeleri']; }), yol: 'aylar' });
+      if (v.not) b.push({ t: 'p', s: 'Not: ' + v.not });
+      b.push({ t: 'imza', kisiler: satirlar(v.danisman).map(function (a) { return { ad: a, gorev: 'Danışman Öğretmen' }; }), sutun: 3 });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü' });
+    } else if (id === 'kulup_tutanak') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.kulup || 'ÖĞRENCİ KULÜBÜ') + ' İLK TOPLANTI VE GÖREV DAĞILIMI TUTANAĞI'));
+      b.push({ t: 'bilgi', satirlar: [['Toplantı tarihi', v.tarih || ''], ['Toplantı yeri', v.yer || ''], ['Tema', kulupTema(v.kulup)], ['Danışman öğretmen(ler)', satirlar(v.danisman).join(', ')]] });
+      b.push({ t: 'p', s: (v.tarih || '…/…/20…') + ' tarihinde ' + (v.yer ? v.yer + '’nda ' : '') + (v.kulup || 'kulüp') + ' üyesi öğrenciler danışman öğretmen gözetiminde toplanmıştır. Toplantıda kulübün amacı, yeni kulüp yapısı ve sosyal etkinlik temaları tanıtılmış; kulüp çalışmalarının okul temelli sosyal etkinlikler eylem planıyla uyumlu yürütüleceği açıklanmıştır. Görev dağılımı için aday olan öğrenciler arasından açık oylama yapılmış ve aşağıdaki öğrenciler seçilmiştir. Yıllık çalışma planının üyelerin önerileri alınarak hazırlanmasına karar verilmiştir.' });
+      b.push({ t: 'tablo', bas: ['Görev', 'Adı soyadı - sınıfı'], gen: [30, 70], sat: [['Kulüp başkanı', v.baskan || ''], ['Başkan yardımcısı', v.baskanyrd || ''], ['Sekreter', v.sekreter || '']] });
+      b.push({ t: 'h', s: 'KULÜP ÜYE LİSTESİ' });
+      var u = satirlar(v.uyeler); if (!u.length) for (var j = 0; j < 15; j++) u.push('');
+      b.push({ t: 'tablo', bas: ['No', 'Adı soyadı', 'Sınıfı', 'Okul no', 'İmza'], gen: [6, 40, 14, 14, 26], sat: u.map(function (a, i) { var p = a.split(/\s*[-–]\s*/); return [String(i + 1), p[0] || '', p[1] || '', p[2] || '', '']; }) });
+      b.push({ t: 'imza', kisiler: satirlar(v.danisman).map(function (a) { return { ad: a, gorev: 'Danışman Öğretmen' }; }).concat([{ ad: (v.baskan || '').split(/\s*[-–]\s*/)[0], gorev: 'Kulüp Başkanı' }]), sutun: 3 });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: v.tarih });
+    } else if (id === 'kulup_rapor') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.kulup || 'ÖĞRENCİ KULÜBÜ') + ' ' + (v.donem || '') + ' ÇALIŞMA RAPORU'));
+      b.push({ t: 'bilgi', satirlar: [['Tema', kulupTema(v.kulup)], ['Danışman öğretmen(ler)', satirlar(v.danisman).join(', ')], ['Üye sayısı', v.uye || '']] });
+      b.push({ t: 'h', s: 'YAPILAN ÇALIŞMALAR' }); b.push({ t: 'liste', l: ic.yapilanlar || [], yol: 'yapilanlar' });
+      b.push({ t: 'h', s: 'GENEL DEĞERLENDİRME' }); b.push({ t: 'p', s: ic.degerlendirme || '', yol: 'degerlendirme' });
+      b.push({ t: 'h', s: 'ÖNERİLER' }); b.push({ t: 'liste', l: ic.oneriler || [], yol: 'oneriler' });
+      b.push({ t: 'imza', kisiler: satirlar(v.danisman).map(function (a) { return { ad: a, gorev: 'Danışman Öğretmen' }; }), sutun: 3 });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü' });
+    }
+    return b;
+  }
+
+  /* ---------------- durum ---------------- */
+  var S = ls('osc_ev_taslak') || { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 };
+  var ORT = ls('osc_ev_ortak') || {};
+  function sakla() { ls('osc_ev_taslak', S); }
+  function kayitlar(v) { if (v === undefined) return ls('osc_ev_kayitlar') || []; ls('osc_ev_kayitlar', v.slice(0, 80)); }
+
+  function cerceve(ic) {
+    kok.innerHTML = '<header class="ev-hero"><div><span class="ev-et">Öğretmen evrakları</span><h1>Evrakınız <em>dakikalar içinde</em> hazır</h1><p>Zümre, ŞÖK ve veli toplantısı tutanakları, BEP planı ve yeni kulüp yapısına göre kulüp evrakları. Bilgileri doldurun, taslağı düzenleyin, Word olarak indirin.</p></div><nav><button data-ek="sec" class="' + (S.ekran !== 'liste' ? 'on' : '') + '">✨ Yeni evrak</button><button data-ek="liste" class="' + (S.ekran === 'liste' ? 'on' : '') + '">📁 Evraklarım</button></nav></header>' + ic;
+    kok.querySelectorAll('[data-ek]').forEach(function (b) { b.onclick = function () { S.ekran = b.dataset.ek; sakla(); ciz(); }; });
+  }
+  function ciz() { if (S.ekran === 'liste') return vListe(); if (S.ekran === 'form' && tur(S.tur)) return vForm(); if (S.ekran === 'onizle' && tur(S.tur) && S.ic) return vOnizle(); S.ekran = 'sec'; vSec(); }
+
+  function vSec() {
+    cerceve('<section class="ev-kart"><h2>Hangi evrakı hazırlayacaksınız?</h2><div class="ev-turler">' + TURLER.map(function (t) { return '<button data-tur="' + t.id + '"><span>' + t.ik + '</span><b>' + esc(t.ad) + '</b><small>' + esc(t.ac) + '</small></button>'; }).join('') + '</div><p class="ev-not">🔒 Evraklarınız yalnızca bu tarayıcıda saklanır; öğrenci bilgileri sunucumuza kaydedilmez.</p></section>');
+    kok.querySelectorAll('[data-tur]').forEach(function (b) { b.onclick = function () { S.tur = b.dataset.tur; S.veri = {}; S.ic = null; S.id = 0; S.ekran = 'form'; sakla(); ciz(); window.scrollTo({ top: kok.getBoundingClientRect().top + window.pageYOffset - 20, behavior: 'smooth' }); }; });
+  }
+  function alanHtml(a) {
+    var v = S.veri[a.k]; if (v === undefined) { v = ['okul', 'il', 'mudur'].indexOf(a.k) >= 0 && ORT[a.k] ? ORT[a.k] : a.k === 'okul' && C.okul ? C.okul : (typeof a.v === 'function' ? a.v() : (a.v || '')); S.veri[a.k] = v; }
+    var g = '';
+    if (a.tip === 'secim') { var l = Array.isArray(a.l) ? a.l.map(function (x) { return [x, x]; }) : Object.keys(a.l).map(function (k) { return [k, a.l[k]]; }); g = '<select data-a="' + a.k + '"><option value="">Seçin…</option>' + l.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (String(v) === x[0] ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select>'; }
+    else if (a.tip === 'kulup') g = '<select data-a="' + a.k + '"><option value="">Kulüp seçin…</option>' + Object.keys(KULUP).map(function (t) { return '<optgroup label="' + esc(t) + '">' + KULUP[t].map(function (x) { return '<option' + (v === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>';
+    else if (a.tip === 'uzun') g = '<textarea data-a="' + a.k + '" rows="4" placeholder="' + esc(a.ph || '') + '">' + esc(v) + '</textarea>';
+    else g = '<input data-a="' + a.k + '" value="' + esc(v) + '" placeholder="' + esc(a.ph || '') + '">';
+    return '<label class="' + (a.tip === 'uzun' ? 'gen' : '') + '"><span>' + esc(a.ad) + '</span>' + g + '</label>';
+  }
+  function vForm() {
+    var t = tur(S.tur);
+    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div><div class="ev-form">' + t.alan.map(alanHtml).join('') + '</div>' +
+      '<div class="ev-cubuk"><span>' + (C.yz ? '🤖 Yapay zekâ, bilgilerinize göre gündemi, görüşmeleri ve kararları özgün olarak yazar.' : 'Taslak içerik bilgilerinize göre otomatik oluşturulur; dilediğiniz gibi düzenleyebilirsiniz.') + '</span><div>' + (C.yz ? '<button class="ev-btn" id="ev-hizli">Hazır taslakla oluştur</button><button class="ev-btn ana" id="ev-yz">🤖 Yapay zekâ ile oluştur</button>' : '<button class="ev-btn ana" id="ev-hizli">Evrakı oluştur →</button>') + '</div></div></section>');
+    kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function () { S.veri[e.dataset.a] = e.value; if (['okul', 'il', 'mudur'].indexOf(e.dataset.a) >= 0) { ORT[e.dataset.a] = e.value; ls('osc_ev_ortak', ORT); } sakla(); }; });
+    document.getElementById('ev-geri').onclick = function () { S.ekran = 'sec'; sakla(); ciz(); };
+    var eksik = function () { var z = { zumre: ['okul', 'ders'], sok: ['okul', 'sube'], veli: ['okul', 'sube'], bep: ['okul', 'ders'], kulup_plan: ['okul', 'kulup'], kulup_tutanak: ['okul', 'kulup'], kulup_rapor: ['okul', 'kulup'] }[S.tur] || []; var e = z.filter(function (k) { return !String(S.veri[k] || '').trim(); }); if (e.length) { bildir('Lütfen doldurun: ' + e.map(function (k) { return t.alan.filter(function (a) { return a.k === k; })[0].ad; }).join(', '), 'hata'); return true; } return false; };
+    document.getElementById('ev-hizli').onclick = function () { if (eksik()) return; S.ic = varsayilan(S.tur, S.veri); S.ekran = 'onizle'; sakla(); ciz(); };
+    var yb = document.getElementById('ev-yz'); if (yb) yb.onclick = function () {
+      if (eksik()) return; yb.disabled = true; yb.innerHTML = '<span class="ev-don"></span> Yazılıyor…';
+      sunucu('yz', { tur: S.tur, veri: S.tur === 'bep' ? Object.assign({}, S.veri, { ogrenci: '', birim: '' }) : S.veri }).then(function (ic) {
+        var taban = varsayilan(S.tur, S.veri); Object.keys(taban).forEach(function (k) { if (ic[k] === undefined || ic[k] === null || (Array.isArray(ic[k]) && !ic[k].length)) ic[k] = taban[k]; });
+        S.ic = ic; S.ekran = 'onizle'; sakla(); ciz(); bildir('Taslak hazır. Metinlerin üzerine tıklayarak düzenleyebilirsiniz.', 'ok');
+      }).catch(function (e) { yb.disabled = false; yb.textContent = '🤖 Yapay zekâ ile oluştur'; bildir(e.message + ' Hazır taslakla devam edebilirsiniz.', 'hata'); });
+    };
+  }
+  /* önizleme: kâğıt görünümünde, metinler yerinde düzenlenebilir */
+  function vOnizle() {
+    var t = tur(S.tur), bl = bloklar(S.tur, S.veri, S.ic);
+    var html = bl.map(function (b, bi) {
+      switch (b.t) {
+        case 'baslik': return '<div class="ev-b">' + esc(b.s) + '</div>';
+        case 'alt': return '<div class="ev-alt">' + esc(b.s) + '</div>';
+        case 'h': return '<h4>' + esc(b.s) + '</h4>';
+        case 'p': return '<p' + (b.yol ? ' contenteditable="true" data-yol="' + b.yol + '" data-onek="' + esc(b.onek || '') + '"' : '') + '>' + esc(b.s) + '</p>';
+        case 'liste': return '<ol' + (b.numara === false ? ' class="nok"' : '') + '>' + (b.l || []).map(function (x, i) { return '<li' + (b.yol ? ' contenteditable="true" data-yol="' + b.yol + '.' + i + '"' : '') + '>' + esc(x) + '</li>'; }).join('') + '</ol>' + (b.yol ? '<button class="ev-ekle" data-ekle="' + b.yol + '">＋ madde ekle</button>' : '');
+        case 'bilgi': return '<table class="ev-bilgi">' + b.satirlar.map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
+        case 'tablo': return '<table class="ev-tb' + (t.yatay ? ' yatay' : '') + '">' + (b.bas ? '<tr>' + b.bas.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>' : '') + b.sat.slice(0, 40).map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + esc(c).replace(/\n/g, '<br>') + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+        case 'imza': return (b.baslik ? '<h4>' + esc(b.baslik) + '</h4>' : '') + '<div class="ev-imza">' + (b.kisiler || []).map(function (k) { return '<div><b>' + esc(k.ad || '………………') + '</b><small>' + esc(k.gorev) + '</small><i>İmza</i></div>'; }).join('') + '</div>';
+        case 'onay': return '<div class="ev-onay"><b>UYGUNDUR</b><span>' + esc(b.tarih || '…/…/20…') + '</span><b>' + esc(b.ad || '………………') + '</b><span>' + esc(b.gorev) + '</span></div>';
+        case 'sayfa': return '<hr class="ev-sayfa">';
+      }
+      return '';
+    }).join('');
+    cerceve('<section class="ev-izgara"><div class="ev-kagit' + (t.yatay ? ' yatay' : '') + '">' + html + '</div><aside class="ev-yan"><div class="ev-kart"><h3>' + t.ik + ' ' + esc(t.ad) + '</h3><p class="ev-not">Kâğıt üzerindeki gündem, görüşme, karar ve plan metinlerine tıklayıp düzenleyebilirsiniz.</p>' +
+      '<button class="ev-btn ana tam" id="ev-word">⬇ Word (.docx) indir</button><button class="ev-btn tam" id="ev-yazdir">🖨 Yazdır / PDF</button><button class="ev-btn tam" id="ev-kaydet">💾 Evraklarıma kaydet</button><button class="ev-btn hafif tam" id="ev-duzen">✎ Bilgileri düzenle</button><button class="ev-btn hafif tam" id="ev-yeni">＋ Yeni evrak</button></div></aside></section>');
+    kok.querySelectorAll('[data-yol]').forEach(function (e) {
+      e.oninput = function () {
+        var y = e.dataset.yol.split('.'), metin = e.textContent;
+        if (e.dataset.onek && metin.indexOf(e.dataset.onek) === 0) metin = metin.slice(e.dataset.onek.length);
+        var hedef = S.ic; for (var i = 0; i < y.length - 1; i++) { if (hedef[y[i]] === undefined) hedef[y[i]] = /^\d+$/.test(y[i + 1]) ? [] : {}; hedef = hedef[y[i]]; }
+        if (y.length === 1) S.ic[y[0]] = metin; else hedef[y[y.length - 1]] = metin; sakla();
+      };
+    });
+    kok.querySelectorAll('[data-ekle]').forEach(function (b) { b.onclick = function () { var l = S.ic[b.dataset.ekle] = S.ic[b.dataset.ekle] || []; l.push('Yeni madde'); sakla(); vOnizle(); }; });
+    document.getElementById('ev-word').onclick = function () { wordIndir(); };
+    document.getElementById('ev-yazdir').onclick = function () { yazdir(); };
+    document.getElementById('ev-kaydet').onclick = function () { var l = kayitlar(), id = S.id || Date.now(); l = l.filter(function (x) { return x.id !== id; }); l.unshift({ id: id, tur: S.tur, ad: dosyaAdi(), tarih: bugun(), veri: S.veri, ic: S.ic }); kayitlar(l); S.id = id; sakla(); bildir('Evraklarım’a kaydedildi.', 'ok'); };
+    document.getElementById('ev-duzen').onclick = function () { S.ekran = 'form'; sakla(); ciz(); };
+    document.getElementById('ev-yeni').onclick = function () { S = { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 }; sakla(); ciz(); };
+  }
+  function dosyaAdi() { var t = tur(S.tur), v = S.veri; return (t.ad.replace(/\s*\(.*?\)/g, '') + ' ' + (v.ders || v.sube || v.kulup || v.sinif || '') + ' ' + (v.yil || '')).replace(/\s+/g, ' ').trim(); }
+  function jszip() { return window.JSZip ? Promise.resolve() : new Promise(function (ok, no) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = ok; s.onerror = function () { no(new Error('Word oluşturucu yüklenemedi.')); }; document.head.appendChild(s); }); }
+  function wordIndir() {
+    var t = tur(S.tur);
+    jszip().then(function () { return window.OSC_DOCX_EVRAK({ baslik: dosyaAdi(), site: C.site, yatay: !!t.yatay, bloklar: bloklar(S.tur, S.veri, S.ic) }); }).then(function (blob) {
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = dosyaAdi().replace(/[\\\/:*?"<>|]+/g, '-') + '.docx'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    }).catch(function (e) { bildir(e.message, 'hata'); });
+  }
+  function yazdir() {
+    var t = tur(S.tur), k = kok.querySelector('.ev-kagit'); if (!k) return;
+    var w = window.open('', '_blank'); if (!w) return bildir('Açılır pencere engellendi.', 'hata');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(dosyaAdi()) + '</title><style>@page{size:A4 ' + (t.yatay ? 'landscape' : 'portrait') + ';margin:14mm}body{font:11pt Calibri,Arial,sans-serif;color:#111}' + EV_BASKI + '</style></head><body><div class="ev-kagit">' + k.innerHTML.replace(/contenteditable="true"/g, '').replace(/<button[^>]*>.*?<\/button>/g, '') + '</div><script>onload=function(){print()}<\/script></body></html>');
+    w.document.close();
+  }
+  var EV_BASKI = '.ev-b{text-align:center;font-weight:700;margin:0 0 3px}.ev-alt{text-align:center;margin-bottom:8px}h4{color:#1e3a8a;margin:14px 0 6px;font-size:11.5pt}p{text-align:justify;margin:0 0 6px}ol{margin:0 0 6px;padding-left:22px}li{margin-bottom:3px}table{border-collapse:collapse;width:100%;margin:6px 0 10px}td,th{border:1px solid #6b7280;padding:4px 6px;vertical-align:top;font-size:10pt;text-align:left}th{background:#e8edf6}.ev-bilgi th{width:30%;background:#f1f4f9}.ev-imza{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-top:8px}.ev-imza b,.ev-imza small,.ev-imza i{display:block}.ev-imza i{color:#888;font-style:normal;margin-top:14px;font-size:9pt}.ev-onay{text-align:center;margin-top:18px}.ev-onay b,.ev-onay span{display:block}.ev-onay span{margin-bottom:6px}.ev-sayfa{page-break-after:always;border:0}';
+
+  function vListe() {
+    var l = kayitlar();
+    cerceve('<section class="ev-kart"><h2>📁 Evraklarım</h2><p class="ev-not">Bu tarayıcıda kaydettiğiniz evraklar.</p>' + (l.length ? '<div class="ev-liste">' + l.map(function (x) { var t = tur(x.tur) || { ik: '📄' }; return '<div class="ev-li"><span>' + t.ik + '</span><div><b>' + esc(x.ad) + '</b><small>' + esc(x.tarih) + '</small></div><button class="ev-btn" data-ac="' + x.id + '">Aç</button><button class="ev-btn hafif" data-sil="' + x.id + '">🗑</button></div>'; }).join('') + '</div>' : '<div class="ev-bos">Henüz kaydettiğiniz evrak yok.</div>') + '</section>');
+    kok.querySelectorAll('[data-ac]').forEach(function (b) { b.onclick = function () { var x = kayitlar().filter(function (k) { return String(k.id) === b.dataset.ac; })[0]; if (!x) return; S = { ekran: 'onizle', tur: x.tur, veri: x.veri, ic: x.ic, id: x.id }; sakla(); ciz(); }; });
+    kok.querySelectorAll('[data-sil]').forEach(function (b) { b.onclick = function () { if (!confirm('Silinsin mi?')) return; kayitlar(kayitlar().filter(function (k) { return String(k.id) !== b.dataset.sil; })); vListe(); }; });
+  }
+  ciz();
+  }
+  window.OSC_EV_BASLAT = BASLAT;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', BASLAT); else BASLAT();
+})();
+<?php }
+
+    /* ---------- ayarlar ---------- */
+    public function ayar_menu() { add_submenu_page('edit.php?post_type=osc_quiz', 'Evrak Hazırla', 'Evrak Hazırla', 'manage_options', 'osc-evrak-ayar', array($this, 'ayar_sayfa')); }
+    public function ayar_kayit() {
+        register_setting('osc_evrak', 'osc_ev_yayinda', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));
+        register_setting('osc_evrak', 'osc_ev_yz', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));
+        register_setting('osc_evrak', 'osc_ev_gunluk', array('sanitize_callback' => function ($v) { return max(0, min(500, (int) $v)); }));
+    }
+    public function ayar_sayfa() {
+        $id = (int) get_option('osc_ev_sayfa'); $u = $id ? get_permalink($id) : ''; ?>
+<div class="wrap"><h1>Evrak Hazırla</h1>
+<p>Öğretmenler zümre, ŞÖK ve veli toplantısı tutanaklarını, BEP planını ve öğrenci kulübü evraklarını (yıllık plan, ilk toplantı tutanağı, dönem sonu raporu) hazırlayıp Word olarak indirir. Evraklar öğretmenin tarayıcısında saklanır; öğrenci bilgileri sunucuya kaydedilmez.</p>
+<form method="post" action="options.php"><?php settings_fields('osc_evrak'); ?>
+<table class="form-table">
+<tr><th>Yayın durumu</th><td><label><input type="checkbox" name="osc_ev_yayinda" value="1" <?php checked(self::yayinda()); ?>> <b>Yayında</b> — öğretmenler kullanabilir, menüde görünür</label><p class="description"><?php echo self::yayinda() ? '✅ Şu an herkese açık.' : '🔒 Şu an gizli: yalnızca yöneticiler açıp deneyebilir, Google’a kapalıdır.'; ?><?php if ($u) echo ' Adres: <a href="' . esc_url($u) . '" target="_blank">' . esc_html($u) . '</a>'; ?></p></td></tr>
+<tr><th>Yapay zekâ ile yazma</th><td><label><input type="checkbox" name="osc_ev_yz" value="1" <?php checked(get_option('osc_ev_yz', '1') === '1'); ?>> Öğretmen isterse gündem, görüşme ve kararlar yapay zekâ ile özgün yazılsın</label><p class="description">Yazılı Hazırla’daki yapay zekâ anahtarları kullanılır. Kapalıyken hazır taslaklar kullanılır (ücretsiz).<?php echo OSC_YZ_API::var_mi() ? '' : ' <b>Şu an tanımlı yapay zekâ anahtarı yok.</b>'; ?></p></td></tr>
+<tr><th>Günlük sınır</th><td><input type="number" min="0" max="500" name="osc_ev_gunluk" value="<?php echo (int) get_option('osc_ev_gunluk', 20); ?>" class="small-text"> evrak / öğretmen / gün <span class="description">(yalnızca yapay zekâ ile oluşturulanlar sayılır; yöneticiler sınırsız)</span></td></tr>
+</table><?php submit_button(); ?></form></div>
+<?php }
+    public static function yz_acik() { return get_option('osc_ev_yz', '1') === '1' && OSC_YZ_API::var_mi(); }
+
+    /* ---------- yapay zekâ ---------- */
+    private static $tanim = array(
+        'zumre' => 'zümre öğretmenler kurulu toplantı tutanağı', 'sok' => 'şube öğretmenler kurulu (ŞÖK) toplantı tutanağı', 'veli' => 'sınıf veli toplantısı tutanağı',
+        'bep' => 'bireyselleştirilmiş eğitim programı (BEP)', 'kulup_plan' => 'öğrenci kulübü yıllık çalışma planı', 'kulup_tutanak' => 'öğrenci kulübü ilk toplantı tutanağı', 'kulup_rapor' => 'öğrenci kulübü dönem sonu çalışma raporu');
+    private function kota() {
+        if (current_user_can('manage_options')) return true;
+        $lim = (int) get_option('osc_ev_gunluk', 20); if ($lim <= 0) return false;
+        $k = 'osc_ev_kota_' . get_current_user_id() . '_' . gmdate('Ymd'); $n = (int) get_transient($k);
+        if ($n >= $lim) return false;
+        set_transient($k, $n + 1, DAY_IN_SECONDS); return true;
+    }
+    private static function temiz($v, $n = 600) { return is_scalar($v) ? mb_substr(trim(wp_strip_all_tags((string) $v)), 0, $n) : ''; }
+    private static function liste($v, $n = 14, $u = 700) { return is_array($v) ? array_values(array_filter(array_map(function ($x) use ($u) { return self::temiz($x, $u); }, array_slice($v, 0, $n)), 'strlen')) : array(); }
+    public function ajax_yz() {
+        if (!$this->ogretmen_mi()) wp_send_json_error('Öğretmen hesabıyla giriş yapmalısınız.', 403);
+        if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_ev')) wp_send_json_error('Oturum süresi doldu. Sayfayı yenileyin.', 403);
+        if (!self::gorebilir()) wp_send_json_error('Bu bölüm henüz kullanıma açılmadı.', 403);
+        if (!self::yz_acik()) wp_send_json_error('Yapay zekâ ile yazma şu an kapalı.');
+        $d = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : '{}'), true); if (!is_array($d)) $d = array();
+        $tur = isset($d['tur']) ? (string) $d['tur'] : ''; if (!isset(self::$tanim[$tur])) wp_send_json_error('Geçersiz evrak türü.');
+        $v = isset($d['veri']) && is_array($d['veri']) ? $d['veri'] : array();
+        if (!$this->kota()) wp_send_json_error('Bugünkü yapay zekâ ile evrak hakkınız doldu. Hazır taslakla devam edebilirsiniz.');
+        $bilgi = array(); $etiket = array('ders' => 'Ders/zümre', 'siniflar' => 'Sınıf seviyeleri', 'toplanti' => 'Toplantı zamanı', 'sube' => 'Şube', 'mevcut' => 'Öğrenci sayısı', 'katilim' => 'Katılan veli', 'kademe' => 'Okul kademesi', 'kulup' => 'Kulüp', 'donem' => 'Dönem', 'uye' => 'Üye sayısı', 'tani' => 'Eğitsel ihtiyaç', 'sinif' => 'Sınıf', 'performans' => 'Öğrencinin mevcut performansı', 'yapilanlar' => 'Yapılan çalışmalar', 'not' => 'Öğretmenin notu');
+        $tp = array('donem_basi' => 'eğitim-öğretim yılı başı', 'donem_ara' => '1. dönem ara değerlendirme', 'ikinci_donem' => '2. dönem başı', 'yil_sonu' => 'eğitim-öğretim yılı sonu');
+        foreach ($etiket as $k => $e) { $x = self::temiz(isset($v[$k]) ? $v[$k] : '', 900); if ($k === 'toplanti' && isset($tp[$x])) $x = $tp[$x]; if ($x !== '') $bilgi[] = '- ' . $e . ': ' . $x; }
+        $sema = array(
+            'zumre' => '{"gundem":["madde",...],"gorusmeler":["her gündem maddesi için aynı sırayla 2-4 cümlelik görüşme metni",...],"kararlar":["karar",...]}',
+            'sok' => '{"gundem":[...],"gorusmeler":[...],"kararlar":[...]}', 'veli' => '{"gundem":[...],"gorusmeler":[...],"kararlar":[...]}',
+            'bep' => '{"performans":"öğrencinin performans düzeyi (3-4 cümle)","hedefler":[{"uda":"uzun dönemli amaç","kda":["kısa dönemli amaç",...],"yontem":"","materyal":"","degerlendirme":""}],"uyarlamalar":["ölçme-değerlendirme uyarlaması",...],"aile":["aile katılımı önerisi",...]}',
+            'kulup_plan' => '{"aylar":[{"ay":"Eylül","etkinlikler":["...","..."],"hedef":"","yontem":""}, ... Haziran\'a kadar 10 ay]}',
+            'kulup_tutanak' => '{"gundem":[...],"gorusmeler":[...],"kararlar":[...]}',
+            'kulup_rapor' => '{"yapilanlar":["...",...],"degerlendirme":"4-5 cümle","oneriler":["...",...]}');
+        $p = 'Türkiye’de MEB’e bağlı bir okulda görev yapan deneyimli bir öğretmen gibi resmi yazışma diliyle bir ' . self::$tanim[$tur] . ' içeriği yaz.' . "\n" . implode("\n", $bilgi) . "\nKurallar:\n- Türkiye Yüzyılı Maarif Modeli, güncel ölçme-değerlendirme uygulamaları (senaryolara uygun ortak yazılılar, performans görevi) ve okulun gerçek işleyişine uygun, somut ve uygulanabilir ifadeler kullan.\n- Kişi adı uydurma; öğretmenin verdiği bilgileri ve notu içeriğe yerleştir.\n- Kalıp ve klişe cümlelerden kaçın, her maddeyi bu bilgilere özgü yaz.\n"
+            . ($tur === 'kulup_plan' || $tur === 'kulup_rapor' || $tur === 'kulup_tutanak' ? "- 2026’da yayımlanan Sosyal Etkinlikler Politika Belgesi’ne göre kulüpler 5 tema altında (Kültür Dünyamız, Sanat, Spor, Bilim, Doğa-Çevre-Toplum) okul temelli sosyal etkinlikler eylem planıyla uyumlu yürütülür; etkinlikler e-Okul Sosyal Etkinlik Modülü’ne işlenir.\n" : '')
+            . ($tur === 'bep' ? "- Amaçlar ölçülebilir, gözlenebilir davranışlarla yazılsın; kısa dönemli amaçlar basitten karmaşığa sıralansın. 2-3 uzun dönemli amaç, her birine 3-5 kısa dönemli amaç yaz.\n" : '')
+            . ($tur === 'zumre' || $tur === 'sok' || $tur === 'veli' || $tur === 'kulup_tutanak' ? "- 6-9 gündem maddesi; ilk madde açılış/yoklama, son madde dilek ve kapanış olsun. gorusmeler dizisi gundem ile aynı uzunlukta olsun.\n" : '')
+            . "Yalnızca şu biçimde geçerli JSON döndür, başka metin yazma:\n" . $sema[$tur];
+        $r = OSC_YZ_API::json($p, 3500, 50);
+        if (!is_array($r)) wp_send_json_error(is_string($r) ? $r : 'Yapay zekâ yanıt vermedi.');
+        if ($tur === 'kulup_plan' && isset($r[0])) $r = array('aylar' => $r);
+        $c = array();
+        foreach (array('gundem', 'gorusmeler', 'kararlar', 'uyarlamalar', 'aile', 'yapilanlar', 'oneriler') as $k) if (isset($r[$k])) $c[$k] = self::liste($r[$k], 16, 1200);
+        foreach (array('performans', 'degerlendirme') as $k) if (isset($r[$k])) $c[$k] = self::temiz($r[$k], 2000);
+        if (isset($r['hedefler']) && is_array($r['hedefler'])) foreach (array_slice($r['hedefler'], 0, 6) as $h) if (is_array($h) && !empty($h['uda'])) $c['hedefler'][] = array('uda' => self::temiz($h['uda']), 'kda' => self::liste(isset($h['kda']) ? $h['kda'] : array(), 8, 300), 'yontem' => self::temiz(isset($h['yontem']) ? $h['yontem'] : ''), 'materyal' => self::temiz(isset($h['materyal']) ? $h['materyal'] : ''), 'degerlendirme' => self::temiz(isset($h['degerlendirme']) ? $h['degerlendirme'] : ''));
+        if (isset($r['aylar']) && is_array($r['aylar'])) foreach (array_slice($r['aylar'], 0, 12) as $a) if (is_array($a) && !empty($a['ay'])) $c['aylar'][] = array('ay' => self::temiz($a['ay'], 20), 'etkinlikler' => self::liste(isset($a['etkinlikler']) ? $a['etkinlikler'] : array(), 5, 300), 'hedef' => self::temiz(isset($a['hedef']) ? $a['hedef'] : ''), 'yontem' => self::temiz(isset($a['yontem']) ? $a['yontem'] : ''));
+        if (isset($c['gundem'], $c['gorusmeler'])) $c['gorusmeler'] = array_slice(array_pad($c['gorusmeler'], count($c['gundem']), ''), 0, count($c['gundem']));
+        if (!$c) wp_send_json_error('Yapay zekâ yanıtı çözümlenemedi.');
+        wp_send_json_success($c);
+    }
+
+    /* ---------- sayfa ---------- */
+    public function tam_sayfa() {
+        $id = (int) get_option('osc_ev_sayfa');
+        if (!$id || !is_page($id) || is_admin() || apply_filters('osc_ev_tema_sablonu', false)) return;
+        add_filter('body_class', function ($c) { $c[] = 'osc-ev-tam'; $c[] = 'no-sidebar'; return array_diff($c, array('has-sidebar', 'right-sidebar', 'left-sidebar')); });
+        add_filter('is_active_sidebar', '__return_false', 99);
+        get_header(); ?>
+<style>body.osc-ev-tam{background:#f4f6fb}body.osc-ev-tam #secondary,body.osc-ev-tam .sidebar,body.osc-ev-tam .widget-area{display:none!important}.osc-ev-sayfa{width:100%;max-width:none;margin:0;padding:0 0 30px;box-sizing:border-box;clear:both;float:none}.osc-ev-sayfa>.ic{max-width:1240px;margin:0 auto;padding:26px 18px 0;box-sizing:border-box}@media(max-width:640px){.osc-ev-sayfa>.ic{padding:16px 12px 0}}</style>
+<main id="main" class="osc-ev-sayfa" role="main"><div class="ic"><?php echo $this->kisa_kod(); ?></div></main>
+<?php get_footer(); exit;
+    }
+    public function kisa_kod() {
+        if (!self::gorebilir()) return '';
+        if (!$this->ogretmen_mi()) {
+            $ogr = is_user_logged_in(); $g = OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url()));
+            return '<div style="max-width:620px;margin:30px auto;padding:34px 28px;border-radius:24px;text-align:center;background:#fff;border:1px solid #e6e9f2;box-shadow:0 24px 50px -36px rgba(30,27,75,.5);font-family:\'Plus Jakarta Sans\',system-ui,sans-serif"><div style="width:64px;height:64px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,#0f766e,#2563eb);display:flex;align-items:center;justify-content:center;font-size:30px">🗂️</div><h2 style="margin:0 0 8px;font-size:24px;color:#0b1220">Evrak Hazırla öğretmenlere özeldir</h2><p style="margin:0 0 20px;color:#475569;line-height:1.6">' . ($ogr ? 'Bu araç yalnızca öğretmen hesaplarıyla kullanılabilir.' : 'Zümre, ŞÖK ve veli toplantısı tutanakları, BEP planı ve kulüp evraklarını hazırlamak için ücretsiz öğretmen hesabınızla giriş yapın.') . '</p>' . ($ogr ? '' : '<a href="' . esc_url($g) . '" style="display:inline-block;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:14px">Giriş yap / Ücretsiz üye ol →</a>') . '</div>';
+        }
+        $u = wp_get_current_user();
+        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() ? 1 : 0, 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true));
+        $rk = class_exists('OSC_Yazili') ? array(OSC_Yazili::reklam('ust'), OSC_Yazili::reklam('alt')) : array('', '');
+        ob_start(); ?>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<?php echo $rk[0]; ?>
+<div id="osc-ev" class="osc-ev"><div class="ev-yuk">Yükleniyor…</div></div>
+<link rel="stylesheet" href="<?php echo esc_url(self::kaynak_url('css')); ?>">
+<script>window.OSC_EV = <?php echo wp_json_encode($cfg); ?>;</script>
+<script src="<?php echo esc_url(self::kaynak_url('js')); ?>"></script>
+<?php echo $rk[1]; ?>
+<?php return ob_get_clean();
+    }
+}
+$GLOBALS['osc_evrak'] = new OSC_Evrak();
 }

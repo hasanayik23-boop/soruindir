@@ -189,6 +189,53 @@
     return o;
   };
 
+  /* ---------- genel evrak (tutanak, plan, rapor) ---------- */
+  function evrakBelge(m) {
+    var SP0 = '<w:spacing w:after="0"/>', GENI = m.yatay ? 15240 : GEN, g = '';
+    var sat = function (t, f, ppr) { return p(metinParca(String(t == null ? '' : t), f || {}), ppr || SP0); };
+    var cokSatir = function (t, f, ppr) { return String(t == null ? '' : t).split('\n').map(function (l) { return sat(l, f, ppr); }).join('') || p(''); };
+    (m.bloklar || []).forEach(function (b) {
+      switch (b.t) {
+        case 'baslik': g += ortala(wr(b.s, { b: true, sz: b.sz || 24 }), '<w:spacing w:after="' + (b.after || 40) + '"/>'); break;
+        case 'alt': g += ortala(wr(b.s, { sz: 21 }), '<w:spacing w:after="120"/>'); break;
+        case 'h': g += p(wr(b.s, { b: true, sz: 22, renk: MAVI }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>'); break;
+        case 'p': g += cokSatir(b.s, {}, '<w:spacing w:after="80"/><w:jc w:val="both"/>'); break;
+        case 'liste': (b.l || []).forEach(function (x, i) { g += p(wr((b.numara === false ? '•' : (i + 1) + '.') + ' ', { b: true }) + metinParca(String(x), {}), '<w:spacing w:after="50"/><w:ind w:left="360" w:hanging="360"/><w:jc w:val="both"/>'); }); break;
+        case 'bilgi': { var w1 = Math.round(GENI * 0.3); g += tablo([w1, GENI - w1], (b.satirlar || []).map(function (r) { return [{ x: sat(r[0], { b: true, sz: 21 }), dolgu: 'F1F4F9' }, sat(r[1], { sz: 21 })]; }), { kenar: 'single', sz: 4, renk: '9CA3AF', ust: 50, alt: 50 }); g += p('', '<w:spacing w:after="80"/>'); break; }
+        case 'tablo': {
+          var n = (b.bas || b.sat[0] || []).length, top = (b.gen || []).reduce(function (a, c) { return a + c; }, 0), gen = b.gen ? b.gen.map(function (x) { return Math.round(x / top * GENI); }) : (function () { var o = [], w = Math.floor(GENI / n); for (var i = 0; i < n; i++) o.push(w); return o; })();
+          var rows = []; if (b.bas) rows.push(b.bas.map(function (h) { return { x: sat(h, { b: true, sz: 20 }, SP0), dolgu: 'E8EDF6' }; }));
+          (b.sat || []).forEach(function (r) { rows.push(r.map(function (c) { return { x: cokSatir(c, { sz: 20 }) }; })); });
+          g += tablo(gen, rows, { kenar: 'single', sz: 4, renk: '6B7280', ust: 50, alt: 50, baslik: !!b.bas }); g += p('', '<w:spacing w:after="80"/>'); break;
+        }
+        case 'imza': {
+          var k = b.kisiler || [], sut = Math.min(b.sutun || 3, Math.max(1, k.length)), w = Math.floor(GENI / sut), sat2 = [];
+          for (var i = 0; i < k.length; i += sut) { var r = []; for (var j = 0; j < sut; j++) { var x = k[i + j]; r.push(x ? ortala(wr(x.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(x.gorev || '', { sz: 20 }), SP0) + ortala(wr('İmza', { sz: 18, renk: '888888' }), '<w:spacing w:before="160" w:after="200"/>') : p('')); } sat2.push(r); }
+          if (b.baslik) g += p(wr(b.baslik, { b: true, sz: 22 }), '<w:spacing w:before="200" w:after="80"/><w:keepNext/>');
+          var ws = []; for (var c = 0; c < sut; c++) ws.push(w);
+          g += tablo(ws, sat2, {}); break;
+        }
+        case 'onay': g += p('', '<w:spacing w:after="120"/>') + ortala(wr('UYGUNDUR', { b: true, sz: 22 }), SP0) + ortala(wr(b.tarih || '…/…/20…', { sz: 21 }), SP0) + p('', '<w:spacing w:after="360"/>') + ortala(wr(b.ad || '………………………', { b: true, sz: 21 }), SP0) + ortala(wr(b.gorev || 'Okul Müdürü', { sz: 21 }), SP0); break;
+        case 'sayfa': g += p('<w:r><w:br w:type="page"/></w:r>'); break;
+        default: g += p('');
+      }
+    });
+    return g;
+  }
+  window.OSC_DOCX_EVRAK = function (m) {
+    var g = evrakBelge(m), y = !!m.yatay;
+    var sect = '<w:sectPr><w:pgSz w:w="' + (y ? 16838 : 11906) + '" w:h="' + (y ? 11906 : 16838) + '"' + (y ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>';
+    var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + g + sect + '</w:body></w:document>';
+    var stil = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="tr-TR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>';
+    var z = new window.JSZip();
+    z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>');
+    z.file('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>' + x(m.baslik || 'Evrak') + '</dc:title><dc:creator>' + x(m.site || 'soruindir.net') + '</dc:creator></cp:coreProperties>');
+    z.file('word/document.xml', doc);
+    z.file('word/styles.xml', stil);
+    z.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStil" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    return z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+  };
   window.OSC_DOCX = {
     omml: omml,
     /**

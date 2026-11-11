@@ -9,7 +9,8 @@ class OSC_Havuz {
     public function __construct() {
         add_action('init', array($this, 'db_kur'), 6);
         add_action('admin_menu', array($this, 'menu'));
-        foreach (array('kaynaklar', 'dosya', 'ekle', 'isaretle', 'liste', 'guncelle', 'ozet', 'sifirla', 'senaryo_kaydet', 'senaryo_sil') as $a) add_action('wp_ajax_osc_hv_' . $a, array($this, 'ajax_' . $a));
+        add_action('admin_init', function () { if (get_option('osc_hv_d2_ayir') !== '1' && current_user_can('manage_options')) { self::donem_beklet(); update_option('osc_hv_d2_ayir', '1'); } }, 40);
+        foreach (array('kaynaklar', 'dosya', 'ekle', 'isaretle', 'liste', 'guncelle', 'ozet', 'sifirla', 'senaryo_kaydet', 'senaryo_sil', 'donem_beklet') as $a) add_action('wp_ajax_osc_hv_' . $a, array($this, 'ajax_' . $a));
         add_action('transition_post_status', array($this, 'ogretmen_testi'), 20, 3);
     }
     public static function tablo() { global $wpdb; return $wpdb->prefix . 'osc_havuz'; }
@@ -68,6 +69,23 @@ class OSC_Havuz {
         }
         return $bir;
     }
+    /** arşiv eşleştirmesi için: dönemi bilinen soru yalnızca o dönemin tablosuyla eşleşir (tablo yoksa beklemede kalır) */
+    public static function tablo_donem($sinif, $ders, $donem) {
+        $donem = (int) $donem;
+        if ($donem && in_array($donem, self::senaryolar()['donemler'], true)) return self::tablo_bul($sinif, $ders, $donem);
+        if ($donem && !in_array($donem, self::senaryolar()['donemler'], true)) return null;
+        return self::tablo_bul($sinif, $ders);
+    }
+    /** senaryosu henüz olmayan dönemin arşiv soruları: yanlış (başka dönem) çıktılardan ayrılıp beklemeye alınır */
+    public static function donem_beklet() {
+        global $wpdb; $t = self::tablo(); $dn = self::senaryolar()['donemler']; $n = 0;
+        foreach (array(1, 2) as $d) {
+            if (in_array($d, $dn, true)) continue;
+            $n += (int) $wpdb->query($wpdb->prepare("UPDATE $t SET cikti_kod = '', cikti_puan = 0, durum = 'eslesmedi' WHERE donem = %d AND kaynak NOT LIKE 'yz%%' AND kaynak NOT IN ('yonetici','ogretmen') AND (cikti_kod <> '' OR durum <> 'eslesmedi')", $d));
+        }
+        return $n;
+    }
+    public function ajax_donem_beklet() { $this->yetki(); wp_send_json_success(array('n' => self::donem_beklet())); }
     public function ajax_senaryo_kaydet() {
         $this->yetki();
         $l = json_decode(wp_unslash(isset($_POST['tablolar']) ? $_POST['tablolar'] : '[]'), true); if (!is_array($l)) wp_send_json_error('Veri okunamadı.');
@@ -271,6 +289,7 @@ class OSC_Havuz {
         if (!empty($_POST['sinif'])) { $w[] = 'sinif = %d'; $a[] = (int) $_POST['sinif']; }
         if (!empty($_POST['ders'])) { $w[] = 'ders = %s'; $a[] = sanitize_text_field(wp_unslash($_POST['ders'])); }
         if (!empty($_POST['durum'])) { $w[] = 'durum = %s'; $a[] = sanitize_key($_POST['durum']); }
+        if (isset($_POST['donem']) && $_POST['donem'] !== '') { $w[] = 'donem = %d'; $a[] = (int) $_POST['donem']; }
         if (isset($_POST['cikti']) && $_POST['cikti'] !== '') { $w[] = 'cikti_kod = %s'; $a[] = sanitize_text_field(wp_unslash($_POST['cikti'])); }
         if (!empty($_POST['ara'])) { $w[] = 'soru LIKE %s'; $a[] = '%' . $wpdb->esc_like(sanitize_text_field(wp_unslash($_POST['ara']))) . '%'; }
         $lim = min(500, max(1, (int) (isset($_POST['adet']) ? $_POST['adet'] : 40))); $off = max(0, (int) (isset($_POST['bas']) ? $_POST['bas'] : 0));

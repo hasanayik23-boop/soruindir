@@ -5,7 +5,7 @@ python3 yama_a.py
 python3 yama_b.py
 python3 yama_c.py
 python3 - <<'E'
-d='/home/claude/work/osc/'
+d='./'
 s=open(d+'onlinesorucoz.php',encoding='utf-8').read()
 k=open(d+'parca/sinif.php',encoding='utf-8').read()
 k=k.replace('/*__EK_METODLAR__*/',open(d+'parca/ek.php',encoding='utf-8').read())
@@ -34,6 +34,11 @@ y=y.replace("'/*__DIGER_JSON__*/'", q(open('/home/claude/work/dersler/diger.json
 assert '__DIGER_JSON__' not in y
 assert '/*__YAZILI' not in y
 k=k+'\n'+y
+ev=open(d+'parca/evrak.php',encoding='utf-8').read()
+for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
+    assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
+    ev=ev.replace(ph,c)
+k=k+'\n'+ev
 s=s.rstrip()+'\n'+k
 open(d+'onlinesorucoz.php','w',encoding='utf-8').write(s)
 print('birlesti', len(s))
