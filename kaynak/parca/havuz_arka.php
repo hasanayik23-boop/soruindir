@@ -562,10 +562,10 @@ class OSC_Havuz_Arka {
     }
 
     /* ---------------- öğrenme çıktısı eşleştirme ---------------- */
-    private static function tablo_bul($sinif, $ders) {
+    private static function tablo_bul($sinif, $ders, $donem = 0) {
         if (!$sinif || !$ders) return null;
         if ($ders === 'T.C. İnkılap Tarihi ve Atatürkçülük') $ders = $sinif <= 8 ? 'Sosyal Bilgiler' : 'Tarih';
-        $t = OSC_Havuz::tablo_bul($sinif, $ders); if ($t) return $t;
+        $t = OSC_Havuz::tablo_donem($sinif, $ders, $donem); if ($t) return $t;
         return null;
     }
     private static $DUR = null;
@@ -647,13 +647,13 @@ class OSC_Havuz_Arka {
             $q['paragraph'] = $html($q['paragraph']); $q['root'] = $html($q['root']); foreach ($q['options'] as $h => $v) $q['options'][$h] = $html($v);
         } unset($q);
         $meta = self::meta(basename($ad) . ' ' . mb_substr($metin, 0, 400) . ' ' . $k['baslik'] . ' ' . $k['kategori'], isset($k['etiket']) ? $k['etiket'] : array());
-        $t = self::tablo_bul($meta['sinif'], $meta['ders']);
+        $t = self::tablo_bul($meta['sinif'], $meta['ders'], isset($meta['donem']) ? (int) $meta['donem'] : 0);
         $es = $t ? self::sirali($sorular, $meta, $t) : array();
         $esik = (float) get_option('osc_hv_esik', 0.45); if ($esik <= 0) $esik = 0.45;
         $o = array();
         foreach ($sorular as $i => $q) {
             $e = isset($es[$i]) ? $es[$i] : null; unset($q['puan']); $eksik = !empty($q['_eksik']); unset($q['_eksik']); if ($eksik) $q['gorsel_eksik'] = 1;
-            $o[] = array('kaynak' => isset($k['kaynak']) ? $k['kaynak'] : 'arsiv', 'kaynak_url' => $k['url'], 'kaynak_baslik' => mb_substr($k['baslik'] . ' · ' . basename($ad), 0, 250), 'sinif' => $meta['sinif'], 'ders' => $meta['ders'], 'donem' => $meta['donem'], 'yazili' => $meta['yazili'], 'cikti_kod' => $e ? $e['kod'] : '', 'cikti_puan' => $e ? $e['guven'] : 0, 'durum' => !$e || !$e['kod'] ? ($meta['sinif'] && $meta['ders'] ? 'inceleme' : 'eslesmedi') : ($e['guven'] >= $esik && !$eksik ? 'onayli' : 'inceleme'), 'soru' => $q);
+            $o[] = array('kaynak' => isset($k['kaynak']) ? $k['kaynak'] : 'arsiv', 'kaynak_url' => $k['url'], 'kaynak_baslik' => mb_substr($k['baslik'] . ' · ' . basename($ad), 0, 250), 'sinif' => $meta['sinif'], 'ders' => $meta['ders'], 'donem' => $meta['donem'], 'yazili' => $meta['yazili'], 'cikti_kod' => $e ? $e['kod'] : '', 'cikti_puan' => $e ? $e['guven'] : 0, 'durum' => !$e || !$e['kod'] ? ($meta['sinif'] && $meta['ders'] && (empty($meta['donem']) || in_array((int) $meta['donem'], OSC_Havuz::senaryolar()['donemler'], true)) ? 'inceleme' : 'eslesmedi') : ($e['guven'] >= $esik && !$eksik ? 'onayli' : 'inceleme'), 'soru' => $q);
         }
         return array('sorular' => $o, 'meta' => trim(($meta['sinif'] ? $meta['sinif'] . '. sınıf ' : '') . $meta['ders']));
     }

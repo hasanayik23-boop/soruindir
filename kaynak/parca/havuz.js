@@ -49,8 +49,17 @@
   }
   function kullanilan(x, yazili) { var s = x.sayi || {}; if (yazili) return !!(s[String(yazili)] && Object.keys(s[String(yazili)]).length); return !!(s['1'] && Object.keys(s['1']).length) || !!(s['2'] && Object.keys(s['2']).length); }
   /** Soruyu öğrenme çıktısına eşleştir: {kod, puan, guven} */
+  /** dönemi bilinen soru yalnızca o dönemin senaryo tablosuyla eşleşir; o dönemin tablosu yoksa eşleşmez (beklemede kalır) */
+  function tabloD(sinif, ders, donem) {
+    donem = +donem || 0; var dn = SNR.donemler || [1];
+    if (donem && dn.indexOf(donem) < 0) return null;
+    if (!donem) return tablo(sinif, ders);
+    var d = DERS_ES[ders] ? DERS_ES[ders](sinif) : ders, bir = null;
+    SNR.tablolar.forEach(function (t) { if (t.sinif === +sinif && t.ders === d && (t.donem || 1) === donem) bir = t; });
+    return bir;
+  }
   function eslestir(soru, meta, tumu) {
-    var t = tablo(meta.sinif, meta.ders); if (!t) return null;
+    var t = tabloD(meta.sinif, meta.ders, meta.donem); if (!t) return null;
     var D = dizin(t), q = {}; kelimeler((soru.paragraph || '') + ' ' + (soru.root || '') + ' ' + Object.keys(soru.options || {}).map(function (k) { return soru.options[k]; }).join(' ')).forEach(function (w) { q[w] = 1; });
     var sonuc = D.docs.map(function (d) {
       var s = 0; Object.keys(q).forEach(function (w) { if (d.tf[w]) s += D.idf[w] || 0; });
@@ -288,7 +297,7 @@
   }
   /** Bir belgedeki soruları sıraya duyarlı eşleştirir: yazılılar müfredat sırasını izler. */
   function siraliEslestir(sorular, meta) {
-    var t = tablo(meta.sinif, meta.ders); if (!t) return sorular.map(function () { return null; });
+    var t = tabloD(meta.sinif, meta.ders, meta.donem); if (!t) return sorular.map(function () { return null; });
     var tek = sorular.map(function (q) { return eslestir(q, meta, true); });
     var J = t.satirlar.length, n = sorular.length; if (!n) return [];
     var S = tek.map(function (e) { return e ? e.tum : new Array(J).fill(0); });
@@ -335,7 +344,7 @@
         if (tt) tt.satirlar.forEach(function (x) { if (x.kod) kodlar[x.kod.replace(/\.$/, '')] = x.kod; });
         return sorular.map(function (soru, i) {
           var e = es[i], kk = qs[i] && qs[i].kod && kodlar[String(qs[i].kod).replace(/\.$/, '')]; if (kk) e = { kod: kk, puan: 1, guven: 1 };
-          return { elle: kk ? 1 : null, kaynak: kaynak.kaynak, kaynak_url: kaynak.url, kaynak_baslik: (kaynak.baslik || '') + ' · ' + ad.split('/').pop(), sinif: meta.sinif, ders: meta.ders, donem: meta.donem, yazili: meta.yazili, cikti_kod: e ? e.kod : '', cikti_puan: e ? e.guven : 0, durum: !e ? (meta.sinif && meta.ders ? 'inceleme' : 'eslesmedi') : (e.guven >= esik ? 'onayli' : 'inceleme'), soru: soru };
+          return { elle: kk ? 1 : null, kaynak: kaynak.kaynak, kaynak_url: kaynak.url, kaynak_baslik: (kaynak.baslik || '') + ' · ' + ad.split('/').pop(), sinif: meta.sinif, ders: meta.ders, donem: meta.donem, yazili: meta.yazili, cikti_kod: e ? e.kod : '', cikti_puan: e ? e.guven : 0, durum: !e ? (meta.sinif && meta.ders && (!meta.donem || (SNR.donemler || [1]).indexOf(+meta.donem) >= 0) ? 'inceleme' : 'eslesmedi') : (e.guven >= esik ? 'onayli' : 'inceleme'), soru: soru };
         });
       });
     });
@@ -399,7 +408,7 @@
   }
 
   /* ================= havuzu inceleme ================= */
-  var filtre = { sinif: '', ders: '', durum: 'inceleme', cikti: '', ara: '' }, sayfa = 0, son = null;
+  var filtre = { sinif: '', ders: '', donem: '', durum: 'inceleme', cikti: '', ara: '' }, sayfa = 0, son = null;
   function dersler() { var o = {}; SNR.tablolar.forEach(function (t) { o[t.ders] = 1; }); o['T.C. İnkılap Tarihi ve Atatürkçülük'] = 1; return Object.keys(o).sort(function (a, b) { return a.localeCompare(b, 'tr'); }); }
   function ciktiSecenek(sinif, ders, sec) {
     var t = tablo(sinif, ders); if (!t) return '<option value="">— senaryo tablosu yok —</option>';
@@ -408,18 +417,20 @@
   function vHavuz() {
     kok.innerHTML = '<div class="osc-hv-k osc-hv-filtre"><label>Sınıf <select data-f="sinif"><option value="">Tümü</option>' + [5, 6, 7, 8, 9, 10, 11, 12, 4, 3, 2, 1].map(function (s) { return '<option' + (+filtre.sinif === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '<option value="0"' + (filtre.sinif === 0 ? ' selected' : '') + '>Belirsiz</option></select></label>' +
       '<label>Ders <select data-f="ders"><option value="">Tümü</option>' + dersler().map(function (d) { return '<option' + (filtre.ders === d ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('') + '</select></label>' +
+      '<label>Dönem <select data-f="donem"><option value="">Tümü</option><option value="1"' + (filtre.donem === '1' ? ' selected' : '') + '>1. dönem</option><option value="2"' + (filtre.donem === '2' ? ' selected' : '') + '>2. dönem</option></select></label>' +
       '<label>Durum <select data-f="durum"><option value="">Tümü</option><option value="inceleme"' + (filtre.durum === 'inceleme' ? ' selected' : '') + '>İnceleme bekliyor</option><option value="eslesmedi"' + (filtre.durum === 'eslesmedi' ? ' selected' : '') + '>Eşleşmedi</option><option value="onayli"' + (filtre.durum === 'onayli' ? ' selected' : '') + '>Onaylı</option></select></label>' +
       '<label>Ara <input data-f="ara" value="' + esc(filtre.ara) + '" placeholder="soru metninde"></label><button class="button" id="hv-uygula">Listele</button>' +
-      '<span class="sag"><button class="button" id="hv-oto" title="Seçili filtredeki sorular için öğrenme çıktısını yeniden hesaplar">Otomatik eşleştir</button> <button class="button button-primary" id="hv-hepsi">Görünenleri onayla</button></span></div><div id="hv-sonuc"></div>';
+      '<span class="sag">' + ((SNR.donemler || [1]).indexOf(2) < 0 ? '<button class="button" id="hv-d2" title="2. dönem senaryoları henüz yüklenmedi; bu dönemin arşiv soruları 1. dönem çıktılarından ayrılır ve senaryolar gelene kadar beklemede kalır">2. dönem sorularını beklemeye al</button> ' : '') + '<button class="button" id="hv-oto" title="Seçili filtredeki sorular için öğrenme çıktısını yeniden hesaplar">Otomatik eşleştir</button> <button class="button button-primary" id="hv-hepsi">Görünenleri onayla</button></span></div><div id="hv-sonuc"></div>';
     kok.querySelectorAll('[data-f]').forEach(function (e) { e.onchange = function () { filtre[e.dataset.f] = e.dataset.f === 'sinif' ? (e.value === '' ? '' : +e.value) : e.value; }; });
     document.getElementById('hv-uygula').onclick = function () { var a = kok.querySelector('[data-f=ara]'); filtre.ara = a.value; sayfa = 0; listele(); };
     document.getElementById('hv-hepsi').onclick = function () { if (!son || !son.satirlar.length) return; var ids = son.satirlar.filter(function (r) { return r.cikti_kod; }).map(function (r) { return r.id; }); if (!ids.length) return alert('Görünen sorularda çıktısı seçilmiş soru yok.'); if (!confirm(ids.length + ' soru onaylansın mı?')) return; api('guncelle', { ids: ids, durum: 'onayli' }).then(listele); };
     document.getElementById('hv-oto').onclick = otoEslestir;
+    var d2 = document.getElementById('hv-d2'); if (d2) d2.onclick = function () { if (!confirm('2. dönem senaryoları yüklenene kadar, 2. dönem yazılılarından gelen arşiv soruları 1. dönem çıktılarından ayrılıp “Eşleşmedi”de bekletilsin mi? (Sorular silinmez.)')) return; api('donem_beklet', {}).then(function (r) { alert(r.n + ' soru beklemeye alındı. 2. dönem senaryolarını yükleyince otomatik eşleştirilir.'); listele(); }); };
     listele();
   }
   function listele() {
     var el = document.getElementById('hv-sonuc'); el.innerHTML = '<div class="osc-hv-k">Yükleniyor…</div>';
-    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, durum: filtre.durum, ara: filtre.ara, bas: sayfa * 40, adet: 40 }).then(function (d) {
+    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, donem: filtre.donem, durum: filtre.durum, ara: filtre.ara, bas: sayfa * 40, adet: 40 }).then(function (d) {
       son = d;
       if (!d.satirlar.length) { el.innerHTML = '<div class="osc-hv-k">Bu filtrede soru yok.</div>'; return; }
       el.innerHTML = '<p class="osc-hv-alt">' + d.toplam + ' soru · ' + (sayfa * 40 + 1) + '–' + Math.min(d.toplam, sayfa * 40 + 40) + ' arası gösteriliyor</p>' + d.satirlar.map(function (r) {
@@ -447,10 +458,30 @@
       });
     }).catch(function (e) { el.innerHTML = '<div class="notice notice-error"><p>' + esc(e.message) + '</p></div>'; });
   }
+  /** yeni yüklenen dönemin bekleyen (eşleşmemiş) sorularını o dönemin çıktılarıyla eşleştir */
+  function bekleyenEslestir(dns) {
+    var top = { n: 0, on: 0 }, p = Promise.resolve();
+    dns.forEach(function (dn) {
+      var bas = 0, tur = function () {
+        return api('liste', { donem: dn, durum: 'eslesmedi', bas: bas, adet: 300 }).then(function (d) {
+          var q = Promise.resolve(), yeni = 0;
+          d.satirlar.forEach(function (r) {
+            if (!r.sinif || !r.ders) return;
+            var e = eslestir(r.soru || {}, { sinif: +r.sinif, ders: r.ders, donem: dn, yazili: +r.yazili }); if (!e || !e.kod) return;
+            var durum = e.guven >= 0.45 ? 'onayli' : 'inceleme'; top.n++; yeni++; if (durum === 'onayli') top.on++;
+            q = q.then(function () { return api('guncelle', { ids: [r.id], cikti_kod: e.kod, cikti_puan: e.guven, durum: durum }); });
+          });
+          return q.then(function () { bas += 300 - yeni; if (d.satirlar.length === 300) return tur(); });
+        });
+      };
+      p = p.then(tur);
+    });
+    return p.then(function () { return top; });
+  }
   function otoEslestir() {
     var b = document.getElementById('hv-oto'); b.disabled = true; b.textContent = 'Eşleştiriliyor…';
     var esik = 0.45, n = 0, on = 0;
-    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, durum: filtre.durum, ara: filtre.ara, bas: 0, adet: 500 }).then(function (d) {
+    api('liste', { sinif: filtre.sinif === 0 ? '' : filtre.sinif, ders: filtre.ders, donem: filtre.donem, durum: filtre.durum, ara: filtre.ara, bas: 0, adet: 500 }).then(function (d) {
       var p = Promise.resolve();
       d.satirlar.forEach(function (r) {
         var meta = (r.sinif && r.ders) ? { sinif: +r.sinif, ders: r.ders, donem: +r.donem, yazili: +r.yazili } : metaTahmin(r.kaynak_baslik + ' ' + r.ders);
@@ -672,7 +703,7 @@
         }).join('') + '</tbody></table><p><button class="button button-primary" id="s-kaydet">' + tum.length + ' tabloyu kaydet</button></p>' : '') + (uy.length ? '<div class="notice notice-warning inline"><p>' + uy.map(esc).join('<br>') + '</p></div>' : '');
         on.querySelectorAll('[data-sd]').forEach(function (s) { s.onchange = function () { tum[+s.dataset.sd].donem = +s.value; }; });
         on.querySelectorAll('[data-sders]').forEach(function (s) { s.onchange = function () { tum[+s.dataset.sders].ders = s.value.trim(); }; });
-        var k = document.getElementById('s-kaydet'); if (k) k.onclick = function () { k.disabled = true; api('senaryo_kaydet', { tablolar: JSON.stringify(tum) }).then(function (r) { SNR = r.snr; vSenaryo(); document.getElementById('s-msj').innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi. Yazılı Hazırla’da hemen kullanılabilir; “🤖 Yapay zekâ ile doldur” sekmesinden bu dönem için soru üretebilirsiniz.</b>'; }).catch(function (er) { k.disabled = false; alert(er.message); }); };
+        var k = document.getElementById('s-kaydet'); if (k) k.onclick = function () { k.disabled = true; api('senaryo_kaydet', { tablolar: JSON.stringify(tum) }).then(function (r) { SNR = r.snr; vSenaryo(); var dns = []; tum.forEach(function (t) { if (dns.indexOf(t.donem) < 0) dns.push(t.donem); }); var m = document.getElementById('s-msj'); m.innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi.</b> Bekleyen arşiv soruları eşleştiriliyor…'; return bekleyenEslestir(dns).then(function (x) { m.innerHTML = '<b style="color:#059669">✓ ' + r.n + ' tablo kaydedildi. Beklemedeki ' + x.n + ' arşiv sorusu yeni çıktılarla eşleştirildi (' + x.on + ' onaylı, kalanlar “İnceleme”de).</b> Yazılı Hazırla’da hemen kullanılabilir; “🤖 Yapay zekâ ile doldur” sekmesinden bu dönem için soru üretebilirsiniz.'; }); }).catch(function (er) { k.disabled = false; alert(er.message); }); };
       });
     };
   }
