@@ -35,7 +35,7 @@ assert '__DIGER_JSON__' not in y
 assert '/*__YAZILI' not in y
 om=y
 ev=open(d+'parca/evrak.php',encoding='utf-8').read()
-for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
+for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/bgh.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
 om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()
