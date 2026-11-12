@@ -31,6 +31,7 @@ class OSC_Yazili {
         add_shortcode('osc_yazili_hazirla', array($this, 'kisa_kod'));
         foreach (array('hazirla', 'yz', 'degistir', 'kaydet', 'liste', 'getir', 'sil', 'havuza') as $a) add_action('wp_ajax_osc_yz_' . $a, array($this, 'ajax_' . $a));
         add_action('wp_ajax_osc_yz_konular', array($this, 'ajax_konular'));
+        foreach (array('hazirla', 'degistir', 'konular', 'say', 'havuza', 'yz') as $a) add_action('wp_ajax_nopriv_osc_yz_' . $a, array($this, 'ajax_' . $a));
         add_action('wp_ajax_osc_yz_say', array($this, 'ajax_say'));
         add_action('template_redirect', array($this, 'kaynak_servis'), 0);
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
@@ -61,8 +62,9 @@ class OSC_Yazili {
     }
     public static function cfg($gomulu = false) {
         $u = wp_get_current_user();
-        return array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_yz'), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'logo' => OSC_Sinav::logo_src(), 'home' => home_url('/'), 'panel' => ($gomulu || !is_user_logged_in() || OSC_Sinav::rol() === 'ogrenci') ? '' : OSC_Sinav::sayfa_url('osc_sp_panel_sayfa'), 'yz' => (OSC_YZ_API::var_mi() && self::canli() !== 'kapali') ? 1 : 0, 'yzmod' => self::canli(), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'gomulu' => $gomulu ? 1 : 0, 'kota' => is_user_logged_in() ? self::kota_durum() : null, 'yerel' => (is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci') ? 0 : 1, 'giris' => is_user_logged_in() ? '' : OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())));
+        return array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_yz'), 'ad' => self::profil('ogretmen', $u->display_name), 'okul' => self::profil('okul', (string) get_user_meta($u->ID, 'osc_okul', true)), 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'logo' => OSC_Sinav::logo_src(), 'home' => home_url('/'), 'panel' => ($gomulu || !is_user_logged_in() || OSC_Sinav::rol() === 'ogrenci') ? '' : OSC_Sinav::sayfa_url('osc_sp_panel_sayfa'), 'yz' => (is_user_logged_in() && OSC_YZ_API::var_mi() && self::canli() !== 'kapali') ? 1 : 0, 'yzmod' => self::canli(), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'gomulu' => $gomulu ? 1 : 0, 'kota' => is_user_logged_in() ? self::kota_durum() : null, 'yerel' => (is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci') ? 0 : 1, 'giris' => is_user_logged_in() ? '' : OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())));
     }
+    public static function profil($k, $vars = '') { if (!is_user_logged_in()) return ''; $p = get_user_meta(get_current_user_id(), 'osc_om_profil', true); return is_array($p) && !empty($p[$k]) ? (string) $p[$k] : (string) $vars; }
     public static function surum() { return substr(md5((string) @filemtime(__FILE__) . '|' . DB_NAME . '|' . get_option('osc_senaryo_surum', '')), 0, 10); }
     /** Yazılı Hazırla'da canlı yapay zekâ: kapali | bos (yalnızca havuzda soru kalmayınca) | acik */
     public static function canli() { $v = get_option('osc_yz_canli', 'bos'); return in_array($v, array('kapali', 'bos', 'acik'), true) ? $v : 'bos'; }
@@ -451,6 +453,8 @@ class OSC_Yazili {
 .osc-yz .yz-bosh-ic>span{font-size:34px;line-height:1}
 .osc-yz .yz-bosh-ic h2{font-size:17px;margin:0 0 6px}
 .osc-yz .yz-bosh-ic p{color:var(--k2);font-size:14px;line-height:1.6;margin:0 0 12px}
+
+.yz-uye{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:13px;line-height:1.5}.yz-uye a{font-weight:800;color:#4338ca}.yz-uye.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
 <?php }
     public static function js_cikti() { ?>/* =====================================================================
  * OSC_DOCX — yazılı kâğıdını gerçek Word (.docx) dosyası olarak üretir.
@@ -843,6 +847,12 @@ class OSC_Yazili {
     getir: function (d) { var x = kayitlar().filter(function (k) { return k.id === +d.id; })[0]; if (!x) throw new Error('Yazılı bulunamadı.'); return { id: x.id, veri: x.veri }; },
     sil: function (d) { kayitlar(kayitlar().filter(function (k) { return k.id !== +d.id; })); return true; }
   };
+  /* üyeler: okul / öğretmen bilgisi hesapta saklanır, tüm yazılı ve evraklara işlenir */
+  var pZaman = {}, pBekle = {};
+  function profilKaydet(k, v) {
+    if (!C.uye || !C.pnonce) return; pBekle[k] = v; clearTimeout(pZaman.t);
+    pZaman.t = setTimeout(function () { var fd = new FormData(); fd.append('action', 'osc_om_profil'); fd.append('nonce', C.pnonce); fd.append('veri', JSON.stringify(pBekle)); pBekle = {}; fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {}); }, 900);
+  }
   function api(a, d, ms) {
     if (C.yerel && YEREL[a]) return new Promise(function (ok, no) { try { ok(YEREL[a](d || {})); } catch (e) { no(e); } });
     return sunucu(a, d, ms);
@@ -859,7 +869,7 @@ class OSC_Yazili {
   var DERS_IK = { 'Türkçe': '📖', 'Matematik': '➗', 'Fen Bilimleri': '🔬', 'Sosyal Bilgiler': '🌍', 'İngilizce': '🇬🇧', 'Din Kültürü ve Ahlak Bilgisi': '🕌', 'T.C. İnkılap Tarihi ve Atatürkçülük': '🇹🇷', 'Fizik': '⚛️', 'Kimya': '⚗️', 'Biyoloji': '🧬', 'Tarih': '🏛️', 'Coğrafya': '🗺️', 'Felsefe': '💭', 'Türk Dili ve Edebiyatı': '✒️' };
   var RENK = ['#6366f1', '#06b6d4', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#84cc16', '#f97316'];
 
-  function yeniDurum() { return { adim: 1, yil: SNR.yil || '2026-2027', sinif: 0, ders: '', donem: varsayilanDonem(), yazili: 1, senaryo: 0, ozel: {}, bilgi: { okul: C.okul || (C.yerel ? ls('osc_yz_okul') || '' : ''), baslik: '', ogretmen: C.ad || '', tarih: bugun(), sure: 40 }, zorluk: 0, tur: 'acik', alan: 'normal', kaynak: 'arsiv', slotlar: [], sorular: [], anahtar: true, id: 0 }; }
+  function yeniDurum() { return { adim: 1, yil: SNR.yil || '2026-2027', sinif: 0, ders: '', donem: varsayilanDonem(), yazili: 1, senaryo: 0, ozel: {}, bilgi: { okul: C.okul || '', baslik: '', ogretmen: C.ad || '', tarih: bugun(), sure: 40 }, zorluk: 0, tur: 'acik', alan: 'normal', kaynak: 'arsiv', slotlar: [], sorular: [], anahtar: true, id: 0 }; }
   var S = ls('osc_yz_taslak') || yeniDurum(), sekme = 'yeni', kuyrukNo = 0;
   if (!S.alan) S.alan = 'normal';
   if (!S.kaynak) S.kaynak = 'arsiv';
@@ -1023,6 +1033,7 @@ class OSC_Yazili {
   function v2() {
     var b = S.bilgi, benSay = S.slotlar.filter(function (x) { return x.ben; }).length, t = tablo(), rk = t ? konuRenk(t) : {};
     var h = '<div class="yz-iki"><section class="yz-kart"><div class="yz-kart-bas"><span class="yz-num">🏫</span><div><h2>Sınav bilgileri</h2><p>Kâğıdın başlığında görünür</p></div></div>' +
+      (C.uye ? '<p class="yz-uye ok">✓ Okul ve öğretmen bilgileriniz hesabınızdan geldi. Burada değiştirirseniz tüm yazılı ve evraklarınızda güncellenir.</p>' : '<p class="yz-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı ve öğretmen adınız bir kez yazıldıktan sonra tüm yazılılarınıza ve evraklarınıza otomatik işlenir; yazılılarınız her cihazdan açılır.' + (C.giris ? ' <a href="' + esc(C.giris) + '">Üye ol / giriş yap →</a>' : '') + '</p>') +
       '<label class="yz-alan"><span>Okul adı</span><input data-b="okul" value="' + esc(b.okul) + '" placeholder="Örn. Atatürk Ortaokulu"></label>' +
       '<label class="yz-alan"><span>Sınav başlığı</span><input data-b="baslik" value="' + esc(b.baslik) + '"></label>' +
       '<label class="yz-alan"><span>Öğretmen adı</span><input data-b="ogretmen" value="' + esc(b.ogretmen) + '" placeholder="Adınız soyadınız"></label>' +
@@ -1035,7 +1046,7 @@ class OSC_Yazili {
       '<div class="yz-slotlar">' + S.slotlar.map(function (x, i) { return '<label class="yz-slot' + (x.ben ? ' ben' : '') + '"><i style="--r:' + (rk[x.konu] || '#6366f1') + '">' + (i + 1) + '</i><div><small>' + esc(kodGoster(x.kod)) + (kodGoster(x.kod) ? ' · ' : '') + esc(x.konu) + '</small><p>' + esc(x.cikti) + '</p></div><span class="yz-anahtar"><input type="checkbox" data-ben="' + i + '"' + (x.ben ? ' checked' : '') + '><em></em><span>' + (x.ben ? 'Ben yazacağım' : 'Otomatik') + '</span></span></label>'; }).join('') + '</div></section>' +
       '<div class="yz-cubuk"><button class="yz-btn" data-git2="1">← Geri</button><div class="yz-ozet"><b>' + (S.slotlar.length - benSay) + ' soru ' + (S.kaynak === 'yz' ? 'yapay zekâyla yazılacak' : 'otomatik hazırlanacak') + '</b><span>' + (benSay ? benSay + ' soruyu siz yazacaksınız' : 'Tüm sorular otomatik') + '</span></div>' + (S.sorular.length ? '<button class="yz-btn" data-git2="3">Mevcut sorular →</button>' : '') + '<button class="yz-btn ana" id="yz-hazirla">' + (S.sorular.length ? 'Yeniden hazırla' : 'Soruları hazırla') + ' <i>✨</i></button></div>';
     cerceve(h);
-    kok.querySelectorAll('[data-b]').forEach(function (e) { e.oninput = function () { S.bilgi[e.dataset.b] = e.dataset.b === 'sure' ? +e.value : e.value; sakla(); }; });
+    kok.querySelectorAll('[data-b]').forEach(function (e) { e.oninput = function () { S.bilgi[e.dataset.b] = e.dataset.b === 'sure' ? +e.value : e.value; sakla(); if (e.dataset.b === 'okul' || e.dataset.b === 'ogretmen') profilKaydet(e.dataset.b, e.value); }; });
     kok.querySelectorAll('[data-z]').forEach(function (e) { e.onclick = function () { S.zorluk = +e.dataset.z; sakla(); v2(); }; });
     kok.querySelectorAll('[data-t]').forEach(function (e) { e.onclick = function () { S.tur = e.dataset.t; sakla(); v2(); }; });
     kok.querySelectorAll('[data-al]').forEach(function (e) { e.onclick = function () { S.alan = e.dataset.al; sakla(); v2(); }; });
@@ -1476,8 +1487,12 @@ var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector(
     }
     /** herkese açık işlemler (soru hazırlama): giriş gerekmez */
     private function kontrol_acik() {
-        if (!$this->ogretmen_mi()) wp_send_json_error('Yazılı Hazırla’yı kullanmak için öğretmen hesabıyla giriş yapın.', 403);
         if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_yz')) wp_send_json_error('Oturum süresi doldu. Sayfayı yenileyin.', 403);
+        if (!is_user_logged_in()) {   // ziyaretçi: IP başına saatlik sınır (kötüye kullanıma karşı)
+            $k = 'osc_yz_zy_' . md5(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') . '_' . gmdate('YmdH'); $n = (int) get_transient($k);
+            if ($n > 150) wp_send_json_error('Çok fazla istek gönderildi. Biraz sonra tekrar deneyin ya da ücretsiz üye olun.', 429);
+            set_transient($k, $n + 1, HOUR_IN_SECONDS);
+        }
     }
     /** MEB senaryo tablosu ya da öğretmenin kendi kurduğu (diğer dersler) tablo */
     private function tablo_al($d) {
@@ -1805,7 +1820,7 @@ var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector(
         if ($ids) $wpdb->query('UPDATE ' . OSC_Havuz::tablo() . ' SET kullanim = kullanim + 1 WHERE id IN (' . implode(',', $ids) . ')');
     }
     public function ajax_yz() {
-        $this->kontrol_acik(); $d = $this->girdi();
+        $this->kontrol_acik(); if (!is_user_logged_in()) wp_send_json_error('Yapay zekâ ile soru yazdırmak için ücretsiz üye girişi yapın.', 403); $d = $this->girdi();
         $t = $this->tablo_al($d); if (!$t) wp_send_json_error('Ders ya da konu listesi bulunamadı.');
         $kod = (string) (isset($d['kod']) ? $d['kod'] : ''); $n = max(1, min(3, (int) (isset($d['n']) ? $d['n'] : 1)));
         if (!$this->satir($t, $kod)) wp_send_json_error('Öğrenme çıktısı bulunamadı.');
@@ -1935,15 +1950,11 @@ body.osc-yz-tam .osc-yz-seo{max-width:none}
 <?php get_footer(); exit;
     }
     public function kisa_kod() {
-        if (!$this->ogretmen_mi()) {
-            $g = OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url()));
-            $ogr = is_user_logged_in();
-            return '<div class="osc-yz-kapi" style="max-width:620px;margin:30px auto;padding:34px 28px;border-radius:24px;text-align:center;background:#fff;border:1px solid #e6e9f2;box-shadow:0 24px 50px -36px rgba(30,27,75,.5);font-family:\'Plus Jakarta Sans\',system-ui,sans-serif"><div style="width:64px;height:64px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,#5b5bf6,#c026d3);display:flex;align-items:center;justify-content:center;font-size:30px">📄</div><h2 style="margin:0 0 8px;font-size:24px;color:#0b1220">Yazılı Hazırla öğretmenlere özeldir</h2><p style="margin:0 0 20px;color:#475569;line-height:1.6">' . ($ogr ? 'Bu araç yalnızca öğretmen hesaplarıyla kullanılabilir.' : 'MEB senaryolarına uygun, cevap anahtarlı yazılınızı hazırlamak için ücretsiz öğretmen hesabınızla giriş yapın.') . '</p>' . ($ogr ? '' : '<a href="' . esc_url($g) . '" style="display:inline-block;background:linear-gradient(135deg,#5b5bf6,#7c3aed);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:14px">Giriş yap / Ücretsiz üye ol →</a>') . '</div>';
-        }
-        $cfg = self::cfg(false); $cfg['kota'] = self::kota_durum(); $cfg['rk_hazirlik'] = self::reklam('hazirlik') ? 1 : 0;
+        $cfg = self::cfg(false); $cfg['kota'] = is_user_logged_in() ? self::kota_durum() : null; $cfg['rk_hazirlik'] = self::reklam('hazirlik') ? 1 : 0;
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <?php echo self::reklam('ust'); ?>
+<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Yazılı Hazırla'); ?>
 <div id="osc-yz" class="osc-yz"><div class="yz-yuk">Yükleniyor…</div></div>
 <?php echo self::reklam('orta'); ?>
 <?php $rh = self::reklam('hazirlik'); if ($rh) echo '<div id="osc-rk-hazirlik-kap" class="osc-rk-kayan"><button type="button" aria-label="Kapat" onclick="this.parentNode.classList.remove(\'on\');this.parentNode.dataset.kapali=1">×</button><small>Sorularınız hazırlanıyor…</small>' . $rh . '</div>'; ?>
@@ -1957,7 +1968,7 @@ body.osc-yz-tam .osc-yz-seo{max-width:none}
 <div><b>2. Hazırlayın</b><p>Sorular soruindir.net yazılı arşivinden senaryodaki çıktılara göre gelir; eksik kalanlar yapay zekâ ile yazılır. Beğenmediğinizi değiştirin, isterseniz bazı soruları kendiniz yazın.</p></div>
 <div><b>3. İndirin</b><p>Puanlar 100’e otomatik dağıtılır. Cevap boşluklu yazılı kâğıdını cevap anahtarlı ya da anahtarsız Word veya PDF olarak indirin, yazdırın.</p></div>
 </div>
-<p class="alt">Ücretsizdir. Hazırladığınız yazılılar hesabınıza kaydedilir ve her cihazdan açabilirsiniz.</p>
+<p class="alt">Ücretsizdir, üyelik gerekmez. Ücretsiz üye olursanız yazılılarınız hesabınıza kaydedilir, her cihazdan açabilirsiniz; okul ve öğretmen bilgileriniz tüm yazılı ve evraklarınıza otomatik işlenir.</p>
 </section>
 <?php echo self::reklam('alt'); ?>
 <style>.osc-rk{max-width:1180px;margin:18px auto;text-align:center;min-height:50px;overflow:hidden}.osc-rk-et{display:block;font:600 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}.osc-rk-kayan{position:fixed;left:50%;bottom:0;z-index:99970;width:min(760px,100vw);transform:translate(-50%,110%);visibility:hidden;transition:transform .35s,visibility .35s;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -16px rgba(15,23,42,.45);padding:8px 10px 10px;box-sizing:border-box}.osc-rk-kayan.on{transform:translate(-50%,0);visibility:visible}.osc-rk-kayan>small{display:block;text-align:center;font:600 12px system-ui,sans-serif;color:#6d28d9;margin-bottom:4px}.osc-rk-kayan>button{position:absolute;right:8px;top:6px;border:0!important;background:#f1f5f9!important;color:#334155!important;padding:0!important;font-size:16px;line-height:1;border-radius:8px;width:26px;height:26px;cursor:pointer}.osc-rk-kayan .osc-rk{margin:0}@media print{.osc-rk,.osc-rk-kayan{display:none!important}}</style>
@@ -2112,6 +2123,8 @@ class OSC_Evrak {
 .ev-oy-izgara td.tp{font-weight:800;text-align:center;min-width:52px;color:#0f766e}
 #osc-ev .ev-x{border:0;background:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px 6px;line-height:1;box-shadow:none}
 #osc-ev .ev-x:hover{color:#b91c1c}
+
+.ev-uye{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:13px;line-height:1.5}.ev-uye a{font-weight:800;color:#4338ca}.ev-uye.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
 <?php }
     public static function js_cikti() { ?>/* =====================================================================
  * OSC_DOCX — yazılı kâğıdını gerçek Word (.docx) dosyası olarak üretir.
@@ -2939,7 +2952,14 @@ class OSC_Evrak {
 
   /* ---------------- durum ---------------- */
   var S = ls('osc_ev_taslak') || { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 };
-  var ORT = ls('osc_ev_ortak') || {};
+  /* ortak bilgiler (okul, müdür, öğretmen…): yalnızca üyelerde hesaba kaydedilir ve tüm evraklara işlenir */
+  var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe' };
+  var ORT = C.uye && C.profil ? C.profil : {};
+  var pZ = 0, pB = {};
+  function ortakKaydet(k, v) {
+    if (!C.uye) return; var a = ORTAK_K[k]; if (!a) return; ORT[a] = v; pB[a] = v; clearTimeout(pZ);
+    pZ = setTimeout(function () { var fd = new FormData(); fd.append('action', 'osc_om_profil'); fd.append('nonce', C.pnonce); fd.append('veri', JSON.stringify(pB)); pB = {}; fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {}); }, 900);
+  }
   function sakla() { ls('osc_ev_taslak', S); }
   function kayitlar(v) { if (v === undefined) return ls('osc_ev_kayitlar') || []; ls('osc_ev_kayitlar', v.slice(0, 80)); }
 
@@ -2964,7 +2984,7 @@ class OSC_Evrak {
     kok.querySelectorAll('[data-tur]').forEach(function (b) { b.onclick = function () { S.tur = b.dataset.tur; S.veri = {}; S.ic = null; S.id = 0; S.ekran = 'form'; sakla(); ciz(); window.scrollTo({ top: kok.getBoundingClientRect().top + window.pageYOffset - 20, behavior: 'smooth' }); }; });
   }
   function alanHtml(a) {
-    var v = S.veri[a.k]; if (v === undefined) { v = ['okul', 'il', 'mudur'].indexOf(a.k) >= 0 && ORT[a.k] ? ORT[a.k] : a.k === 'okul' && C.okul ? C.okul : (typeof a.v === 'function' ? a.v() : (a.v || '')); S.veri[a.k] = v; }
+    var v = S.veri[a.k]; if (v === undefined) { v = ORTAK_K[a.k] && ORT[ORTAK_K[a.k]] && !(a.tip === 'secim' && Array.isArray(a.l) && a.l.indexOf(ORT[ORTAK_K[a.k]]) < 0) ? ORT[ORTAK_K[a.k]] : (typeof a.v === 'function' ? a.v() : (a.v || '')); S.veri[a.k] = v; }
     var g = '';
     if (a.tip === 'secim') { var l = Array.isArray(a.l) ? a.l.map(function (x) { return [x, x]; }) : Object.keys(a.l).map(function (k) { return [k, a.l[k]]; }); g = '<select data-a="' + a.k + '"><option value="">Seçin…</option>' + l.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (String(v) === x[0] ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select>'; }
     else if (a.tip === 'kulup') g = '<select data-a="' + a.k + '"><option value="">Kulüp seçin…</option>' + Object.keys(KULUP).map(function (t) { return '<optgroup label="' + esc(t) + '">' + KULUP[t].map(function (x) { return '<option' + (v === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>';
@@ -2975,10 +2995,10 @@ class OSC_Evrak {
   }
   function vForm() {
     var t = tur(S.tur), YZ = C.yz && !t.yzYok && !(S.tur === 'belirli_gun' && S.veri.program === 'yillik');
-    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div><div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : '') +
+    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : '') +
       '<div class="ev-cubuk"><span>' + (YZ ? '🤖 Yapay zekâ, bilgilerinize göre gündemi, görüşmeleri ve kararları özgün olarak yazar.' : 'Taslak içerik bilgilerinize göre otomatik oluşturulur; dilediğiniz gibi düzenleyebilirsiniz.') + '</span><div>' + (YZ ? '<button class="ev-btn" id="ev-hizli">Hazır taslakla oluştur</button><button class="ev-btn ana" id="ev-yz">🤖 Yapay zekâ ile oluştur</button>' : '<button class="ev-btn ana" id="ev-hizli">Evrakı oluştur →</button>') + '</div></div></section>');
     if (t.ozel === 'oys') oyBagla();
-    kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } if (['okul', 'il', 'mudur'].indexOf(e.dataset.a) >= 0) { ORT[e.dataset.a] = e.value; ls('osc_ev_ortak', ORT); } sakla(); }; });
+    kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } ortakKaydet(e.dataset.a, e.value); sakla(); }; });
     document.getElementById('ev-geri').onclick = function () { S.ekran = t.grup === 'kulup' ? 'kulup' : 'sec'; sakla(); ciz(); };
     kok.querySelectorAll('[data-coklu]').forEach(function (d) { var k = d.dataset.coklu, guncel = function () { S.veri[k] = [].map.call(d.querySelectorAll('input:checked'), function (i) { return i.value; }); sakla(); }; d.querySelectorAll('input').forEach(function (i) { i.onchange = guncel; }); d.querySelectorAll('[data-hep]').forEach(function (b) { b.onclick = function () { d.querySelectorAll('input').forEach(function (i) { i.checked = b.dataset.hep === '1'; }); guncel(); }; }); });
     rkKoy('form', kok);
@@ -3095,6 +3115,7 @@ class OSC_Evrak {
 <?php foreach (self::reklam_alanlari() as $ra => $ad) echo '<tr><th>' . esc_html($ad) . '</th><td><textarea name="osc_reklam_' . esc_attr($ra) . '" rows="4" class="large-text code">' . esc_textarea(get_option('osc_reklam_' . $ra, '')) . '</textarea></td></tr>'; ?>
 </table><?php submit_button(); ?></form></div>
 <?php }
+    public static function profil() { if (!is_user_logged_in()) return new stdClass(); $p = get_user_meta(get_current_user_id(), 'osc_om_profil', true); if (!is_array($p)) $p = array(); if (empty($p['okul'])) { $o = (string) get_user_meta(get_current_user_id(), 'osc_okul', true); if ($o) $p['okul'] = $o; } if (empty($p['ogretmen'])) $p['ogretmen'] = wp_get_current_user()->display_name; return $p ? $p : new stdClass(); }
     public static function yz_acik() { return get_option('osc_ev_yz', '0') === '1' && OSC_YZ_API::var_mi(); }
 
     /* ---------- yapay zekâ ---------- */
@@ -3166,16 +3187,13 @@ class OSC_Evrak {
     }
     public function kisa_kod() {
         if (!self::gorebilir()) return '';
-        if (!$this->ogretmen_mi()) {
-            $ogr = is_user_logged_in(); $g = OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url()));
-            return '<div style="max-width:620px;margin:30px auto;padding:34px 28px;border-radius:24px;text-align:center;background:#fff;border:1px solid #e6e9f2;box-shadow:0 24px 50px -36px rgba(30,27,75,.5);font-family:\'Plus Jakarta Sans\',system-ui,sans-serif"><div style="width:64px;height:64px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,#0f766e,#2563eb);display:flex;align-items:center;justify-content:center;font-size:30px">🗂️</div><h2 style="margin:0 0 8px;font-size:24px;color:#0b1220">Evrak Hazırla öğretmenlere özeldir</h2><p style="margin:0 0 20px;color:#475569;line-height:1.6">' . ($ogr ? 'Bu araç yalnızca öğretmen hesaplarıyla kullanılabilir.' : 'Zümre, ŞÖK ve veli toplantısı tutanakları, BEP planı ve kulüp evraklarını hazırlamak için ücretsiz öğretmen hesabınızla giriş yapın.') . '</p>' . ($ogr ? '' : '<a href="' . esc_url($g) . '" style="display:inline-block;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:14px">Giriş yap / Ücretsiz üye ol →</a>') . '</div>';
-        }
         $u = wp_get_current_user();
-        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() ? 1 : 0, 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler());
+        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler());
         $rk = array(self::reklam('ev_ust'), self::reklam('ev_alt')); $rf = self::reklam('ev_form'); $ry = self::reklam('ev_yan');
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <?php echo $rk[0]; ?>
+<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Evrak Hazırla'); ?>
 <div id="osc-ev" class="osc-ev"><div class="ev-yuk">Yükleniyor…</div></div>
 <?php if ($rf) echo '<div id="osc-ev-rk-form">' . $rf . '</div>'; if ($ry) echo '<div id="osc-ev-rk-yan">' . $ry . '</div>'; ?>
 <link rel="stylesheet" href="<?php echo esc_url(self::kaynak_url('css')); ?>">
@@ -3202,11 +3220,31 @@ class OSC_Masa {
         add_shortcode('osc_ogretmen_masasi_tanitim', array(__CLASS__, 'anasayfa_bolumu'));
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
         add_action('template_redirect', array($this, 'tam_sayfa'), 20);
+        add_action('wp_ajax_osc_om_profil', array($this, 'ajax_profil'));
+        add_action('init', function () { if (OSC_Masa::yayinda() && !get_option('osc_om_yayin_t')) update_option('osc_om_yayin_t', time()); });
     }
     public static function yazili_acik() { return class_exists('OSC_Yazili') && OSC_Yazili::yayinda(); }
     public static function evrak_acik() { return class_exists('OSC_Evrak') && OSC_Evrak::yayinda(); }
     public static function yayinda() { return self::yazili_acik() || self::evrak_acik(); }
     public static function gorebilir() { return self::yayinda() || current_user_can('manage_options'); }
+    /** “YENİ” rozeti yayına alındıktan sonra 45 gün görünür */
+    public static function yeni_mi() { $t = (int) get_option('osc_om_yayin_t'); return !$t || time() - $t < 45 * DAY_IN_SECONDS; }
+    /** üyenin ortak bilgileri: tüm yazılı ve evraklara işlenir */
+    public function ajax_profil() {
+        if (!is_user_logged_in() || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_om')) wp_send_json_error('', 403);
+        $d = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : '{}'), true); if (!is_array($d)) wp_send_json_error('');
+        $uid = get_current_user_id(); $p = get_user_meta($uid, 'osc_om_profil', true); if (!is_array($p)) $p = array();
+        foreach (array('okul', 'il', 'mudur', 'ogretmen', 'gorev', 'kademe') as $k) if (isset($d[$k]) && is_scalar($d[$k])) $p[$k] = mb_substr(sanitize_text_field((string) $d[$k]), 0, 150);
+        update_user_meta($uid, 'osc_om_profil', $p);
+        if (!empty($p['okul'])) update_user_meta($uid, 'osc_okul', $p['okul']);
+        wp_send_json_success();
+    }
+    /** araç sayfalarında üst bağlantı (Öğretmen Masası › …) */
+    public static function kirinti($ad) {
+        $u = self::url();
+        return '<nav class="om-kirinti" aria-label="Sayfa yolu" style="max-width:1180px;margin:0 auto 12px;font:600 13px \'Plus Jakarta Sans\',system-ui,sans-serif;color:#64748b"><a href="' . esc_url(home_url('/')) . '" style="color:#64748b;text-decoration:none">Ana sayfa</a> › <a href="' . esc_url($u) . '" style="color:#4338ca;text-decoration:none">Öğretmen Masası</a> › <span>' . esc_html($ad) . '</span></nav>'
+            . '<script type="application/ld+json">' . wp_json_encode(array('@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array(array('@type' => 'ListItem', 'position' => 1, 'name' => 'Ana sayfa', 'item' => home_url('/')), array('@type' => 'ListItem', 'position' => 2, 'name' => 'Öğretmen Masası', 'item' => $u), array('@type' => 'ListItem', 'position' => 3, 'name' => $ad))), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    }
     public static function url() { $id = (int) get_option('osc_om_sayfa'); return $id && get_post_status($id) === 'publish' ? get_permalink($id) : home_url('/ogretmen-masasi/'); }
 
     /* ---------- yönetim ---------- */
@@ -3282,13 +3320,13 @@ class OSC_Masa {
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <div class="om">
 <section class="om-hero"><div class="om-ic">
-  <span class="om-et"><i></i>Öğretmenler için ücretsiz</span>
+  <span class="om-et"><i></i>Öğretmenler için ücretsiz · üyelik gerekmez</span>
   <h1>Öğretmen <em>Masası</em></h1>
   <p>Yazılı sınav kâğıdınızı MEB senaryolarına göre bir dakikada hazırlayın; tutanaklardan BEP planına, kulüp evraklarından OYS puan çizelgesine kadar evraklarınızı tek yerden oluşturun. Word olarak indirin, düzenleyin, yazdırın.</p>
   <div class="om-cta">
     <?php if ($yz) echo '<a class="om-btn a" href="' . esc_url($yzu) . '">📄 Yazılı hazırla</a>'; if ($ev) echo '<a class="om-btn b" href="' . esc_url($evu) . '">🗂️ Evrak hazırla</a>'; ?>
   </div>
-  <?php if (!$giris) echo '<p class="om-kucuk">Araçları kullanmak için <a href="' . esc_url($uye) . '">ücretsiz öğretmen hesabınızla giriş yapın</a>.</p>'; elseif ($ogr) echo '<p class="om-kucuk">Bu araçlar öğretmen hesaplarına özeldir.</p>'; ?>
+  <?php if (!$giris) echo '<p class="om-kucuk">Üye olmadan hemen kullanabilirsiniz. <a href="' . esc_url($uye) . '">Ücretsiz üye olursanız</a> okul bilgileriniz tüm evraklara otomatik işlenir, yazılılarınız her cihazdan açılır.</p>'; ?>
   <div class="om-say"><div><b>5–12</b><span>sınıf, tüm dersler</span></div><div><b>MEB</b><span>2026-2027 senaryoları</span></div><div><b><?php echo max(1, count(class_exists('OSC_Evrak') ? OSC_Evrak::acik_turler() : array())); ?></b><span>evrak türü</span></div><div><b>.docx</b><span>Word ve PDF çıktı</span></div></div>
 </div></section>
 
@@ -3315,11 +3353,11 @@ class OSC_Masa {
 <?php endif; ?>
 
 <section class="om-bolum"><h2>Nasıl çalışır?</h2>
-<div class="om-adim"><div><i>1</i><b>Giriş yapın</b><p>Ücretsiz öğretmen hesabınızla giriş yapın; okul bilgileriniz sonraki evraklarda otomatik dolar.</p></div><div><i>2</i><b>Seçin ve doldurun</b><p>Senaryoyu ya da evrak türünü seçin, birkaç bilgiyi girin. Taslak anında hazırlanır.</p></div><div><i>3</i><b>Düzenleyin, indirin</b><p>Kâğıt görünümünde kontrol edin, istediğinizi değiştirin; Word ya da PDF olarak indirin.</p></div></div></section>
+<div class="om-adim"><div><i>1</i><b>Aracı açın</b><p>Üyelik gerekmez. Üye olursanız okul bilgileriniz bir kez yazıldıktan sonra tüm evraklarda otomatik dolar.</p></div><div><i>2</i><b>Seçin ve doldurun</b><p>Senaryoyu ya da evrak türünü seçin, birkaç bilgiyi girin. Taslak anında hazırlanır.</p></div><div><i>3</i><b>Düzenleyin, indirin</b><p>Kâğıt görünümünde kontrol edin, istediğinizi değiştirin; Word ya da PDF olarak indirin.</p></div></div></section>
 
 <section class="om-bolum om-sss"><h2>Sık sorulan sorular</h2>
-<details><summary>Ücretli mi?</summary><p>Hayır. Öğretmen hesabıyla giriş yapan tüm öğretmenler ücretsiz kullanabilir.</p></details>
-<details><summary>Hazırlanan evraklar nerede saklanıyor?</summary><p>Yazılılarınız hesabınıza kaydedilir ve her cihazdan açılabilir. Evraklar ise yalnızca kullandığınız tarayıcıda saklanır; öğrenci bilgileri sunucuya kaydedilmez.</p></details>
+<details><summary>Ücretli mi, üyelik gerekiyor mu?</summary><p>Ücretsizdir ve üye olmadan kullanabilirsiniz. Ücretsiz üye olursanız okul adı, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli olur; tüm yazılı ve evraklarınıza otomatik işlenir, yazılılarınız her cihazdan açılır.</p></details>
+<details><summary>Hazırlanan evraklar nerede saklanıyor?</summary><p>Üyelerin yazılıları hesaplarına kaydedilir ve her cihazdan açılabilir; üye olmayanlarınki kullandıkları tarayıcıda saklanır. Evraklar yalnızca tarayıcınızda saklanır; öğrenci bilgileri sunucuya kaydedilmez.</p></details>
 <details><summary>Evraklar yönetmeliğe uygun mu?</summary><p>Toplantı zamanları ve evrak bölümleri ilgili MEB yönetmeliklerine göre hazırlanır ve her evrakta dayanağı belirtilir. Okulunuza özgü bilgileri ve tarihleri kontrol edip gerekirse düzenleyin.</p></details>
 <details><summary>Word dosyasını değiştirebilir miyim?</summary><p>Evet. İndirdiğiniz .docx dosyası Word, LibreOffice veya Google Dokümanlar’da açılıp düzenlenebilir.</p></details>
 </section>
@@ -3391,7 +3429,7 @@ class OSC_Masa {
 <section class="sph2-sec om-ana" aria-labelledby="om-ana-b">
   <div class="om-ana-kap">
     <div class="om-ana-sol">
-      <span class="om-ana-et"><i></i>YENİ · Öğretmenler için ücretsiz</span>
+      <span class="om-ana-et"><i></i><?php echo self::yeni_mi() ? 'YENİ · ' : ''; ?>Öğretmenler için ücretsiz · üyelik gerekmez</span>
       <h2 id="om-ana-b">Öğretmen <em>Masası</em></h2>
       <p>Yazılı sınav kâğıdınızı MEB senaryolarına göre hazırlayın; tutanak, plan ve çizelgelerinizi dakikalar içinde oluşturun. Hepsi tek yerde, Word olarak indirilebilir.</p>
       <a class="om-ana-btn" href="<?php echo esc_url(self::url()); ?>">Öğretmen Masası’na git <b>→</b></a>

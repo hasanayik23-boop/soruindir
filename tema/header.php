@@ -50,7 +50,7 @@ $sx_search_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 $sx_sayfa = function ($opt, $yol) { $id = (int) get_option($opt); return ($id && get_post_status($id) === 'publish') ? get_permalink($id) : home_url($yol); };
 $sx_yz = class_exists('OSC_Yazili') ? OSC_Yazili::url() : home_url('/yazili-hazirla/');
 $sx_yz_on = class_exists('OSC_Yazili') && method_exists('OSC_Yazili', 'yayinda') && OSC_Yazili::yayinda(); // yayına alınana kadar gizli
-$sx_om_on = class_exists('OSC_Masa') && OSC_Masa::yayinda(); $sx_om = $sx_om_on ? OSC_Masa::url() : '';
+$sx_om_on = class_exists('OSC_Masa') && OSC_Masa::yayinda(); $sx_om = $sx_om_on ? OSC_Masa::url() : ''; $sx_om_yeni = $sx_om_on && (!method_exists('OSC_Masa', 'yeni_mi') || OSC_Masa::yeni_mi()); // “YENİ” rozeti belli bir süre sonra kendiliğinden kalkar
 $sx_uye = $sx_sayfa('osc_sp_uye_sayfa', '/uyelik/'); $sx_ogt = $sx_sayfa('osc_sp_panel_sayfa', '/ogretmen-paneli/'); $sx_ogr = $sx_sayfa('osc_sp_ogrenci_sayfa', '/ogrenci-paneli/');
 $sx_giris = is_user_logged_in();
 $sx_rol = $sx_giris ? (class_exists('OSC_Sinav') ? OSC_Sinav::rol() : 'ogretmen') : '';
@@ -283,7 +283,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                         <?php foreach ($sx_calc as $m): ?><a href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a><?php endforeach; ?>
                     </div>
                 </div>
-                <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası <span class="sx-yeni">YENİ</span></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
+                <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası<?php if ($sx_om_yeni): ?> <span class="sx-yeni">YENİ</span><?php endif; ?></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
                 <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/icerik-gonder/'); ?>" href="https://soruindir.net/icerik-gonder/">İçerik gönder</a>
             </nav>
 
@@ -347,7 +347,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                 </div>
             </form>
             <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/')); ?>">Ana sayfa</a>
-            <?php if ($sx_om_on): ?><a class="sx-drawer-link sx-yz-mob" href="<?php echo esc_url($sx_om); ?>"><span>🧑‍🏫 Öğretmen Masası</span><span class="sx-yeni">YENİ</span></a><?php endif; ?>
+            <?php if ($sx_om_on): ?><a class="sx-drawer-link sx-yz-mob" href="<?php echo esc_url($sx_om); ?>"><span>🧑‍🏫 Öğretmen Masası</span><?php if ($sx_om_yeni): ?><span class="sx-yeni">YENİ</span><?php endif; ?></a><?php endif; ?>
             <?php if ($sx_yz_on): ?><a class="sx-drawer-link sx-yz-mob" href="<?php echo esc_url($sx_yz); ?>"><span>📄 Yazılı Hazırla</span><span class="sx-yeni">YENİ</span></a><?php endif; ?>
             <a class="sx-drawer-link<?php echo $sx_active('https://soruindir.net/test-coz/'); ?>" href="https://soruindir.net/test-coz/">Online testler</a>
             <?php foreach ($sx_menu as $m): ?>

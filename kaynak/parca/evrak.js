@@ -508,7 +508,14 @@
 
   /* ---------------- durum ---------------- */
   var S = ls('osc_ev_taslak') || { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 };
-  var ORT = ls('osc_ev_ortak') || {};
+  /* ortak bilgiler (okul, müdür, öğretmen…): yalnızca üyelerde hesaba kaydedilir ve tüm evraklara işlenir */
+  var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe' };
+  var ORT = C.uye && C.profil ? C.profil : {};
+  var pZ = 0, pB = {};
+  function ortakKaydet(k, v) {
+    if (!C.uye) return; var a = ORTAK_K[k]; if (!a) return; ORT[a] = v; pB[a] = v; clearTimeout(pZ);
+    pZ = setTimeout(function () { var fd = new FormData(); fd.append('action', 'osc_om_profil'); fd.append('nonce', C.pnonce); fd.append('veri', JSON.stringify(pB)); pB = {}; fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {}); }, 900);
+  }
   function sakla() { ls('osc_ev_taslak', S); }
   function kayitlar(v) { if (v === undefined) return ls('osc_ev_kayitlar') || []; ls('osc_ev_kayitlar', v.slice(0, 80)); }
 
@@ -533,7 +540,7 @@
     kok.querySelectorAll('[data-tur]').forEach(function (b) { b.onclick = function () { S.tur = b.dataset.tur; S.veri = {}; S.ic = null; S.id = 0; S.ekran = 'form'; sakla(); ciz(); window.scrollTo({ top: kok.getBoundingClientRect().top + window.pageYOffset - 20, behavior: 'smooth' }); }; });
   }
   function alanHtml(a) {
-    var v = S.veri[a.k]; if (v === undefined) { v = ['okul', 'il', 'mudur'].indexOf(a.k) >= 0 && ORT[a.k] ? ORT[a.k] : a.k === 'okul' && C.okul ? C.okul : (typeof a.v === 'function' ? a.v() : (a.v || '')); S.veri[a.k] = v; }
+    var v = S.veri[a.k]; if (v === undefined) { v = ORTAK_K[a.k] && ORT[ORTAK_K[a.k]] && !(a.tip === 'secim' && Array.isArray(a.l) && a.l.indexOf(ORT[ORTAK_K[a.k]]) < 0) ? ORT[ORTAK_K[a.k]] : (typeof a.v === 'function' ? a.v() : (a.v || '')); S.veri[a.k] = v; }
     var g = '';
     if (a.tip === 'secim') { var l = Array.isArray(a.l) ? a.l.map(function (x) { return [x, x]; }) : Object.keys(a.l).map(function (k) { return [k, a.l[k]]; }); g = '<select data-a="' + a.k + '"><option value="">Seçin…</option>' + l.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (String(v) === x[0] ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select>'; }
     else if (a.tip === 'kulup') g = '<select data-a="' + a.k + '"><option value="">Kulüp seçin…</option>' + Object.keys(KULUP).map(function (t) { return '<optgroup label="' + esc(t) + '">' + KULUP[t].map(function (x) { return '<option' + (v === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>';
@@ -544,10 +551,10 @@
   }
   function vForm() {
     var t = tur(S.tur), YZ = C.yz && !t.yzYok && !(S.tur === 'belirli_gun' && S.veri.program === 'yillik');
-    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div><div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : '') +
+    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : '') +
       '<div class="ev-cubuk"><span>' + (YZ ? '🤖 Yapay zekâ, bilgilerinize göre gündemi, görüşmeleri ve kararları özgün olarak yazar.' : 'Taslak içerik bilgilerinize göre otomatik oluşturulur; dilediğiniz gibi düzenleyebilirsiniz.') + '</span><div>' + (YZ ? '<button class="ev-btn" id="ev-hizli">Hazır taslakla oluştur</button><button class="ev-btn ana" id="ev-yz">🤖 Yapay zekâ ile oluştur</button>' : '<button class="ev-btn ana" id="ev-hizli">Evrakı oluştur →</button>') + '</div></div></section>');
     if (t.ozel === 'oys') oyBagla();
-    kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } if (['okul', 'il', 'mudur'].indexOf(e.dataset.a) >= 0) { ORT[e.dataset.a] = e.value; ls('osc_ev_ortak', ORT); } sakla(); }; });
+    kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } ortakKaydet(e.dataset.a, e.value); sakla(); }; });
     document.getElementById('ev-geri').onclick = function () { S.ekran = t.grup === 'kulup' ? 'kulup' : 'sec'; sakla(); ciz(); };
     kok.querySelectorAll('[data-coklu]').forEach(function (d) { var k = d.dataset.coklu, guncel = function () { S.veri[k] = [].map.call(d.querySelectorAll('input:checked'), function (i) { return i.value; }); sakla(); }; d.querySelectorAll('input').forEach(function (i) { i.onchange = guncel; }); d.querySelectorAll('[data-hep]').forEach(function (b) { b.onclick = function () { d.querySelectorAll('input').forEach(function (i) { i.checked = b.dataset.hep === '1'; }); guncel(); }; }); });
     rkKoy('form', kok);

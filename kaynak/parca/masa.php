@@ -12,11 +12,31 @@ class OSC_Masa {
         add_shortcode('osc_ogretmen_masasi_tanitim', array(__CLASS__, 'anasayfa_bolumu'));
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
         add_action('template_redirect', array($this, 'tam_sayfa'), 20);
+        add_action('wp_ajax_osc_om_profil', array($this, 'ajax_profil'));
+        add_action('init', function () { if (OSC_Masa::yayinda() && !get_option('osc_om_yayin_t')) update_option('osc_om_yayin_t', time()); });
     }
     public static function yazili_acik() { return class_exists('OSC_Yazili') && OSC_Yazili::yayinda(); }
     public static function evrak_acik() { return class_exists('OSC_Evrak') && OSC_Evrak::yayinda(); }
     public static function yayinda() { return self::yazili_acik() || self::evrak_acik(); }
     public static function gorebilir() { return self::yayinda() || current_user_can('manage_options'); }
+    /** “YENİ” rozeti yayına alındıktan sonra 45 gün görünür */
+    public static function yeni_mi() { $t = (int) get_option('osc_om_yayin_t'); return !$t || time() - $t < 45 * DAY_IN_SECONDS; }
+    /** üyenin ortak bilgileri: tüm yazılı ve evraklara işlenir */
+    public function ajax_profil() {
+        if (!is_user_logged_in() || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_om')) wp_send_json_error('', 403);
+        $d = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : '{}'), true); if (!is_array($d)) wp_send_json_error('');
+        $uid = get_current_user_id(); $p = get_user_meta($uid, 'osc_om_profil', true); if (!is_array($p)) $p = array();
+        foreach (array('okul', 'il', 'mudur', 'ogretmen', 'gorev', 'kademe') as $k) if (isset($d[$k]) && is_scalar($d[$k])) $p[$k] = mb_substr(sanitize_text_field((string) $d[$k]), 0, 150);
+        update_user_meta($uid, 'osc_om_profil', $p);
+        if (!empty($p['okul'])) update_user_meta($uid, 'osc_okul', $p['okul']);
+        wp_send_json_success();
+    }
+    /** araç sayfalarında üst bağlantı (Öğretmen Masası › …) */
+    public static function kirinti($ad) {
+        $u = self::url();
+        return '<nav class="om-kirinti" aria-label="Sayfa yolu" style="max-width:1180px;margin:0 auto 12px;font:600 13px \'Plus Jakarta Sans\',system-ui,sans-serif;color:#64748b"><a href="' . esc_url(home_url('/')) . '" style="color:#64748b;text-decoration:none">Ana sayfa</a> › <a href="' . esc_url($u) . '" style="color:#4338ca;text-decoration:none">Öğretmen Masası</a> › <span>' . esc_html($ad) . '</span></nav>'
+            . '<script type="application/ld+json">' . wp_json_encode(array('@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array(array('@type' => 'ListItem', 'position' => 1, 'name' => 'Ana sayfa', 'item' => home_url('/')), array('@type' => 'ListItem', 'position' => 2, 'name' => 'Öğretmen Masası', 'item' => $u), array('@type' => 'ListItem', 'position' => 3, 'name' => $ad))), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    }
     public static function url() { $id = (int) get_option('osc_om_sayfa'); return $id && get_post_status($id) === 'publish' ? get_permalink($id) : home_url('/ogretmen-masasi/'); }
 
     /* ---------- yönetim ---------- */
@@ -92,13 +112,13 @@ class OSC_Masa {
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <div class="om">
 <section class="om-hero"><div class="om-ic">
-  <span class="om-et"><i></i>Öğretmenler için ücretsiz</span>
+  <span class="om-et"><i></i>Öğretmenler için ücretsiz · üyelik gerekmez</span>
   <h1>Öğretmen <em>Masası</em></h1>
   <p>Yazılı sınav kâğıdınızı MEB senaryolarına göre bir dakikada hazırlayın; tutanaklardan BEP planına, kulüp evraklarından OYS puan çizelgesine kadar evraklarınızı tek yerden oluşturun. Word olarak indirin, düzenleyin, yazdırın.</p>
   <div class="om-cta">
     <?php if ($yz) echo '<a class="om-btn a" href="' . esc_url($yzu) . '">📄 Yazılı hazırla</a>'; if ($ev) echo '<a class="om-btn b" href="' . esc_url($evu) . '">🗂️ Evrak hazırla</a>'; ?>
   </div>
-  <?php if (!$giris) echo '<p class="om-kucuk">Araçları kullanmak için <a href="' . esc_url($uye) . '">ücretsiz öğretmen hesabınızla giriş yapın</a>.</p>'; elseif ($ogr) echo '<p class="om-kucuk">Bu araçlar öğretmen hesaplarına özeldir.</p>'; ?>
+  <?php if (!$giris) echo '<p class="om-kucuk">Üye olmadan hemen kullanabilirsiniz. <a href="' . esc_url($uye) . '">Ücretsiz üye olursanız</a> okul bilgileriniz tüm evraklara otomatik işlenir, yazılılarınız her cihazdan açılır.</p>'; ?>
   <div class="om-say"><div><b>5–12</b><span>sınıf, tüm dersler</span></div><div><b>MEB</b><span>2026-2027 senaryoları</span></div><div><b><?php echo max(1, count(class_exists('OSC_Evrak') ? OSC_Evrak::acik_turler() : array())); ?></b><span>evrak türü</span></div><div><b>.docx</b><span>Word ve PDF çıktı</span></div></div>
 </div></section>
 
@@ -125,11 +145,11 @@ class OSC_Masa {
 <?php endif; ?>
 
 <section class="om-bolum"><h2>Nasıl çalışır?</h2>
-<div class="om-adim"><div><i>1</i><b>Giriş yapın</b><p>Ücretsiz öğretmen hesabınızla giriş yapın; okul bilgileriniz sonraki evraklarda otomatik dolar.</p></div><div><i>2</i><b>Seçin ve doldurun</b><p>Senaryoyu ya da evrak türünü seçin, birkaç bilgiyi girin. Taslak anında hazırlanır.</p></div><div><i>3</i><b>Düzenleyin, indirin</b><p>Kâğıt görünümünde kontrol edin, istediğinizi değiştirin; Word ya da PDF olarak indirin.</p></div></div></section>
+<div class="om-adim"><div><i>1</i><b>Aracı açın</b><p>Üyelik gerekmez. Üye olursanız okul bilgileriniz bir kez yazıldıktan sonra tüm evraklarda otomatik dolar.</p></div><div><i>2</i><b>Seçin ve doldurun</b><p>Senaryoyu ya da evrak türünü seçin, birkaç bilgiyi girin. Taslak anında hazırlanır.</p></div><div><i>3</i><b>Düzenleyin, indirin</b><p>Kâğıt görünümünde kontrol edin, istediğinizi değiştirin; Word ya da PDF olarak indirin.</p></div></div></section>
 
 <section class="om-bolum om-sss"><h2>Sık sorulan sorular</h2>
-<details><summary>Ücretli mi?</summary><p>Hayır. Öğretmen hesabıyla giriş yapan tüm öğretmenler ücretsiz kullanabilir.</p></details>
-<details><summary>Hazırlanan evraklar nerede saklanıyor?</summary><p>Yazılılarınız hesabınıza kaydedilir ve her cihazdan açılabilir. Evraklar ise yalnızca kullandığınız tarayıcıda saklanır; öğrenci bilgileri sunucuya kaydedilmez.</p></details>
+<details><summary>Ücretli mi, üyelik gerekiyor mu?</summary><p>Ücretsizdir ve üye olmadan kullanabilirsiniz. Ücretsiz üye olursanız okul adı, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli olur; tüm yazılı ve evraklarınıza otomatik işlenir, yazılılarınız her cihazdan açılır.</p></details>
+<details><summary>Hazırlanan evraklar nerede saklanıyor?</summary><p>Üyelerin yazılıları hesaplarına kaydedilir ve her cihazdan açılabilir; üye olmayanlarınki kullandıkları tarayıcıda saklanır. Evraklar yalnızca tarayıcınızda saklanır; öğrenci bilgileri sunucuya kaydedilmez.</p></details>
 <details><summary>Evraklar yönetmeliğe uygun mu?</summary><p>Toplantı zamanları ve evrak bölümleri ilgili MEB yönetmeliklerine göre hazırlanır ve her evrakta dayanağı belirtilir. Okulunuza özgü bilgileri ve tarihleri kontrol edip gerekirse düzenleyin.</p></details>
 <details><summary>Word dosyasını değiştirebilir miyim?</summary><p>Evet. İndirdiğiniz .docx dosyası Word, LibreOffice veya Google Dokümanlar’da açılıp düzenlenebilir.</p></details>
 </section>
@@ -201,7 +221,7 @@ class OSC_Masa {
 <section class="sph2-sec om-ana" aria-labelledby="om-ana-b">
   <div class="om-ana-kap">
     <div class="om-ana-sol">
-      <span class="om-ana-et"><i></i>YENİ · Öğretmenler için ücretsiz</span>
+      <span class="om-ana-et"><i></i><?php echo self::yeni_mi() ? 'YENİ · ' : ''; ?>Öğretmenler için ücretsiz · üyelik gerekmez</span>
       <h2 id="om-ana-b">Öğretmen <em>Masası</em></h2>
       <p>Yazılı sınav kâğıdınızı MEB senaryolarına göre hazırlayın; tutanak, plan ve çizelgelerinizi dakikalar içinde oluşturun. Hepsi tek yerde, Word olarak indirilebilir.</p>
       <a class="om-ana-btn" href="<?php echo esc_url(self::url()); ?>">Öğretmen Masası’na git <b>→</b></a>

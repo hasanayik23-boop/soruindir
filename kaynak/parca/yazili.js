@@ -73,6 +73,12 @@
     getir: function (d) { var x = kayitlar().filter(function (k) { return k.id === +d.id; })[0]; if (!x) throw new Error('Yazılı bulunamadı.'); return { id: x.id, veri: x.veri }; },
     sil: function (d) { kayitlar(kayitlar().filter(function (k) { return k.id !== +d.id; })); return true; }
   };
+  /* üyeler: okul / öğretmen bilgisi hesapta saklanır, tüm yazılı ve evraklara işlenir */
+  var pZaman = {}, pBekle = {};
+  function profilKaydet(k, v) {
+    if (!C.uye || !C.pnonce) return; pBekle[k] = v; clearTimeout(pZaman.t);
+    pZaman.t = setTimeout(function () { var fd = new FormData(); fd.append('action', 'osc_om_profil'); fd.append('nonce', C.pnonce); fd.append('veri', JSON.stringify(pBekle)); pBekle = {}; fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {}); }, 900);
+  }
   function api(a, d, ms) {
     if (C.yerel && YEREL[a]) return new Promise(function (ok, no) { try { ok(YEREL[a](d || {})); } catch (e) { no(e); } });
     return sunucu(a, d, ms);
@@ -89,7 +95,7 @@
   var DERS_IK = { 'Türkçe': '📖', 'Matematik': '➗', 'Fen Bilimleri': '🔬', 'Sosyal Bilgiler': '🌍', 'İngilizce': '🇬🇧', 'Din Kültürü ve Ahlak Bilgisi': '🕌', 'T.C. İnkılap Tarihi ve Atatürkçülük': '🇹🇷', 'Fizik': '⚛️', 'Kimya': '⚗️', 'Biyoloji': '🧬', 'Tarih': '🏛️', 'Coğrafya': '🗺️', 'Felsefe': '💭', 'Türk Dili ve Edebiyatı': '✒️' };
   var RENK = ['#6366f1', '#06b6d4', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#84cc16', '#f97316'];
 
-  function yeniDurum() { return { adim: 1, yil: SNR.yil || '2026-2027', sinif: 0, ders: '', donem: varsayilanDonem(), yazili: 1, senaryo: 0, ozel: {}, bilgi: { okul: C.okul || (C.yerel ? ls('osc_yz_okul') || '' : ''), baslik: '', ogretmen: C.ad || '', tarih: bugun(), sure: 40 }, zorluk: 0, tur: 'acik', alan: 'normal', kaynak: 'arsiv', slotlar: [], sorular: [], anahtar: true, id: 0 }; }
+  function yeniDurum() { return { adim: 1, yil: SNR.yil || '2026-2027', sinif: 0, ders: '', donem: varsayilanDonem(), yazili: 1, senaryo: 0, ozel: {}, bilgi: { okul: C.okul || '', baslik: '', ogretmen: C.ad || '', tarih: bugun(), sure: 40 }, zorluk: 0, tur: 'acik', alan: 'normal', kaynak: 'arsiv', slotlar: [], sorular: [], anahtar: true, id: 0 }; }
   var S = ls('osc_yz_taslak') || yeniDurum(), sekme = 'yeni', kuyrukNo = 0;
   if (!S.alan) S.alan = 'normal';
   if (!S.kaynak) S.kaynak = 'arsiv';
@@ -253,6 +259,7 @@
   function v2() {
     var b = S.bilgi, benSay = S.slotlar.filter(function (x) { return x.ben; }).length, t = tablo(), rk = t ? konuRenk(t) : {};
     var h = '<div class="yz-iki"><section class="yz-kart"><div class="yz-kart-bas"><span class="yz-num">🏫</span><div><h2>Sınav bilgileri</h2><p>Kâğıdın başlığında görünür</p></div></div>' +
+      (C.uye ? '<p class="yz-uye ok">✓ Okul ve öğretmen bilgileriniz hesabınızdan geldi. Burada değiştirirseniz tüm yazılı ve evraklarınızda güncellenir.</p>' : '<p class="yz-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı ve öğretmen adınız bir kez yazıldıktan sonra tüm yazılılarınıza ve evraklarınıza otomatik işlenir; yazılılarınız her cihazdan açılır.' + (C.giris ? ' <a href="' + esc(C.giris) + '">Üye ol / giriş yap →</a>' : '') + '</p>') +
       '<label class="yz-alan"><span>Okul adı</span><input data-b="okul" value="' + esc(b.okul) + '" placeholder="Örn. Atatürk Ortaokulu"></label>' +
       '<label class="yz-alan"><span>Sınav başlığı</span><input data-b="baslik" value="' + esc(b.baslik) + '"></label>' +
       '<label class="yz-alan"><span>Öğretmen adı</span><input data-b="ogretmen" value="' + esc(b.ogretmen) + '" placeholder="Adınız soyadınız"></label>' +
@@ -265,7 +272,7 @@
       '<div class="yz-slotlar">' + S.slotlar.map(function (x, i) { return '<label class="yz-slot' + (x.ben ? ' ben' : '') + '"><i style="--r:' + (rk[x.konu] || '#6366f1') + '">' + (i + 1) + '</i><div><small>' + esc(kodGoster(x.kod)) + (kodGoster(x.kod) ? ' · ' : '') + esc(x.konu) + '</small><p>' + esc(x.cikti) + '</p></div><span class="yz-anahtar"><input type="checkbox" data-ben="' + i + '"' + (x.ben ? ' checked' : '') + '><em></em><span>' + (x.ben ? 'Ben yazacağım' : 'Otomatik') + '</span></span></label>'; }).join('') + '</div></section>' +
       '<div class="yz-cubuk"><button class="yz-btn" data-git2="1">← Geri</button><div class="yz-ozet"><b>' + (S.slotlar.length - benSay) + ' soru ' + (S.kaynak === 'yz' ? 'yapay zekâyla yazılacak' : 'otomatik hazırlanacak') + '</b><span>' + (benSay ? benSay + ' soruyu siz yazacaksınız' : 'Tüm sorular otomatik') + '</span></div>' + (S.sorular.length ? '<button class="yz-btn" data-git2="3">Mevcut sorular →</button>' : '') + '<button class="yz-btn ana" id="yz-hazirla">' + (S.sorular.length ? 'Yeniden hazırla' : 'Soruları hazırla') + ' <i>✨</i></button></div>';
     cerceve(h);
-    kok.querySelectorAll('[data-b]').forEach(function (e) { e.oninput = function () { S.bilgi[e.dataset.b] = e.dataset.b === 'sure' ? +e.value : e.value; sakla(); }; });
+    kok.querySelectorAll('[data-b]').forEach(function (e) { e.oninput = function () { S.bilgi[e.dataset.b] = e.dataset.b === 'sure' ? +e.value : e.value; sakla(); if (e.dataset.b === 'okul' || e.dataset.b === 'ogretmen') profilKaydet(e.dataset.b, e.value); }; });
     kok.querySelectorAll('[data-z]').forEach(function (e) { e.onclick = function () { S.zorluk = +e.dataset.z; sakla(); v2(); }; });
     kok.querySelectorAll('[data-t]').forEach(function (e) { e.onclick = function () { S.tur = e.dataset.t; sakla(); v2(); }; });
     kok.querySelectorAll('[data-al]').forEach(function (e) { e.onclick = function () { S.alan = e.dataset.al; sakla(); v2(); }; });

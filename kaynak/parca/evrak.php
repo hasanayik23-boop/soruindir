@@ -86,6 +86,7 @@ class OSC_Evrak {
 <?php foreach (self::reklam_alanlari() as $ra => $ad) echo '<tr><th>' . esc_html($ad) . '</th><td><textarea name="osc_reklam_' . esc_attr($ra) . '" rows="4" class="large-text code">' . esc_textarea(get_option('osc_reklam_' . $ra, '')) . '</textarea></td></tr>'; ?>
 </table><?php submit_button(); ?></form></div>
 <?php }
+    public static function profil() { if (!is_user_logged_in()) return new stdClass(); $p = get_user_meta(get_current_user_id(), 'osc_om_profil', true); if (!is_array($p)) $p = array(); if (empty($p['okul'])) { $o = (string) get_user_meta(get_current_user_id(), 'osc_okul', true); if ($o) $p['okul'] = $o; } if (empty($p['ogretmen'])) $p['ogretmen'] = wp_get_current_user()->display_name; return $p ? $p : new stdClass(); }
     public static function yz_acik() { return get_option('osc_ev_yz', '0') === '1' && OSC_YZ_API::var_mi(); }
 
     /* ---------- yapay zekâ ---------- */
@@ -157,16 +158,13 @@ class OSC_Evrak {
     }
     public function kisa_kod() {
         if (!self::gorebilir()) return '';
-        if (!$this->ogretmen_mi()) {
-            $ogr = is_user_logged_in(); $g = OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url()));
-            return '<div style="max-width:620px;margin:30px auto;padding:34px 28px;border-radius:24px;text-align:center;background:#fff;border:1px solid #e6e9f2;box-shadow:0 24px 50px -36px rgba(30,27,75,.5);font-family:\'Plus Jakarta Sans\',system-ui,sans-serif"><div style="width:64px;height:64px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,#0f766e,#2563eb);display:flex;align-items:center;justify-content:center;font-size:30px">🗂️</div><h2 style="margin:0 0 8px;font-size:24px;color:#0b1220">Evrak Hazırla öğretmenlere özeldir</h2><p style="margin:0 0 20px;color:#475569;line-height:1.6">' . ($ogr ? 'Bu araç yalnızca öğretmen hesaplarıyla kullanılabilir.' : 'Zümre, ŞÖK ve veli toplantısı tutanakları, BEP planı ve kulüp evraklarını hazırlamak için ücretsiz öğretmen hesabınızla giriş yapın.') . '</p>' . ($ogr ? '' : '<a href="' . esc_url($g) . '" style="display:inline-block;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:14px">Giriş yap / Ücretsiz üye ol →</a>') . '</div>';
-        }
         $u = wp_get_current_user();
-        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() ? 1 : 0, 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler());
+        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler());
         $rk = array(self::reklam('ev_ust'), self::reklam('ev_alt')); $rf = self::reklam('ev_form'); $ry = self::reklam('ev_yan');
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <?php echo $rk[0]; ?>
+<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Evrak Hazırla'); ?>
 <div id="osc-ev" class="osc-ev"><div class="ev-yuk">Yükleniyor…</div></div>
 <?php if ($rf) echo '<div id="osc-ev-rk-form">' . $rf . '</div>'; if ($ry) echo '<div id="osc-ev-rk-yan">' . $ry . '</div>'; ?>
 <link rel="stylesheet" href="<?php echo esc_url(self::kaynak_url('css')); ?>">

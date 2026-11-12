@@ -10,6 +10,7 @@ class OSC_Yazili {
         add_shortcode('osc_yazili_hazirla', array($this, 'kisa_kod'));
         foreach (array('hazirla', 'yz', 'degistir', 'kaydet', 'liste', 'getir', 'sil', 'havuza') as $a) add_action('wp_ajax_osc_yz_' . $a, array($this, 'ajax_' . $a));
         add_action('wp_ajax_osc_yz_konular', array($this, 'ajax_konular'));
+        foreach (array('hazirla', 'degistir', 'konular', 'say', 'havuza', 'yz') as $a) add_action('wp_ajax_nopriv_osc_yz_' . $a, array($this, 'ajax_' . $a));
         add_action('wp_ajax_osc_yz_say', array($this, 'ajax_say'));
         add_action('template_redirect', array($this, 'kaynak_servis'), 0);
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
@@ -40,8 +41,9 @@ class OSC_Yazili {
     }
     public static function cfg($gomulu = false) {
         $u = wp_get_current_user();
-        return array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_yz'), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'logo' => OSC_Sinav::logo_src(), 'home' => home_url('/'), 'panel' => ($gomulu || !is_user_logged_in() || OSC_Sinav::rol() === 'ogrenci') ? '' : OSC_Sinav::sayfa_url('osc_sp_panel_sayfa'), 'yz' => (OSC_YZ_API::var_mi() && self::canli() !== 'kapali') ? 1 : 0, 'yzmod' => self::canli(), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'gomulu' => $gomulu ? 1 : 0, 'kota' => is_user_logged_in() ? self::kota_durum() : null, 'yerel' => (is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci') ? 0 : 1, 'giris' => is_user_logged_in() ? '' : OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())));
+        return array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_yz'), 'ad' => self::profil('ogretmen', $u->display_name), 'okul' => self::profil('okul', (string) get_user_meta($u->ID, 'osc_okul', true)), 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'logo' => OSC_Sinav::logo_src(), 'home' => home_url('/'), 'panel' => ($gomulu || !is_user_logged_in() || OSC_Sinav::rol() === 'ogrenci') ? '' : OSC_Sinav::sayfa_url('osc_sp_panel_sayfa'), 'yz' => (is_user_logged_in() && OSC_YZ_API::var_mi() && self::canli() !== 'kapali') ? 1 : 0, 'yzmod' => self::canli(), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'gomulu' => $gomulu ? 1 : 0, 'kota' => is_user_logged_in() ? self::kota_durum() : null, 'yerel' => (is_user_logged_in() && OSC_Sinav::rol() !== 'ogrenci') ? 0 : 1, 'giris' => is_user_logged_in() ? '' : OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())));
     }
+    public static function profil($k, $vars = '') { if (!is_user_logged_in()) return ''; $p = get_user_meta(get_current_user_id(), 'osc_om_profil', true); return is_array($p) && !empty($p[$k]) ? (string) $p[$k] : (string) $vars; }
     public static function surum() { return substr(md5((string) @filemtime(__FILE__) . '|' . DB_NAME . '|' . get_option('osc_senaryo_surum', '')), 0, 10); }
     /** Yazılı Hazırla'da canlı yapay zekâ: kapali | bos (yalnızca havuzda soru kalmayınca) | acik */
     public static function canli() { $v = get_option('osc_yz_canli', 'bos'); return in_array($v, array('kapali', 'bos', 'acik'), true) ? $v : 'bos'; }
@@ -191,8 +193,12 @@ var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector(
     }
     /** herkese açık işlemler (soru hazırlama): giriş gerekmez */
     private function kontrol_acik() {
-        if (!$this->ogretmen_mi()) wp_send_json_error('Yazılı Hazırla’yı kullanmak için öğretmen hesabıyla giriş yapın.', 403);
         if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_yz')) wp_send_json_error('Oturum süresi doldu. Sayfayı yenileyin.', 403);
+        if (!is_user_logged_in()) {   // ziyaretçi: IP başına saatlik sınır (kötüye kullanıma karşı)
+            $k = 'osc_yz_zy_' . md5(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') . '_' . gmdate('YmdH'); $n = (int) get_transient($k);
+            if ($n > 150) wp_send_json_error('Çok fazla istek gönderildi. Biraz sonra tekrar deneyin ya da ücretsiz üye olun.', 429);
+            set_transient($k, $n + 1, HOUR_IN_SECONDS);
+        }
     }
     /** MEB senaryo tablosu ya da öğretmenin kendi kurduğu (diğer dersler) tablo */
     private function tablo_al($d) {
@@ -520,7 +526,7 @@ var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector(
         if ($ids) $wpdb->query('UPDATE ' . OSC_Havuz::tablo() . ' SET kullanim = kullanim + 1 WHERE id IN (' . implode(',', $ids) . ')');
     }
     public function ajax_yz() {
-        $this->kontrol_acik(); $d = $this->girdi();
+        $this->kontrol_acik(); if (!is_user_logged_in()) wp_send_json_error('Yapay zekâ ile soru yazdırmak için ücretsiz üye girişi yapın.', 403); $d = $this->girdi();
         $t = $this->tablo_al($d); if (!$t) wp_send_json_error('Ders ya da konu listesi bulunamadı.');
         $kod = (string) (isset($d['kod']) ? $d['kod'] : ''); $n = max(1, min(3, (int) (isset($d['n']) ? $d['n'] : 1)));
         if (!$this->satir($t, $kod)) wp_send_json_error('Öğrenme çıktısı bulunamadı.');
@@ -650,15 +656,11 @@ body.osc-yz-tam .osc-yz-seo{max-width:none}
 <?php get_footer(); exit;
     }
     public function kisa_kod() {
-        if (!$this->ogretmen_mi()) {
-            $g = OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url()));
-            $ogr = is_user_logged_in();
-            return '<div class="osc-yz-kapi" style="max-width:620px;margin:30px auto;padding:34px 28px;border-radius:24px;text-align:center;background:#fff;border:1px solid #e6e9f2;box-shadow:0 24px 50px -36px rgba(30,27,75,.5);font-family:\'Plus Jakarta Sans\',system-ui,sans-serif"><div style="width:64px;height:64px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,#5b5bf6,#c026d3);display:flex;align-items:center;justify-content:center;font-size:30px">📄</div><h2 style="margin:0 0 8px;font-size:24px;color:#0b1220">Yazılı Hazırla öğretmenlere özeldir</h2><p style="margin:0 0 20px;color:#475569;line-height:1.6">' . ($ogr ? 'Bu araç yalnızca öğretmen hesaplarıyla kullanılabilir.' : 'MEB senaryolarına uygun, cevap anahtarlı yazılınızı hazırlamak için ücretsiz öğretmen hesabınızla giriş yapın.') . '</p>' . ($ogr ? '' : '<a href="' . esc_url($g) . '" style="display:inline-block;background:linear-gradient(135deg,#5b5bf6,#7c3aed);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:14px">Giriş yap / Ücretsiz üye ol →</a>') . '</div>';
-        }
-        $cfg = self::cfg(false); $cfg['kota'] = self::kota_durum(); $cfg['rk_hazirlik'] = self::reklam('hazirlik') ? 1 : 0;
+        $cfg = self::cfg(false); $cfg['kota'] = is_user_logged_in() ? self::kota_durum() : null; $cfg['rk_hazirlik'] = self::reklam('hazirlik') ? 1 : 0;
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <?php echo self::reklam('ust'); ?>
+<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Yazılı Hazırla'); ?>
 <div id="osc-yz" class="osc-yz"><div class="yz-yuk">Yükleniyor…</div></div>
 <?php echo self::reklam('orta'); ?>
 <?php $rh = self::reklam('hazirlik'); if ($rh) echo '<div id="osc-rk-hazirlik-kap" class="osc-rk-kayan"><button type="button" aria-label="Kapat" onclick="this.parentNode.classList.remove(\'on\');this.parentNode.dataset.kapali=1">×</button><small>Sorularınız hazırlanıyor…</small>' . $rh . '</div>'; ?>
@@ -672,7 +674,7 @@ body.osc-yz-tam .osc-yz-seo{max-width:none}
 <div><b>2. Hazırlayın</b><p>Sorular soruindir.net yazılı arşivinden senaryodaki çıktılara göre gelir; eksik kalanlar yapay zekâ ile yazılır. Beğenmediğinizi değiştirin, isterseniz bazı soruları kendiniz yazın.</p></div>
 <div><b>3. İndirin</b><p>Puanlar 100’e otomatik dağıtılır. Cevap boşluklu yazılı kâğıdını cevap anahtarlı ya da anahtarsız Word veya PDF olarak indirin, yazdırın.</p></div>
 </div>
-<p class="alt">Ücretsizdir. Hazırladığınız yazılılar hesabınıza kaydedilir ve her cihazdan açabilirsiniz.</p>
+<p class="alt">Ücretsizdir, üyelik gerekmez. Ücretsiz üye olursanız yazılılarınız hesabınıza kaydedilir, her cihazdan açabilirsiniz; okul ve öğretmen bilgileriniz tüm yazılı ve evraklarınıza otomatik işlenir.</p>
 </section>
 <?php echo self::reklam('alt'); ?>
 <style>.osc-rk{max-width:1180px;margin:18px auto;text-align:center;min-height:50px;overflow:hidden}.osc-rk-et{display:block;font:600 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}.osc-rk-kayan{position:fixed;left:50%;bottom:0;z-index:99970;width:min(760px,100vw);transform:translate(-50%,110%);visibility:hidden;transition:transform .35s,visibility .35s;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -16px rgba(15,23,42,.45);padding:8px 10px 10px;box-sizing:border-box}.osc-rk-kayan.on{transform:translate(-50%,0);visibility:visible}.osc-rk-kayan>small{display:block;text-align:center;font:600 12px system-ui,sans-serif;color:#6d28d9;margin-bottom:4px}.osc-rk-kayan>button{position:absolute;right:8px;top:6px;border:0!important;background:#f1f5f9!important;color:#334155!important;padding:0!important;font-size:16px;line-height:1;border-radius:8px;width:26px;height:26px;cursor:pointer}.osc-rk-kayan .osc-rk{margin:0}@media print{.osc-rk,.osc-rk-kayan{display:none!important}}</style>

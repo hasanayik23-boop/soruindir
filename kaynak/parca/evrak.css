@@ -93,3 +93,5 @@
 .ev-oy-izgara td.tp{font-weight:800;text-align:center;min-width:52px;color:#0f766e}
 #osc-ev .ev-x{border:0;background:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px 6px;line-height:1;box-shadow:none}
 #osc-ev .ev-x:hover{color:#b91c1c}
+
+.ev-uye{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:13px;line-height:1.5}.ev-uye a{font-weight:800;color:#4338ca}.ev-uye.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
