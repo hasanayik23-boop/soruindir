@@ -33,14 +33,19 @@ y=y.replace('/*__YAZILI_CSS__*/',open(d+'parca/yazili.css',encoding='utf-8').rea
 y=y.replace("'/*__DIGER_JSON__*/'", q(open('/home/claude/work/dersler/diger.json',encoding='utf-8').read()))
 assert '__DIGER_JSON__' not in y
 assert '/*__YAZILI' not in y
-k=k+'\n'+y
+om=y
 ev=open(d+'parca/evrak.php',encoding='utf-8').read()
 for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
-k=k+'\n'+ev
+om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()
+bas=open(d+'parca/masa_bas.php',encoding='utf-8').read()
+assert bas.count('/*__GOVDE__*/')==1
+open(d+'ogretmen-masasi.php','w',encoding='utf-8').write(bas.replace('/*__GOVDE__*/',om))
+print('masa', len(om))
 s=s.rstrip()+'\n'+k
 open(d+'onlinesorucoz.php','w',encoding='utf-8').write(s)
 print('birlesti', len(s))
 E
 php -l onlinesorucoz.php
+php -l ogretmen-masasi.php

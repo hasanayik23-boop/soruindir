@@ -51,7 +51,7 @@ class OSC_Evrak {
     public static function js_cikti() { ?>/*__EVRAK_JS__*/<?php }
 
     /* ---------- ayarlar ---------- */
-    public function ayar_menu() { add_submenu_page('edit.php?post_type=osc_quiz', 'Evrak Hazırla', 'Evrak Hazırla', 'manage_options', 'osc-evrak-ayar', array($this, 'ayar_sayfa')); }
+    public function ayar_menu() { add_submenu_page('osc-ogretmen-masasi', 'Evrak Hazırla', 'Evrak Hazırla', 'manage_options', 'osc-evrak-ayar', array($this, 'ayar_sayfa')); }
     public function ayar_kayit() {
         register_setting('osc_evrak', 'osc_ev_yayinda', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));
         register_setting('osc_evrak', 'osc_ev_yz', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));

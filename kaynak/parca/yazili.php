@@ -60,7 +60,7 @@ class OSC_Yazili {
     public static function js_cikti() { ?>/*__YAZILI_JS__*/<?php }
 
     /* ---------- sitenin her yerinde tanıtım ---------- */
-    public function ayar_menu() { add_submenu_page('edit.php?post_type=osc_quiz', 'Yazılı Hazırla', 'Yazılı Hazırla', 'manage_options', 'osc-yazili-ayar', array($this, 'ayar_sayfa')); }
+    public function ayar_menu() { add_submenu_page('osc-ogretmen-masasi', 'Yazılı Hazırla', 'Yazılı Hazırla', 'manage_options', 'osc-yazili-ayar', array($this, 'ayar_sayfa')); }
     public function ayar_kayit() {
         register_setting('osc_yazili', 'osc_yz_url', array('sanitize_callback' => 'esc_url_raw'));
         foreach (array('osc_yz_yayinda', 'osc_yz_bar', 'osc_yz_buton', 'osc_yz_alt', 'osc_yz_oto_onay') as $o) register_setting('osc_yazili', $o, array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));

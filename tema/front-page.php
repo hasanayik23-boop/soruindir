@@ -427,6 +427,8 @@ $grades = array(
         </div>
     </section>
 
+    <!-- ÖĞRETMEN MASASI (Öğretmen Masası eklentisi): Yazılı Hazırla + Evrak Hazırla -->
+    <?php $sph2_om = class_exists('OSC_Masa') ? OSC_Masa::anasayfa_bolumu() : ''; if ($sph2_om): echo $sph2_om; else: ?>
     <!-- YAZILI HAZIRLA: MEB senaryolarına uygun yazılı -->
     <?php $sph2_yz = class_exists('OSC_Yazili') ? OSC_Yazili::url() : home_url('/yazili-hazirla/'); ?>
     <?php if (class_exists('OSC_Yazili') && method_exists('OSC_Yazili', 'yayinda') && OSC_Yazili::yayinda()): // yayına alınana kadar gizli ?>
@@ -482,6 +484,7 @@ $grades = array(
         </style>
     </section>
     <?php endif; ?>
+    <?php endif; // öğretmen masası ?>
 
     <!-- ÜYELİK: öğretmen ve öğrenci girişleri -->
     <section class="sph2-sec" aria-label="Üyelik">
