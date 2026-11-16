@@ -453,15 +453,20 @@ $grades = array(
         'plan'  => '<svg viewBox="0 0 96 80"><rect x="14" y="12" width="60" height="58" rx="8" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><rect x="14" y="12" width="60" height="16" rx="8" fill="#EF6C57"/><rect x="14" y="20" width="60" height="8" fill="#EF6C57"/><path d="M28 6v12M60 6v12" stroke="#1E3A5F" stroke-width="4" stroke-linecap="round"/><g fill="#E2E8F0"><rect x="22" y="35" width="9" height="8" rx="2"/><rect x="35" y="35" width="9" height="8" rx="2"/><rect x="48" y="35" width="9" height="8" rx="2"/><rect x="61" y="35" width="7" height="8" rx="2"/><rect x="22" y="48" width="9" height="8" rx="2"/><rect x="48" y="48" width="9" height="8" rx="2"/><rect x="61" y="48" width="7" height="8" rx="2"/><rect x="22" y="60" width="9" height="6" rx="2"/></g><rect x="35" y="48" width="9" height="8" rx="2" fill="#2F80ED"/><circle cx="76" cy="60" r="13" fill="#22A06B"/><path d="M76 53v7l5 3" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',
         'masa'  => '<svg viewBox="0 0 96 80"><rect x="8" y="50" width="80" height="7" rx="3" fill="#8B5E3C"/><path d="M16 57v18M80 57v18" stroke="#8B5E3C" stroke-width="5" stroke-linecap="round"/><rect x="18" y="20" width="38" height="26" rx="3" fill="#1E3A5F"/><rect x="21" y="23" width="32" height="20" rx="1" fill="#DBEAFE"/><path d="M25 30h14M25 36h20" stroke="#2F80ED" stroke-width="2.5" stroke-linecap="round"/><path d="M14 50h46" stroke="#334155" stroke-width="3" stroke-linecap="round"/><rect x="62" y="32" width="18" height="6" rx="1.5" fill="#22A06B"/><rect x="60" y="38" width="22" height="6" rx="1.5" fill="#2F80ED"/><rect x="63" y="44" width="18" height="6" rx="1.5" fill="#F59E0B"/><circle cx="74" cy="22" r="6" fill="#EF4444"/><path d="M74 16c0-3 2-5 4-5" stroke="#16A34A" stroke-width="2" fill="none"/></svg>',
         'tercih'=> '<svg viewBox="0 0 96 80"><path d="M48 10L8 28l40 18 40-18z" fill="#1E3A5F"/><path d="M24 36v16c0 6 11 12 24 12s24-6 24-12V36L48 47z" fill="#3B5B7D"/><path d="M84 30v22" stroke="#F59E0B" stroke-width="3"/><circle cx="84" cy="55" r="4" fill="#F59E0B"/><rect x="58" y="56" width="30" height="20" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><path d="M63 70l6-6 5 4 9-9" stroke="#22A06B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        'zumre' => '<svg viewBox="0 0 96 80"><ellipse cx="48" cy="50" rx="34" ry="12" fill="#C08457"/><rect x="40" y="40" width="18" height="12" rx="1.5" fill="#fff" transform="rotate(-8 49 46)"/><circle cx="20" cy="28" r="8" fill="#E8B48A"/><path d="M8 50c0-10 5-14 12-14s12 4 12 14z" fill="#2F80ED"/><circle cx="48" cy="18" r="8" fill="#F4C7A1"/><path d="M36 40c0-10 5-14 12-14s12 4 12 14z" fill="#22A06B"/><circle cx="76" cy="28" r="8" fill="#C68B5E"/><path d="M64 50c0-10 5-14 12-14s12 4 12 14z" fill="#EF6C57"/><path d="M30 70l4-10M66 70l-4-10" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round"/></svg>',
+        'hesap' => '<svg viewBox="0 0 96 80"><rect x="24" y="4" width="48" height="72" rx="8" fill="#1E3A5F"/><rect x="30" y="11" width="36" height="16" rx="3" fill="#C7F0D8"/><text x="62" y="24" text-anchor="end" font-size="11" font-family="monospace" fill="#14532D" font-weight="700">482,5</text><g fill="#3B5B7D"><rect x="30" y="33" width="10" height="9" rx="2"/><rect x="43" y="33" width="10" height="9" rx="2"/><rect x="30" y="46" width="10" height="9" rx="2"/><rect x="43" y="46" width="10" height="9" rx="2"/><rect x="30" y="59" width="10" height="9" rx="2"/><rect x="43" y="59" width="10" height="9" rx="2"/></g><rect x="56" y="33" width="10" height="9" rx="2" fill="#F59E0B"/><rect x="56" y="46" width="10" height="22" rx="2" fill="#22A06B"/></svg>',
     );
     $sx4_kart = array(
         array('test', 'Online test çöz', 'Deneme, yaprak test ve LGS–YKS sorularını ekranda çöz; puanını ve yanlışlarını anında gör.', $test_page_url, '#E9F7EF'),
-        array('indir', 'İndir & yazdır', 'Cevap anahtarlı yazılı, deneme ve çalışma kâğıtları; PDF ve Word olarak.', home_url('/category/yazili-sorulari/'), '#EAF2FD'),
+        array('indir', 'İndir & yazdır', 'Tüm kategoriler: deneme, çalışma kâğıdı, etkinlik ve evraklar; PDF ve Word olarak.', '#sph2-kat', '#EAF2FD'),
         array('yazili', 'Yazılı soruları', 'Senaryolara uygun 1. ve 2. dönem yazılıları; sınıf ve derse göre.', home_url('/category/yazili-sorulari/'), '#FFF6E5'),
         array('plan', 'Yıllık planlar', 'Tüm sınıf ve dersler için güncel, ünitelendirilmiş yıllık planlar.', $sx4_om ? OSC_Masa::url() . '#yillik' : home_url('/category/yillik-planlar/'), '#FDEDEA'),
     );
     if ($sx4_om) $sx4_kart[] = array('masa', 'Öğretmen Masası', 'Yazılı hazırla, tutanak, BEP, kulüp evrakı ve OYS çizelgesi; dakikalar içinde.', OSC_Masa::url(), '#EEF0FE');
     if ($sx4_lgs || $sx4_yks) $sx4_kart[] = array('tercih', 'Tercih robotları', 'LGS ve YKS taban puanlarıyla puanına uygun okul ve bölümleri gör.', $sx4_lgs ? $sx4_lgs : $sx4_yks, '#E8F6F8');
+    $sx4_kart[] = array('zumre', 'Zümre tutanakları', 'Şube, zümre ve öğretmenler kurulu tutanakları; düzenlenebilir Word.', home_url('/category/zumre-toplanti-tutanaklari/'), '#F3ECFB');
+    $sx4_kart[] = array('hesap', 'Puan hesaplama', 'LGS, YKS, AGS, KPSS ve daha fazlası için puan hesaplama araçları.', home_url('/lgs-puan-hesaplama/'), '#EEF6E8');
+    if (count($sx4_kart) % 2) array_pop($sx4_kart);
     $sx4_yan = $popular ? array_slice($popular, 0, 5) : array();
     ?>
     <style>
@@ -489,8 +494,8 @@ $grades = array(
     .sx4-sinif{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:20px auto 0;max-width:600px;position:relative}
     .sph2 .sx4-sinif a{padding:5px 11px;border-radius:99px;background:#fff;border:1px solid #DCEAF7;font-size:13px;font-weight:600;color:#46607A}
     .sph2 .sx4-sinif a:hover{border-color:#2F80ED;color:#2F80ED}
-    .sx4-govde{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:22px;align-items:start}
-    .sx4-kartlar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .sx4-govde{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:22px;align-items:stretch}
+    .sx4-kartlar{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:14px}
     .sph2 .sx4-kart{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:20px;background:#fff;border:1px solid #E3EBF3;box-shadow:0 1px 2px rgba(19,48,79,.04);transition:transform .18s,box-shadow .18s,border-color .18s;min-height:118px}
     .sph2 .sx4-kart:hover{transform:translateY(-3px);border-color:#C9DCF0;box-shadow:0 20px 36px -28px rgba(19,48,79,.55)}
     .sx4-kart .yz{flex:1;min-width:0}
@@ -498,7 +503,7 @@ $grades = array(
     .sx4-kart small{display:block;margin-top:5px;font-size:13.5px;line-height:1.5;color:#5B7189}
     .sx4-kart .re{flex:0 0 104px;height:88px;border-radius:16px;display:flex;align-items:center;justify-content:center}
     .sx4-kart .re svg{width:92px;height:76px}
-    .sx4-yan{display:flex;flex-direction:column;gap:14px}
+    .sx4-yan{display:flex;flex-direction:column;gap:14px}.sx4-yan .sx4-kutu:last-child{flex:1}
     .sx4-kutu{background:#fff;border:1px solid #E3EBF3;border-radius:20px;padding:16px 16px 10px}
     .sx4-kutu h3{margin:0 0 8px !important;font-size:16px;color:#13304F;display:flex;align-items:center;gap:8px}
     .sx4-kutu h3:before{content:"";width:8px;height:8px;border-radius:50%;background:#2F80ED}
@@ -619,7 +624,7 @@ $grades = array(
     <?php endif; ?>
 
     <!-- KATEGORİLER -->
-    <section class="sph2-sec" aria-label="Kategoriler">
+    <section class="sph2-sec" id="sph2-kat" aria-label="Kategoriler" style="scroll-margin-top:90px">
         <div class="sph2-grid">
         <?php
         $c_idx = 0; $kategori_sayaci = 0; $infeed_done = false;
