@@ -9,8 +9,40 @@ class OSC_YPlan {
     public function __construct() {
         add_action('admin_menu', array($this, 'menu'), 32);
         foreach (array('program') as $a) { add_action('wp_ajax_osc_yp_' . $a, array($this, 'ajax_' . $a)); add_action('wp_ajax_nopriv_osc_yp_' . $a, array($this, 'ajax_' . $a)); }
-        foreach (array('yz', 'ayikla', 'kaydet', 'sil', 'takvim') as $a) add_action('wp_ajax_osc_yp_' . $a, array($this, 'ajax_' . $a));
+        foreach (array('yz', 'ayikla', 'kaydet', 'sil', 'takvim', 'meb_kaydet', 'meb_sifirla') as $a) add_action('wp_ajax_osc_yp_' . $a, array($this, 'ajax_' . $a));
     }
+    /* ---------- MEB taslak/çerçeve yıllık planları ----------
+     * anahtar "okul türü|sınıf|ders" (okul türü boş = tüm okullar, sınıf L = herhangi bir lise sınıfı)
+     * hafta: [n, saat, ünite, konu, çıktı, süreç, ölçme, sdb, değer, okuryazarlık, belirli gün, okul temelli planlama] */
+    private static $meb_c = null;
+    private static function meb_dosya() { $u = wp_upload_dir(); return trailingslashit($u['basedir']) . 'osc-yp/meb.json'; }
+    public static function meb() {
+        if (self::$meb_c !== null) return self::$meb_c;
+        $f = self::meb_dosya(); $d = file_exists($f) ? json_decode((string) file_get_contents($f), true) : null;
+        if (!is_array($d)) { $g = base64_decode('/*__YP_MEB__*/'); $d = $g && function_exists('gzdecode') ? json_decode((string) gzdecode($g), true) : array(); if (!is_array($d)) $d = array(); }
+        return self::$meb_c = $d;
+    }
+    private static function meb_bul($tur, $sinif, $ders) {
+        $m = self::meb(); $lise = (int) $sinif >= 9; $turlar = array($tur, '');
+        if ($lise) $turlar[] = 'Anadolu Lisesi';   // MTAL, AİHL ve diğer liseler: Anadolu Lisesi planı
+        foreach (array((string) $sinif, $lise ? 'L' : null) as $sx) { if ($sx === null) continue; foreach ($turlar as $t) { $k = $t . '|' . $sx . '|' . $ders; if (isset($m[$k])) return array($k, $m[$k]); } }
+        return null;
+    }
+    public function ajax_meb_kaydet() {
+        $this->yonetici();
+        $l = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : '[]'), true); if (!is_array($l)) wp_send_json_error('Veri okunamadı.');
+        $m = !empty($_POST['ilk']) ? array() : self::meb();
+        $n = 0; $t = function ($x) { return is_scalar($x) ? mb_substr(wp_strip_all_tags((string) $x), 0, 4000) : ''; };
+        foreach ($l as $x) {
+            if (!is_array($x) || empty($x['ders']) || empty($x['sinif']) || empty($x['haftalar'])) continue;
+            $h = array(); foreach (array_slice((array) $x['haftalar'], 0, 60) as $w) if (is_array($w)) $h[] = array((int) $w['n'], $t($w['saat']), $t($w['unite']), $t($w['konu']), $t($w['cikti']), $t($w['surec']), $t($w['olcme']), $t($w['sdb']), $t($w['deger']), $t($w['okur']), $t($w['bgh']), empty($w['otp']) ? 0 : 1);
+            $m[sanitize_text_field(isset($x['tur']) ? $x['tur'] : '') . '|' . sanitize_text_field($x['sinif']) . '|' . sanitize_text_field($x['ders'])] = array('d' => sanitize_text_field(isset($x['dosya']) ? $x['dosya'] : ''), 'y' => sanitize_text_field(isset($_POST['yil']) ? $_POST['yil'] : ''), 'h' => $h); $n++;
+        }
+        wp_mkdir_p(dirname(self::meb_dosya())); file_put_contents(self::meb_dosya(), wp_json_encode($m, JSON_UNESCAPED_UNICODE)); self::$meb_c = $m;
+        wp_send_json_success(array('n' => $n, 'toplam' => count($m)));
+    }
+    public function ajax_meb_sifirla() { $this->yonetici(); if (file_exists(self::meb_dosya())) unlink(self::meb_dosya()); self::$meb_c = null; wp_send_json_success(array('toplam' => count(self::meb()))); }
+
     /* ---------- çalışma takvimi ---------- */
     public static function varsayilan_takvim() {
         return array('yil' => '2026-2027', 'baslangic' => '2026-09-14', 'bitis' => '2027-06-25',
@@ -49,6 +81,7 @@ class OSC_YPlan {
                 if (!empty($g['alanlar'])) foreach ($g['alanlar'] as $al) if (!empty($al['dersler'])) foreach ($al['dersler'] as $x) if (!empty($x['ad']) && !empty($x['s'])) $ekle('Meslek: ' . (isset($al['ad']) ? $al['ad'] : ''), $x['ad'], (array) $x['s']);
             }
         }
+        foreach (self::meb() as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) < 3) continue; foreach ($p3[1] === 'L' ? range(9, 12) : array((int) $p3[1]) as $si) { if ($si < 1) continue; $var = false; if (isset($c[$si])) foreach ($c[$si] as $l2) if (in_array($p3[2], $l2, true)) $var = true; if (!$var) $ekle('MEB yıllık planı olan diğer dersler', $p3[2], array($si)); } }
         foreach (self::kutuphane() as $k => $v) { list($s, $ad) = explode('|', $k, 2); $var = false; if (isset($c[(int) $s])) foreach ($c[(int) $s] as $l) if (in_array($ad, $l, true)) $var = true; if (!$var) $ekle('Diğer', $ad, array((int) $s)); }
         $out = array(); ksort($c);
         foreach ($c as $s => $gr) { $o2 = array(); foreach ($gr as $g => $l) { usort($l, function ($a, $b) { return strcmp(OSC_YPlan::tr_sira($a), OSC_YPlan::tr_sira($b)); }); $o2[] = array('g' => $g, 'd' => $l); } $out[$s] = $o2; }
@@ -81,6 +114,20 @@ class OSC_YPlan {
     }
     public function ajax_program() {
         $sinif = (int) (isset($_POST['sinif']) ? $_POST['sinif'] : 0); $ders = sanitize_text_field(wp_unslash(isset($_POST['ders']) ? $_POST['ders'] : ''));
+        $tur = sanitize_text_field(wp_unslash(isset($_POST['tur']) ? $_POST['tur'] : ''));
+        $mb = self::meb_bul($tur, $sinif, $ders);
+        if ($mb) {
+            $u = array(); $saat = array(); $gor = array();
+            foreach ($mb[1]['h'] as $w) {
+                $saat[] = (int) $w[1];
+                foreach (preg_split('/\n/', (string) $w[2]) as $un) { $un = trim($un); if ($un === '') continue; $son = count($u) - 1; if ($son < 0 || $u[$son]['ad'] !== $un) { $u[] = array('ad' => $un, 'saat' => 0, 'ciktilar' => array()); } }
+                $son = count($u) - 1; if ($son < 0) continue;
+                foreach (preg_split('/\n/', (string) $w[4]) as $c) { $c = trim($c); if ($c === '' || isset($gor[$c])) continue; $gor[$c] = 1; $kod = preg_match('/^([A-ZÇĞİÖŞÜ]{1,6}(?:\.[A-ZÇĞİÖŞÜ0-9]{1,4})+)\.?\s+(.+)$/u', $c, $mm) ? $mm[1] : ''; $u[$son]['ciktilar'][] = array('kod' => $kod, 'ad' => $kod ? $mm[2] : $c); }
+            }
+            $sy = array_count_values(array_filter($saat)); arsort($sy);
+            $p3 = explode('|', $mb[0], 3);
+            wp_send_json_success(array('kaynak' => 'meb', 'haftalar' => $mb[1]['h'], 'uniteler' => $u, 'saat' => $sy ? (int) key($sy) : 0, 'mebTur' => $p3[0]));
+        }
         $k = self::kutuphane(); $anah = $sinif . '|' . $ders;
         if (isset($k[$anah]) && (empty($k[$anah]['durum']) || $k[$anah]['durum'] === 'onayli' || current_user_can('manage_options'))) wp_send_json_success(array_merge(array('kaynak' => 'program'), $k[$anah]));
         $s = self::senaryodan($sinif, $ders); if ($s) wp_send_json_success($s);
@@ -163,6 +210,13 @@ class OSC_YPlan {
 <textarea id="yp-resmi" rows="5" class="large-text code"><?php echo esc_textarea(implode("\n", array_map(function ($x) { return $x['ad'] . ' | ' . $x['bas'] . ' | ' . $x['bit']; }, $t['resmi']))); ?></textarea>
 <p><button class="button button-primary" id="yp-tk">Takvimi kaydet</button> <span id="yp-tk-d"></span></p></div>
 
+<div class="yp-k"><h2>📥 MEB taslak / çerçeve yıllık planları</h2>
+<?php $mb = self::meb(); $say = array(); foreach ($mb as $kk => $vv) { $t0 = explode('|', $kk); $t0 = $t0[0] !== '' ? $t0[0] : 'Tüm okullar'; $say[$t0] = (isset($say[$t0]) ? $say[$t0] : 0) + 1; } ?>
+<p>Şu an <b><?php echo count($mb); ?></b> sınıf/ders planı yüklü<?php echo $say ? ' (' . esc_html(implode(', ', array_map(function ($a, $b) { return $a . ': ' . $b; }, array_keys($say), $say))) . ')' : ''; ?>. Öğretmen sınıf, ders ve okul türünü seçince plan hafta hafta bu dosyalardan gelir; tarihler aşağıdaki çalışma takvimine göre yeniden hesaplanır.</p>
+<p><b>Her yıl:</b> MEB’in yayımladığı <b>.zip</b> ya da <b>.xlsx</b> taslak yıllık plan dosyalarını seçin (birden çok dosya seçilebilir). Excel’deki her sayfa (Hazırlık, 9, 10, 11, 12…) ayrı sınıf olarak okunur; okul türü (Anadolu, Fen, Sosyal Bilimler Lisesi) dosya adından anlaşılır. Mesleki ve Teknik Anadolu Lisesi, İmam Hatip ve diğer liselerde Anadolu Lisesi planı kullanılır.</p>
+<p><input type="file" id="yp-meb-f" multiple accept=".zip,.xlsx"> <label><input type="checkbox" id="yp-meb-ilk"> Önce mevcut planları sil (yeni eğitim yılı)</label> <button class="button button-primary" id="yp-meb-oku">Dosyaları oku</button> <button class="button" id="yp-meb-sif" title="Yüklediklerinizi silip eklentiyle gelen 2026-2027 planlarına döner">Varsayılana dön</button> <span id="yp-meb-d"></span></p>
+<div id="yp-meb-l"></div></div>
+
 <div class="yp-k"><h2>Öğretim programı ekle / güncelle</h2>
 <p><label>Sınıf <select id="yp-s"><?php for ($i = 1; $i <= 12; $i++) echo '<option value="' . $i . '">' . $i . '. sınıf</option>'; ?></select></label> &nbsp; <label>Ders <input id="yp-d" list="yp-dl" style="width:320px" placeholder="Ders adı"></label><datalist id="yp-dl"></datalist> &nbsp; <label>Kaynak <input id="yp-ka" value="MEB öğretim programı <?php echo esc_attr($t['yil']); ?>" style="width:240px"></label></p>
 <p><b>1) PDF’ten oku:</b> <input type="file" id="yp-pdf" accept="application/pdf"> sayfalar <input id="yp-sf" placeholder="ör. 40-75" style="width:110px"> <button class="button" id="yp-oku">🤖 Yapay zekâ ile oku</button> <span id="yp-oku-d"></span><br><small>MEB öğretim programı PDF’leri <a href="https://mufredat.meb.gov.tr" target="_blank" rel="noopener">mufredat.meb.gov.tr</a> ve <a href="https://tymm.meb.gov.tr" target="_blank" rel="noopener">tymm.meb.gov.tr</a> adreslerindedir. Birkaç sınıfın birlikte olduğu PDF’lerde yalnızca ilgili sınıfın sayfalarını yazın.</small></p>
@@ -174,6 +228,31 @@ class OSC_YPlan {
 <table class="widefat striped"><thead><tr><th>Sınıf</th><th>Ders</th><th>Ünite</th><th>Çıktı</th><th>Yıl</th><th>Kaynak</th><th>Durum</th><th></th></tr></thead><tbody>
 <?php if (!$l) echo '<tr><td colspan="8">Henüz program yüklenmedi. Senaryo tablosu olan derslerde (5–12. sınıf temel dersler) planlar şimdiden senaryodaki çıktılarla oluşur.</td></tr>'; foreach ($l as $i => $x) echo '<tr><td>' . $x['sinif'] . '</td><td>' . esc_html($x['ders']) . '</td><td>' . $x['unite'] . '</td><td>' . $x['cikti'] . '</td><td>' . esc_html($x['yil']) . '</td><td>' . esc_html($x['kaynak_ad']) . '</td><td>' . ($x['durum'] === 'taslak' ? '<b style="color:#b45309">İnceleme bekliyor</b>' : '✅ Onaylı') . '</td><td><a href="#" data-duz="' . $i . '">Düzenle</a> · <a href="#" data-sil="' . esc_attr($x['anahtar']) . '" style="color:#b91c1c">Sil</a></td></tr>'; ?>
 </tbody></table></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>/*__YPXLSX__*/</script>
+<script>
+(function () {
+  var A = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>, N = <?php echo wp_json_encode(wp_create_nonce('osc_yp_yon')); ?>, D = document.getElementById('yp-meb-d'), L = document.getElementById('yp-meb-l'), BUL = null;
+  function post(a, d) { var f = new FormData(); f.append('action', 'osc_yp_' + a); f.append('nonce', N); for (var k in d) f.append(k, d[k]); return fetch(A, { method: 'POST', body: f, credentials: 'same-origin' }).then(function (r) { return r.json(); }); }
+  document.getElementById('yp-meb-oku').onclick = function (e) {
+    e.preventDefault(); var fs = document.getElementById('yp-meb-f').files; if (!fs.length) return alert('Dosya seçin.');
+    D.textContent = 'Okunuyor…';
+    Promise.all([].map.call(fs, function (f) { return f.arrayBuffer().then(function (b) { return { ad: f.name, veri: b }; }); })).then(ypOku).then(function (r) {
+      BUL = r; var adsiz = r.filter(function (x) { return !x.ders; }).length;
+      L.innerHTML = '<p><b>' + r.length + '</b> sınıf/ders planı bulundu. Ders adı boş ya da yanlış olanları düzeltin, sonra kaydedin.</p><table class="widefat striped"><thead><tr><th>Okul türü</th><th>Sınıf</th><th>Ders</th><th>Hafta</th><th>Dosya</th></tr></thead><tbody>' + r.map(function (x, i) { return '<tr><td>' + (x.tur || 'Tüm okullar') + '</td><td>' + (x.sinif === 'L' ? 'Lise (tüm sınıflar)' : x.sinif === 'H' ? 'Hazırlık' : x.sinif) + '</td><td><input data-i="' + i + '" value="' + String(x.ders || '').replace(/"/g, '&quot;') + '" style="width:260px"></td><td>' + x.haftalar.length + '</td><td style="font-size:11px;color:#666">' + x.dosya.split('/').slice(-2).join('/') + '</td></tr>'; }).join('') + '</tbody></table><p><button class="button button-primary" id="yp-meb-kay">Hepsini kaydet</button></p>';
+      L.querySelectorAll('[data-i]').forEach(function (i) { i.oninput = function () { BUL[+i.dataset.i].ders = i.value.trim(); }; });
+      D.textContent = r.length ? (adsiz ? adsiz + ' planın ders adı boş; düzeltin.' : '') : 'Dosyada yıllık plan tablosu bulunamadı (.xls ve .rar dosyaları okunamaz; .xlsx olarak kaydedin).';
+      var kb = document.getElementById('yp-meb-kay'); if (kb) kb.onclick = function (ev) {
+        ev.preventDefault(); var l = BUL.filter(function (x) { return x.ders; }), parca = [], top = 0; for (var j = 0; j < l.length; j += 12) parca.push(l.slice(j, j + 12));
+        var yil = (document.getElementById('yp-yil') || {}).value || '';
+        parca.reduce(function (p, c, k) { return p.then(function () { D.textContent = 'Kaydediliyor… ' + Math.min(l.length, (k + 1) * 12) + '/' + l.length; return post('meb_kaydet', { veri: JSON.stringify(c), yil: yil, ilk: k === 0 && document.getElementById('yp-meb-ilk').checked ? 1 : '' }).then(function (j) { if (!j.success) throw new Error(j.data || 'Hata'); top = j.data.toplam; }); }); }, Promise.resolve())
+          .then(function () { D.textContent = '✅ Kaydedildi. Kütüphanede ' + top + ' plan var.'; }).catch(function (er) { D.textContent = '❌ ' + er.message; });
+      };
+    }).catch(function (er) { D.textContent = '❌ ' + er.message; });
+  };
+  document.getElementById('yp-meb-sif').onclick = function (e) { e.preventDefault(); if (!confirm('Yüklediğiniz planlar silinip eklentiyle gelen planlara dönülsün mü?')) return; post('meb_sifirla', {}).then(function (j) { D.textContent = 'Varsayılan planlar: ' + j.data.toplam; }); };
+})();
+</script>
 <style>#yp-yon .yp-k{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:6px 18px 14px;margin:16px 0;max-width:1100px}</style>
 <script>
 (function () {

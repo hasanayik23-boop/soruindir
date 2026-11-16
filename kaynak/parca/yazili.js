@@ -541,12 +541,19 @@
       '<aside class="yz-yan"><div class="yz-kart koyu"><h2>İndir ve yazdır</h2><p>Öğrencilere dağıtacağınız kâğıt için <b>cevap anahtarsız</b> sürümü kullanın.</p>' +
       '<div class="yz-indir"><button class="yz-ib ana" data-o="word0"><span>W</span><div><b>Word</b><small>Cevap anahtarsız</small></div></button><button class="yz-ib" data-o="word1"><span>W</span><div><b>Word</b><small>Cevap anahtarlı</small></div></button><button class="yz-ib pdf" data-o="pdf0"><span>PDF</span><div><b>Yazdır / PDF</b><small>Cevap anahtarsız</small></div></button><button class="yz-ib pdf" data-o="pdf1"><span>PDF</span><div><b>Yazdır / PDF</b><small>Cevap anahtarlı</small></div></button></div>' +
       '<p class="kucuk">PDF için yazdırma penceresinde hedef olarak <b>“PDF olarak kaydet”</b>i seçin.</p></div>' +
+      (C.evrak && S.sinif && S.sorular.length ? '<div class="yz-kart"><h2>Puan çizelgesi</h2><p class="yz-not">Sınavdan sonra öğrencilerin soru soru puanlarını girmek için bu yazılının soru–çıktı planıyla OYS puan çizelgesi oluşturun.</p><button type="button" class="yz-btn" id="yz-oys">🧮 OYS puan çizelgesine aktar</button></div>' : '') +
       '<div class="yz-kart"><h2>Kaydet</h2><p class="yz-not" id="yz-kd">' + (S.id ? '✓ Yazılılarım’a kaydedildi.' : 'Yazılılarım’a kaydedilir; sonra açıp düzenleyebilirsiniz.') + '</p>' + (C.giris ? '<p class="yz-not kucuk">Şu an bu tarayıcıya kaydediliyor. <a href="' + esc(C.giris) + '"><b>Ücretsiz öğretmen girişi</b></a> yaparsanız yazılılarınız hesabınıza kaydedilir, her cihazdan açılır.</p>' : '') + '<button class="yz-btn tam" id="yz-kaydet">💾 Kaydet</button><button class="yz-btn tam hafif" data-git2="3">✎ Sorulara dön</button><button class="yz-btn tam hafif" id="yz-yeni">＋ Yeni yazılı</button></div></aside></div>';
     cerceve(h);
     var ifr = document.getElementById('yz-if'), yenile = function () { ifr.srcdoc = kagit(S.anahtar, false).replace('</style>', 'body{padding:34px 38px;background:#fff}.kesme{border-top:2px dashed #94a3b8;margin:30px 0 20px}</style>'); };
     ifr.onload = function () { try { ifr.style.height = Math.max(700, ifr.contentWindow.document.documentElement.scrollHeight + 20) + 'px'; } catch (e) {} };
     yenile();
     document.getElementById('yz-ak').onchange = function () { S.anahtar = this.checked; sakla(); yenile(); };
+    var oyb = document.getElementById('yz-oys'); if (oyb) oyb.onclick = function () {
+      var t = tablo() || { satirlar: [] }, ad = function (k) { var r = t.satirlar.filter(function (x) { return kodu(x) === k; })[0]; return r ? r.cikti : ''; };
+      var sor = S.sorular.map(function (q, i) { var k = q.kod || (S.slotlar[i] || {}).kod || ''; return { kod: /^[A-ZÇĞİÖŞÜ]{2,}\./.test(k) ? k : '', cikti: ad(k) || (S.slotlar[i] || {}).cikti || '', puan: +q.puan || 0 }; });
+      try { localStorage.setItem('osc_ev_aktar', JSON.stringify({ tur: 'oys', veri: { okul: S.bilgi.okul || '', ogretmen: S.bilgi.ogretmen || '', tarih: S.bilgi.tarih ? S.bilgi.tarih.split('-').reverse().join('.') : '', oys: { sinif: +S.sinif, ders: S.ders, donem: +S.donem || 1, yazili: +S.yazili || 1, senaryo: +S.senaryo || '', duzen: 1, sorular: sor, ogr: [] } } })); } catch (e) {}
+      location.href = C.evrak;
+    };
     kok.querySelectorAll('[data-al]').forEach(function (e) { e.onclick = function () { S.alan = e.dataset.al; sakla(); kok.querySelectorAll('[data-al]').forEach(function (x) { x.classList.toggle('on', x === e); }); yenile(); }; });
     kok.querySelectorAll('[data-o]').forEach(function (b) { b.onclick = function () { var o = b.dataset.o; if (o.indexOf('word') === 0) wordIndir(o === 'word1', b); else yazdir(o === 'pdf1'); }; });
     kok.querySelectorAll('[data-git2]').forEach(function (e) { e.onclick = function () { git(+e.dataset.git2); }; });

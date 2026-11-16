@@ -26,7 +26,7 @@ class OSC_Masa {
         if (!is_user_logged_in() || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_om')) wp_send_json_error('', 403);
         $d = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : '{}'), true); if (!is_array($d)) wp_send_json_error('');
         $uid = get_current_user_id(); $p = get_user_meta($uid, 'osc_om_profil', true); if (!is_array($p)) $p = array();
-        foreach (array('okul', 'il', 'mudur', 'ogretmen', 'gorev', 'kademe') as $k) if (isset($d[$k]) && is_scalar($d[$k])) $p[$k] = mb_substr(sanitize_text_field((string) $d[$k]), 0, 150);
+        foreach (array('okul', 'il', 'mudur', 'ogretmen', 'gorev', 'kademe', 'okulturu') as $k) if (isset($d[$k]) && is_scalar($d[$k])) $p[$k] = mb_substr(sanitize_text_field((string) $d[$k]), 0, 150);
         update_user_meta($uid, 'osc_om_profil', $p);
         if (!empty($p['okul'])) update_user_meta($uid, 'osc_okul', $p['okul']);
         wp_send_json_success();

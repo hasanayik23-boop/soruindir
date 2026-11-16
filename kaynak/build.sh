@@ -39,7 +39,7 @@ ev=open(d+'parca/evrak.php',encoding='utf-8').read()
 for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/bgh.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
-om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read()
+om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read().replace('/*__YP_MEB__*/',open(d+'veri/yp_meb.b64').read().strip()).replace('/*__YPXLSX__*/',open(d+'parca/ypxlsx.js',encoding='utf-8').read())
 bas=open(d+'parca/masa_bas.php',encoding='utf-8').read()
 assert bas.count('/*__GOVDE__*/')==1
 open(d+'ogretmen-masasi.php','w',encoding='utf-8').write(bas.replace('/*__GOVDE__*/',om))

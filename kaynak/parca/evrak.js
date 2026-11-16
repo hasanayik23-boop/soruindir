@@ -110,6 +110,28 @@
       { k: 'tarih', ad: 'Dilekçe tarihi', v: bugun }, { k: 'aciklama', ad: 'Açıklama (tarihler, gerekçe vb.)', tip: 'uzun', ph: 'Ör. 14.11.2026 Cuma günü ailevi bir mazeretim nedeniyle…' }, { k: 'adres', ad: 'Adres', ph: '…' }, { k: 'tel', ad: 'Telefon', ph: '05…' }, { k: 'ekler', ad: 'Ekler (her satıra bir ek, isteğe bağlı)', tip: 'uzun', ph: 'Sağlık raporu (1 sayfa)' }] },
     { id: 'yillik', ad: 'Ünitelendirilmiş yıllık plan', ik: '🗓️', yzYok: true, yatay: true, ozel: 'yp', ac: '1–12. sınıf tüm dersler; çalışma takvimine göre hafta hafta, öğrenme çıktılarıyla', alan: ORTAK.concat([
       { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' }, { k: 'zumre', ad: 'Diğer zümre öğretmenleri (her satıra bir kişi, isteğe bağlı)', tip: 'uzun' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
+    { id: 'performans', ad: 'Performans görevi ve dereceli puanlama anahtarı', ik: '🏅', ac: 'Öğrenme çıktısına göre görev yönergesi ve 4 düzeyli rubrik', yatayFn: function () { return false; }, alan: ORTAK.concat([
+      { k: 'ders', ad: 'Ders', tip: 'secim', l: DERSLER }, { k: 'sinif', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'cikti', ad: 'Öğrenme çıktısı', tip: 'uzun', ph: 'MAT.7.1.3 Rasyonel sayıların karşılaştırma ve sıralama ilişkilerini yorumlayabilme' },
+      { k: 'konu', ad: 'Görevin konusu', ph: 'Market fişlerindeki fiyatları karşılaştırma' }, { k: 'urun', ad: 'Ürün türü', tip: 'secim', l: ['Poster', 'Sunum', 'Rapor', 'Model / maket', 'Deney raporu', 'Video', 'Proje dosyası', 'Drama / canlandırma'], v: 'Poster' },
+      { k: 'verilis', ad: 'Veriliş tarihi', v: bugun }, { k: 'teslim', ad: 'Teslim tarihi', ph: '…/…/20…' }, { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' }]) },
+    { id: 'dyk', ad: 'DYK kurs planı ve devam çizelgesi', ik: '📗', yatay: true, ac: 'Destekleme ve yetiştirme kursu haftalık planı ve öğrenci devam çizelgesi', alan: ORTAK.concat([
+      { k: 'ders', ad: 'Kurs (ders)', tip: 'secim', l: DERSLER }, { k: 'sinif', ad: 'Sınıf seviyesi / grup', ph: '8. sınıflar' }, { k: 'gunsaat', ad: 'Gün ve saat', ph: 'Cumartesi 09:00-11:40' }, { k: 'haftalik', ad: 'Haftalık ders saati', v: '3' },
+      { k: 'baslama', ad: 'Başlama tarihi', ph: '…/…/20…' }, { k: 'bitis', ad: 'Bitiş tarihi', ph: '…/…/20…' }, { k: 'konular', ad: 'Haftalık konular (her satıra bir hafta)', tip: 'uzun', ph: 'Çarpanlar ve katlar\nÜslü ifadeler\nKareköklü ifadeler' },
+      { k: 'ogrenciler', ad: 'Öğrenciler (her satıra “Ad Soyad - No”)', tip: 'uzun' }, { k: 'ogretmen', ad: 'Kurs öğretmeni', ph: 'Ad Soyad' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
+    { id: 'rehberlik', ad: 'Sınıf rehberlik planı / yıl sonu raporu', ik: '🧭', ac: 'Sınıf rehber öğretmeninin yıllık rehberlik planı ya da yıl sonu çalışma raporu', alan: ORTAK.concat([
+      { k: 'program', ad: 'Evrak', tip: 'secim', l: { plan: 'Sınıf rehberlik yıllık planı', rapor: 'Sınıf rehberlik yıl sonu raporu' }, v: 'plan', yenile: true }, KADEME,
+      { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'mevcut', ad: 'Öğrenci sayısı', ph: '28' }, { k: 'ogretmen', ad: 'Sınıf rehber öğretmeni', ph: 'Ad Soyad' }, { k: 'rehber', ad: 'Okul rehber öğretmeni', ph: 'Ad Soyad' },
+      { k: 'yapilanlar', ad: 'Yapılan çalışmalar (isteğe bağlı, her satıra bir tane)', tip: 'uzun', kosul: function (v) { return v.program === 'rapor'; } }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
+    { id: 'veli_gorusme', ad: 'Veli görüşme formu', ik: '🤝', ac: 'Öğretmen-veli bireysel görüşme kaydı', alan: ORTAK.concat([
+      { k: 'ogrenci', ad: 'Öğrencinin adı soyadı', ph: 'Ad Soyad' }, { k: 'sube', ad: 'Sınıf / şube - no', ph: '7/A - 125' }, { k: 'veli', ad: 'Velinin adı soyadı / yakınlığı', ph: 'Ad Soyad - Annesi' }, { k: 'tarih', ad: 'Görüşme tarihi', v: bugun },
+      { k: 'sekil', ad: 'Görüşme şekli', tip: 'secim', l: ['Yüz yüze', 'Telefon', 'Çevrim içi'], v: 'Yüz yüze' }, { k: 'neden', ad: 'Görüşme nedeni', tip: 'secim', l: ['Akademik başarı', 'Devam-devamsızlık', 'Davranış', 'Sosyal-duygusal durum', 'Sağlık', 'Bilgilendirme', 'Diğer'], v: 'Akademik başarı' },
+      { k: 'konusulan', ad: 'Görüşülen konular', tip: 'uzun' }, { k: 'kararlar', ad: 'Alınan kararlar / yapılacaklar', tip: 'uzun' }, { k: 'ogretmen', ad: 'Görüşmeyi yapan öğretmen', ph: 'Ad Soyad' }]) },
+    { id: 'nobet', ad: 'Nöbet çizelgesi', ik: '🛡️', yatay: true, ac: 'Nöbet yerleri ve öğretmenlere göre haftalık nöbet çizelgesi', alan: ORTAK.concat([
+      { k: 'baslama', ad: 'Geçerlilik başlangıcı', v: bugun }, { k: 'yerler', ad: 'Nöbet yerleri (her satıra bir yer)', tip: 'uzun', ph: 'Bahçe\nZemin kat koridor\n1. kat koridor\nKantin önü' },
+      { k: 'ogretmenler', ad: 'Nöbetçi öğretmenler (her satıra bir kişi)', tip: 'uzun' }, { k: 'mudurYrd', ad: 'Nöbetçi müdür yardımcısı (isteğe bağlı)', ph: 'Ad Soyad' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
+    { id: 'karne', ad: 'Karne görüşleri', ik: '📝', ac: 'Öğrenci listesine göre kişiye özel, olumlu dille karne görüş cümleleri', alan: ORTAK.concat([
+      { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'donem', ad: 'Dönem', tip: 'secim', l: ['1. dönem', '2. dönem (yıl sonu)'], v: '1. dönem' },
+      { k: 'ogrenciler', ad: 'Öğrenciler ve düzeyleri (her satıra “Ad Soyad - düzey”; düzey: çok iyi / iyi / orta / gelişmeli)', tip: 'uzun', ph: 'Ali Yılmaz - çok iyi\nEce Kaya - orta' }, { k: 'ogretmen', ad: 'Sınıf öğretmeni', ph: 'Ad Soyad' }]) },
     { id: 'gunluk_plan', ad: 'Günlük ders planı', ik: '📘', ozel: 'gp', ac: 'Maarif modeline uygun ders planı: öğrenme çıktıları, öğrenme-öğretme uygulamaları, farklılaştırma, ölçme', alan: ORTAK.concat([
       { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'sure', ad: 'Süre (ders saati)', v: '2' }, { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' },
       { k: 'konu', ad: 'Konu / ders başlığı (isteğe bağlı)', ph: 'Ör. Rasyonel sayılarla toplama' }, { k: 'kavram', ad: 'Anahtar kavramlar (isteğe bağlı)', ph: 'rasyonel sayı, payda, sayı doğrusu' },
@@ -319,7 +341,20 @@
   function ypYazi(u) { return (u || []).map(function (x) { return '## ' + x.ad + (x.saat ? ' | ' + x.saat : '') + '\n' + (x.ciktilar || []).map(function (c) { return (c.kod ? c.kod + ' | ' : '') + c.ad; }).join('\n'); }).join('\n\n'); }
   function ypCoz(t) { var u = [], s = null; String(t || '').split('\n').forEach(function (l) { l = l.trim(); if (!l) return; if (/^##/.test(l)) { var p = l.replace(/^#+\s*/, '').split('|'); s = { ad: p[0].trim(), saat: parseInt(p[1], 10) || 0, ciktilar: [] }; u.push(s); return; } if (!s) { s = { ad: 'Ünite', saat: 0, ciktilar: [] }; u.push(s); } var q = l.split('|'); if (q.length > 1 && /^[A-ZÇĞİÖŞÜa-z0-9.\-]{2,25}$/.test(q[0].trim())) s.ciktilar.push({ kod: q[0].trim(), ad: q.slice(1).join('|').trim() }); else s.ciktilar.push({ kod: '', ad: l }); }); return u; }
   /** haftalara ünite ve çıktı dağıtımı */
+  function ypPlanMeb(P) {
+    var H = haftalar(), sat = [], k = 0, W = P.haftalar || [], ders = 0;
+    H.forEach(function (w, wi) {
+      var tarih = aralik(w.bas, w.bit), ay = AYLAR_TR[w.bas.getMonth()], bgh = w.bgh.join('\n'), not = w.notlar.join('\n');
+      if (w.tatil) { sat.push({ ay: ay, hafta: tarih, saat: '', unite: trUp(w.tatil), konu: '', cikti: '', surec: '', olcme: '', bilesen: '', bgh: bgh, aciklama: '', tatil: 1 }); return; }
+      var x = W[k++]; ders++;
+      if (!x) { sat.push({ ay: ay, hafta: ders + '. hafta\n' + tarih, saat: String(P.saat || ''), unite: 'GENEL TEKRAR / OKUL TEMELLİ PLANLAMA', konu: '', cikti: '', surec: '', olcme: '', bilesen: '', bgh: bgh, aciklama: not }); return; }
+      var b2 = String(x[10] || '').split('\n').filter(function (z) { return z.trim() && bgh.indexOf(z.trim()) < 0; });
+      sat.push({ ay: ay, hafta: ders + '. hafta\n' + tarih, saat: x[1] || String(P.saat || ''), unite: x[2] || '', konu: x[3] || '', cikti: x[4] || '', surec: x[5] || '', olcme: x[6] || '', bilesen: [x[7], x[8], x[9]].filter(Boolean).join('\n'), bgh: [bgh].concat(b2).filter(Boolean).join('\n'), aciklama: (x[11] ? 'Okul temelli planlama\n' : '') + (w.donem === 2 && H[wi - 1] && H[wi - 1].donem === 1 ? '2. dönem başlangıcı\n' : '') + not });
+    });
+    return { satir: sat, hafta: H.filter(function (w) { return !w.tatil; }).length, saat: P.saat || '', meb: 1 };
+  }
   function ypPlan(P) {
+    if (P.kaynak === 'meb' && P.haftalar && P.haftalar.length) return ypPlanMeb(P);
     var H = haftalar(), h = Math.max(1, +P.saat || 2), otp = Math.max(0, +P.otp || 0), dersH = H.filter(function (w) { return !w.tatil; });
     // yalnızca 1. dönem çıktıları varsa (senaryo tablosu), üniteler 1. dönem haftalarına dağıtılır
     var sadece1 = P.kaynak === 'senaryo' && P.donemler && P.donemler.length === 1 && +P.donemler[0] === 1, d1 = dersH.filter(function (w) { return w.donem === 1; }).length;
@@ -346,11 +381,12 @@
   }
   function ypFormHtml() {
     var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []);
-    var kay = { program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
+    var kay = { meb: '✅ MEB ' + (P.mebTur ? P.mebTur + ' ' : '') + 'taslak yıllık planından (hafta hafta; tarihler çalışma takvimine göre)', program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
     var h = '<div class="ev-oys"><h3>1. Ders ve süre</h3><div class="ev-form">' +
       '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
       '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dl.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.map(function (x) { return '<option' + (P.ders === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.dersElle || P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
+      (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
       '<label><span>Haftalık ders saati</span><input type="number" min="1" max="20" data-yp="saat" value="' + esc(P.saat || '') + '" placeholder="ör. 5"></label>' +
       '<label><span>Okul temelli planlama (toplam saat)</span><input type="number" min="0" max="100" data-yp="otp" value="' + esc(P.otp || '') + '" placeholder="0"></label></div>' +
       '<p class="ev-not">📅 Takvim: ' + esc(TK.yil || '') + ' — ' + esc(String(TK.baslangic || '').split('-').reverse().join('.')) + ' / ' + esc(String(TK.bitis || '').split('-').reverse().join('.')) + '. Tatil haftaları ve resmî tatiller plana otomatik işlenir.</p>';
@@ -365,15 +401,15 @@
   function ypYukle(P) {
     var ders = P.ders === '__' ? P.dersAd : P.ders; if (!P.sinif || !ders) return;
     P.yukleniyor = 1; P.metin = null;
-    var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders);
-    fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
+    var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders); fd.append('tur', +P.sinif >= 9 ? (P.tur || ORT.okulturu || 'Anadolu Lisesi') : '');
+    fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; P.haftalar = d.haftalar || null; P.mebTur = d.mebTur || ''; if (d.saat && !P.saatElle) P.saat = d.saat; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
   }
   function ypBagla() {
     var P = ypDurum(S.veri);
     kok.querySelectorAll('[data-yp]').forEach(function (e) {
-      e.onchange = function () { var k = e.dataset.yp; P[k] = /sinif|saat|otp/.test(k) ? (+e.value || '') : e.value; if (k === 'sinif') { P.ders = ''; P.uniteler = []; P.kaynak = ''; } sakla(); if (k === 'sinif' || (k === 'ders' && P.ders !== '__') || k === 'dersAd') { ypYukle(P); } vForm(); };
+      e.onchange = function () { var k = e.dataset.yp; P[k] = /sinif|saat|otp/.test(k) ? (+e.value || '') : e.value; if (k === 'saat') P.saatElle = 1; if (k === 'tur') { ORT.okulturu = e.value; if (typeof ortakKaydet === 'function') ortakKaydet('okulturu', e.value); } if (k === 'sinif') { P.ders = ''; P.uniteler = []; P.kaynak = ''; P.haftalar = null; } sakla(); if (k === 'sinif' || (k === 'ders' && P.ders !== '__') || k === 'dersAd' || (k === 'tur' && P.ders)) { ypYukle(P); } vForm(); };
     });
-    var t = document.getElementById('yp-u'); if (t) t.oninput = function () { P.metin = t.value; P.uniteler = ypCoz(t.value); if (P.kaynak !== 'elle') { P.kaynak0 = P.kaynak0 || P.kaynak; } sakla(); };
+    var t = document.getElementById('yp-u'); if (t) t.oninput = function () { P.metin = t.value; P.uniteler = ypCoz(t.value); P.haftalar = null; if (P.kaynak !== 'elle') { P.kaynak0 = P.kaynak0 || P.kaynak; } sakla(); };
     var y = document.getElementById('yp-yenile'); if (y) y.onclick = function () { ypYukle(P); vForm(); };
     var z = document.getElementById('yp-yz'); if (z) z.onclick = function () {
       z.disabled = true; z.innerHTML = '<span class="ev-don"></span> Yazılıyor…';
@@ -388,6 +424,7 @@
       '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
       '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dl.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.map(function (x) { return '<option' + (P.ders === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
+      (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
       (U.length ? '<label><span>Ünite / tema</span><select data-gp="unite">' + U.map(function (u, i) { return '<option value="' + i + '"' + (+P.gu === i ? ' selected' : '') + '>' + esc(u.ad) + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
     if (P.yukleniyor) h += '<p class="ev-not">Program yükleniyor…</p>';
     else if (U.length) { var u = U[+P.gu || 0] || U[0], sec = P.gc || []; h += '<div class="ev-gp-c">' + (u.ciktilar || []).map(function (c, j) { return '<label><input type="checkbox" data-gc="' + j + '"' + (sec.indexOf(j) >= 0 ? ' checked' : '') + '> <b>' + esc(c.kod || '') + '</b> ' + esc(c.ad) + '</label>'; }).join('') + '</div><p class="ev-not">Bu derste işleyeceğiniz öğrenme çıktılarını işaretleyin.</p>'; }
@@ -492,7 +529,14 @@
     var konusma = (bghBul(g) || [])[4] || ('Bugün ' + g + ' vesilesiyle bir aradayız. Bu gün, toplum olarak üzerinde durmamız gereken önemli bir konuya dikkat çekmek amacıyla her yıl okullarımızda anılmaktadır. Hepimizin bu konuda bilinçlenmesi, öğrendiklerimizi ailemiz ve çevremizle paylaşması büyük önem taşımaktadır. Programımızı hazırlayan öğrencilerimize ve öğretmenlerimize teşekkür ederiz.');
     return { akis: a, konusma: konusma };
   }
-  function varsayilan(id, v) { if (id === 'gunluk_plan') return gunlukIcerik(v); if (id === 'belirli_gun' && v.program !== 'yillik') return kutlamaIcerik(v); if (id === 'ogr_kurul') return kurulIcerik(v); if (id === 'egzersiz') return egzersizIcerik(v); if (id === 'gezi') return geziIcerik(v); if (id === 'kulup_aylik') return kulupAylikIcerik(v); if (id === 'dilekce') return dilekceIcerik(v); if (id === 'belirli_gun' || id === 'oys') return { bos: 1 }; return id === 'zumre' ? zumreIcerik(v) : id === 'sok' ? sokIcerik(v) : id === 'veli' ? veliIcerik(v) : id === 'bep' ? bepIcerik(v) : id === 'kulup_plan' ? kulupPlanIcerik(v) : id === 'kulup_rapor' ? kulupRaporIcerik(v) : {}; }
+  function performansIcerik(v) {
+    var c = v.cikti || 'öğrenme çıktısı', u = v.urun || 'ürün';
+    return { yonerge: ['Bu görevde “' + (v.konu || c) + '” konusunu araştırarak bir ' + u.toLocaleLowerCase('tr') + ' hazırlayacaksınız.', 'Görevin amacı şu öğrenme çıktısına ulaşmanızdır: ' + c + '.', 'Araştırmanızda en az iki farklı kaynak kullanın ve kaynaklarınızı ürününüzün sonunda belirtin.', 'Çalışmanızı ' + (v.teslim || 'belirtilen tarihte') + ' teslim edin; görev bireysel olarak yapılacaktır.', 'Değerlendirme aşağıdaki dereceli puanlama anahtarına göre yapılacaktır; teslimden önce kontrol ediniz.'],
+      olcut: [['Konuya ve öğrenme çıktısına uygunluk', 20], ['Bilgilerin doğruluğu ve yeterliği', 20], ['Planlama ve çalışma süreci', 15], ['Özgünlük ve yaratıcılık', 15], ['Düzen, görsel sunum ve dil kullanımı', 15], ['Kaynak kullanımı ve zamanında teslim', 15]] };
+  }
+  var REH = { 'Eylül': 'Okula ve sınıfa uyum; tanışma etkinlikleri; sınıf kurallarının birlikte belirlenmesi', 'Ekim': 'Etkili ve verimli ders çalışma yöntemleri; zaman yönetimi', 'Kasım': 'Akran ilişkileri ve zorbalığı önleme; duyguları tanıma ve ifade etme', 'Aralık': 'Kişisel güvenlik ve güvenli internet kullanımı; teknoloji bağımlılığı', 'Ocak': 'Dönem değerlendirmesi; hedef belirleme', 'Şubat': 'Mesleki farkındalık: ilgi, yetenek ve değerler', 'Mart': 'Sınav kaygısıyla baş etme; stres yönetimi', 'Nisan': 'Problem çözme ve karar verme becerileri; iletişim becerileri', 'Mayıs': 'Eğitim ve meslek seçenekleri; üst öğrenime hazırlık', 'Haziran': 'Yıl sonu değerlendirmesi; tatil önerileri' };
+  var KARNE = { 'çok iyi': ['derslere istekle katılan, sorumluluklarını eksiksiz yerine getiren, başarılı ve örnek davranışlar sergileyen bir öğrencidir. Bu çalışkanlığını sürdürmesini dilerim.', 'meraklı, araştırmacı ve üretken yapısıyla sınıfına örnek olan bir öğrencidir. Başarılarının devamını dilerim.'], 'iyi': ['derslerine ilgili, arkadaşlarıyla uyumlu ve sorumluluk sahibi bir öğrencidir. Düzenli çalışmaya devam ederek başarısını daha da artıracağına inanıyorum.', 'çalışkan ve saygılı bir öğrencidir; derse katılımını artırdığında çok daha başarılı olacaktır.'], 'orta': ['iyi niyetli ve arkadaş canlısı bir öğrencidir. Ders çalışma alışkanlığını düzenli hâle getirdiğinde başarısı belirgin şekilde artacaktır.', 'yapabileceklerinin farkına vardığında çok daha başarılı olabilecek bir öğrencidir; tekrar yapmaya ve soru sormaya özen göstermelidir.'], 'gelişmeli': ['gelişime açık, desteklendiğinde başarılı olabilecek bir öğrencidir. Günlük tekrar yapması ve ödevlerini düzenli tamamlaması önemlidir.', 'öğrenme isteğini artırdığında ve düzenli çalıştığında kısa sürede ilerleme kaydedecektir; ailesinin desteğiyle başarısını yükselteceğine inanıyorum.'] };
+  function varsayilan(id, v) { if (id === 'performans') return performansIcerik(v); if (id === 'rehberlik') return { aylar: AYLAR.map(function (a) { return { ay: a, konu: REH[a] }; }), yapilanlar: satirlar(v.yapilanlar).length ? satirlar(v.yapilanlar) : ['Sınıf rehberlik planındaki etkinlikler zamanında uygulanmıştır.', 'Öğrenci tanıma çalışmaları yapılmış, ihtiyaç duyan öğrenciler rehberlik servisine yönlendirilmiştir.', 'Velilerle bireysel ve toplu görüşmeler yapılmıştır.'], degerlendirme: 'Sınıf rehberlik çalışmaları yıllık plana uygun olarak yürütülmüş; öğrencilerin uyum, iletişim ve verimli ders çalışma konularında olumlu gelişim gösterdiği gözlenmiştir.' }; if (id === 'gunluk_plan') return gunlukIcerik(v); if (id === 'belirli_gun' && v.program !== 'yillik') return kutlamaIcerik(v); if (id === 'ogr_kurul') return kurulIcerik(v); if (id === 'egzersiz') return egzersizIcerik(v); if (id === 'gezi') return geziIcerik(v); if (id === 'kulup_aylik') return kulupAylikIcerik(v); if (id === 'dilekce') return dilekceIcerik(v); if (id === 'belirli_gun' || id === 'oys') return { bos: 1 }; return id === 'zumre' ? zumreIcerik(v) : id === 'sok' ? sokIcerik(v) : id === 'veli' ? veliIcerik(v) : id === 'bep' ? bepIcerik(v) : id === 'kulup_plan' ? kulupPlanIcerik(v) : id === 'kulup_rapor' ? kulupRaporIcerik(v) : {}; }
 
   /* ---------------- içerik → belge blokları ---------------- */
   function bloklar(id, v, ic) {
@@ -608,6 +652,49 @@
       b.push({ t: 'sag', s: (v.tarih || '…/…/20…') + '\n\n' + (v.adsoyad || '………………………') + '\n' + (v.gorev || '') + '\nİmza' }); b.push({ t: 'bosluk', n: 600 });
       b.push({ t: 'p', s: 'Adres: ' + (v.adres || '………………………………………') + '\nTelefon: ' + (v.tel || '………………') });
       var ek = satirlar(v.ekler); if (ek.length) { b.push({ t: 'p', s: 'Ekler:' }); b.push({ t: 'liste', l: ek }); }
+    } else if (id === 'performans') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.ders || '') + ' DERSİ PERFORMANS GÖREVİ'));
+      b.push({ t: 'bilgi', satirlar: [['Ders / sınıf', (v.ders || '') + ' – ' + (v.sinif || '')], ['Görevin konusu', v.konu || ''], ['Öğrenme çıktısı', v.cikti || ''], ['Ürün türü', v.urun || ''], ['Veriliş / teslim tarihi', (v.verilis || '') + ' / ' + (v.teslim || '')], ['Öğrencinin adı soyadı – no', '']] });
+      b.push({ t: 'h', s: 'GÖREV YÖNERGESİ' }); b.push({ t: 'liste', l: ic.yonerge || [], yol: 'yonerge' });
+      b.push({ t: 'h', s: 'DERECELİ PUANLAMA ANAHTARI' });
+      b.push({ t: 'tablo', bas: ['Ölçüt', 'Çok iyi (4)', 'İyi (3)', 'Geliştirilmeli (2)', 'Yetersiz (1)', 'Puan'], gen: [30, 13, 13, 15, 13, 16], sat: (ic.olcut || []).map(function (o) { var p = o[1]; return [o[0] + ' (' + p + ' p)', String(p), String(Math.round(p * .75)), String(Math.round(p * .5)), String(Math.round(p * .25)), '']; }).concat([['TOPLAM', '', '', '', '', '/100']]) });
+      b.push({ t: 'p', s: 'Puanlama: Her ölçütte öğrencinin ulaştığı düzeye karşılık gelen puan verilir; toplam puan 100 üzerinden hesaplanır.' });
+      b.push({ t: 'imza', kisiler: [{ ad: v.ogretmen, gorev: (v.ders || '') + ' Öğretmeni' }], sutun: 1 });
+    } else if (id === 'dyk') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.ders || '') + ' DESTEKLEME VE YETİŞTİRME KURSU PLANI'));
+      b.push({ t: 'bilgi', satirlar: [['Kurs / sınıf seviyesi', (v.ders || '') + ' – ' + (v.sinif || '')], ['Gün ve saat', v.gunsaat || ''], ['Haftalık ders saati', v.haftalik || ''], ['Başlama – bitiş', (v.baslama || '') + ' – ' + (v.bitis || '')], ['Kurs öğretmeni', v.ogretmen || '']] });
+      var kn = satirlar(v.konular); if (!kn.length) for (var q = 0; q < 10; q++) kn.push('');
+      b.push({ t: 'tablo', bas: ['Hafta', 'Konu / öğrenme çıktısı', 'Ders saati', 'Ölçme-değerlendirme', 'Öğretmen imzası'], gen: [8, 50, 10, 18, 14], sat: kn.map(function (x, i) { return [(i + 1) + '. hafta', x, v.haftalik || '', 'Gözlem, kısa sınav', '']; }) });
+      b.push({ t: 'imza', kisiler: [{ ad: v.ogretmen, gorev: 'Kurs Öğretmeni' }], sutun: 1 }); b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü' });
+      b.push({ t: 'sayfa' }); TB('KURS DEVAM ÇİZELGESİ'); b.push({ t: 'alt', s: (v.ders || '') + ' – ' + (v.sinif || '') });
+      var og = satirlar(v.ogrenciler); if (!og.length) for (var q2 = 0; q2 < 15; q2++) og.push('');
+      var hb = ['No', 'Adı soyadı']; for (var h1 = 1; h1 <= 10; h1++) hb.push(h1 + '.h');
+      b.push({ t: 'tablo', bas: hb, gen: [5, 25].concat([7, 7, 7, 7, 7, 7, 7, 7, 7, 7]), sat: og.map(function (x, i) { var p = x.split(/\s*[-–]\s*/); return [p[1] || String(i + 1), p[0] || ''].concat(['', '', '', '', '', '', '', '', '', '']); }) });
+    } else if (id === 'rehberlik') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.sube || '') + (v.program === 'rapor' ? ' SINIF REHBERLİK YIL SONU RAPORU' : ' SINIF REHBERLİK YILLIK PLANI')));
+      b.push({ t: 'bilgi', satirlar: [['Sınıf / şube', v.sube || ''], ['Öğrenci sayısı', v.mevcut || ''], ['Sınıf rehber öğretmeni', v.ogretmen || ''], ['Dayanak', 'Millî Eğitim Bakanlığı Rehberlik ve Psikolojik Danışma Hizmetleri Yönetmeliği']] });
+      if (v.program === 'rapor') { b.push({ t: 'h', s: 'YAPILAN ÇALIŞMALAR' }); b.push({ t: 'liste', l: ic.yapilanlar || [], yol: 'yapilanlar' }); b.push({ t: 'h', s: 'GENEL DEĞERLENDİRME' }); b.push({ t: 'p', s: ic.degerlendirme || '', yol: 'degerlendirme' }); }
+      else b.push({ t: 'tablo', bas: ['Ay', 'Rehberlik etkinliği / konu', 'Uygulama şekli', 'Yapıldı'], gen: [12, 58, 18, 12], sat: (ic.aylar || []).map(function (a) { return [a.ay, a.konu, 'Sınıf rehberlik saati', '']; }) });
+      b.push({ t: 'imza', kisiler: [{ ad: v.ogretmen, gorev: 'Sınıf Rehber Öğretmeni' }, { ad: v.rehber, gorev: 'Okul Rehber Öğretmeni' }], sutun: 2 }); b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü' });
+    } else if (id === 'veli_gorusme') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB('VELİ GÖRÜŞME FORMU');
+      b.push({ t: 'bilgi', satirlar: [['Öğrencinin adı soyadı', v.ogrenci || ''], ['Sınıfı / no', v.sube || ''], ['Velinin adı soyadı / yakınlığı', v.veli || ''], ['Görüşme tarihi ve şekli', (v.tarih || '') + ' – ' + (v.sekil || '')], ['Görüşme nedeni', v.neden || '']] });
+      b.push({ t: 'h', s: 'GÖRÜŞÜLEN KONULAR' }); b.push({ t: 'p', s: v.konusulan || '……………………………………………………………………………………\n……………………………………………………………………………………' });
+      b.push({ t: 'h', s: 'ALINAN KARARLAR / YAPILACAKLAR' }); b.push({ t: 'p', s: v.kararlar || '……………………………………………………………………………………\n……………………………………………………………………………………' });
+      b.push({ t: 'imza', kisiler: [{ ad: v.veli ? v.veli.split(/\s*[-–]\s*/)[0] : '', gorev: 'Veli' }, { ad: v.ogretmen, gorev: 'Öğretmen' }], sutun: 2 });
+    } else if (id === 'nobet') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB('ÖĞRETMEN NÖBET ÇİZELGESİ'); b.push({ t: 'alt', s: (v.baslama || '') + ' tarihinden itibaren geçerlidir' });
+      var yr = satirlar(v.yerler); if (!yr.length) yr = ['Bahçe', 'Zemin kat', '1. kat', '2. kat']; var ot = satirlar(v.ogretmenler), gn = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'], z = 0;
+      b.push({ t: 'tablo', bas: ['Nöbet yeri'].concat(gn), gen: [20, 16, 16, 16, 16, 16], sat: yr.map(function (y) { return [y].concat(gn.map(function () { return ot.length ? ot[(z++) % ot.length] : ''; })); }) });
+      if (v.mudurYrd) b.push({ t: 'p', s: 'Nöbetçi müdür yardımcısı: ' + v.mudurYrd });
+      b.push({ t: 'h', s: 'NÖBETÇİ ÖĞRETMENİN GÖREVLERİ' }); b.push({ t: 'liste', l: ['Nöbet görevine ders başlamadan önce başlar, son ders bitiminden sonra ayrılır.', 'Öğrencilerin güvenliğini, okulun temizlik ve düzenini gözetir; teneffüslerde nöbet yerinde bulunur.', 'Derse girmeyen öğretmenin sınıfında gerekli tedbirleri alır, durumu okul yönetimine bildirir.', 'Nöbet süresince karşılaştığı olayları nöbet defterine yazar.'] });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: v.baslama });
+    } else if (id === 'karne') {
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((v.sube || '') + ' SINIFI ' + (v.donem || '') + ' KARNE GÖRÜŞLERİ'));
+      var kg = satirlar(v.ogrenciler);
+      b.push({ t: 'tablo', bas: ['No', 'Öğrencinin adı soyadı', 'Görüş'], gen: [6, 24, 70], sat: kg.map(function (x, i) { var p = x.split(/\s*[-–]\s*/), ad = p[0], d = (p[1] || 'iyi').toLocaleLowerCase('tr'); var l = KARNE[d] || KARNE['iyi']; return [String(i + 1), ad, ad.split(' ')[0] + ', ' + l[i % l.length]]; }) });
+      b.push({ t: 'p', s: 'Görüşler e-Okul’a girilmeden önce her öğrenci için gözden geçirilip kişiselleştirilmelidir.' });
+      b.push({ t: 'imza', kisiler: [{ ad: v.ogretmen, gorev: 'Sınıf Öğretmeni' }], sutun: 1 });
     } else if (id === 'gunluk_plan') {
       var gs = gpSecili(v), YPg = ypDurum(v), dad = YPg.ders === '__' ? YPg.dersAd : YPg.ders;
       TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((dad || '') + ' DERSİ GÜNLÜK DERS PLANI'));
@@ -628,8 +715,10 @@
     } else if (id === 'yillik') {
       var P = ypDurum(v), dad = P.ders === '__' ? P.dersAd : P.ders, PL = ypPlan(P);
       TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((P.sinif || '') + '. SINIF ' + (dad || '') + ' DERSİ ÜNİTELENDİRİLMİŞ YILLIK PLANI'));
+      if (+P.sinif >= 9 && P.tur) b.push({ t: 'alt', s: P.tur });
       b.push({ t: 'bilgi', satirlar: [['Haftalık ders saati', String(PL.saat)], ['Ders yapılan hafta', String(PL.hafta) + ' hafta (' + String(TK.baslangic || '').split('-').reverse().join('.') + ' – ' + String(TK.bitis || '').split('-').reverse().join('.') + ')'], ['Dayanak', 'Türkiye Yüzyılı Maarif Modeli ' + (dad || '') + ' dersi öğretim programı; ' + (TK.yil || '') + ' eğitim-öğretim yılı çalışma takvimi'], ['Ders öğretmeni', v.ogretmen || '']] });
-      b.push({ t: 'tablo', bas: ['Ay', 'Hafta', 'Saat', 'Ünite / tema', 'Öğrenme çıktıları', 'Ölçme ve değerlendirme', 'Belirli gün ve haftalar', 'Açıklama'], gen: [6, 11, 4, 14, 35, 10, 11, 9], sat: PL.satir.map(function (r) { return [r.ay, r.hafta, r.saat, r.unite, r.cikti, r.olcme, r.bgh, r.aciklama]; }) });
+      if (PL.meb) b.push({ t: 'tablo', bas: ['Ay', 'Hafta', 'Saat', 'Ünite / tema', 'Konu (içerik çerçevesi)', 'Öğrenme çıktıları', 'Süreç bileşenleri', 'Ölçme ve değerlendirme', 'Programlar arası bileşenler', 'Belirli gün ve haftalar', 'Açıklama'], gen: [5, 8, 3, 9, 10, 17, 16, 9, 10, 8, 5], sat: PL.satir.map(function (r) { return [r.ay, r.hafta, r.saat, r.unite, r.konu, r.cikti, r.surec, r.olcme, r.bilesen, r.bgh, r.aciklama]; }) });
+      else b.push({ t: 'tablo', bas: ['Ay', 'Hafta', 'Saat', 'Ünite / tema', 'Öğrenme çıktıları', 'Ölçme ve değerlendirme', 'Belirli gün ve haftalar', 'Açıklama'], gen: [6, 11, 4, 14, 35, 10, 11, 9], sat: PL.satir.map(function (r) { return [r.ay, r.hafta, r.saat, r.unite, r.cikti, r.olcme, r.bgh, r.aciklama]; }) });
       b.push({ t: 'p', s: 'Bu plan Türkiye Yüzyılı Maarif Modeli öğretim programı ve çalışma takvimi esas alınarak hazırlanmıştır. Belirli gün ve haftalar, ilgili derslerde öğrenme çıktılarıyla ilişkilendirilerek işlenir.' });
       b.push({ t: 'imza', baslik: 'ZÜMRE ÖĞRETMENLERİ', kisiler: [{ ad: v.ogretmen, gorev: (dad || '') + ' Öğretmeni' }].concat(satirlar(v.zumre).map(function (a) { return { ad: a, gorev: (dad || '') + ' Öğretmeni' }; })), sutun: 3 });
       b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: TK.baslangic ? TK.baslangic.split('-').reverse().join('.') : '' });
@@ -661,8 +750,10 @@
 
   /* ---------------- durum ---------------- */
   var S = ls('osc_ev_taslak') || { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 };
+  /* Yazılı Hazırla'dan aktarılan evrak (ör. OYS puan çizelgesi) */
+  var AKT = ls('osc_ev_aktar'); if (AKT && AKT.tur) { ls('osc_ev_aktar', null); S = { ekran: 'form', tur: AKT.tur, veri: AKT.veri || {}, ic: null, id: 0 }; }
   /* ortak bilgiler (okul, müdür, öğretmen…): yalnızca üyelerde hesaba kaydedilir ve tüm evraklara işlenir */
-  var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe' };
+  var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe', okulturu: 'okulturu' };
   var ORT = C.uye && C.profil ? C.profil : {};
   var pZ = 0, pB = {};
   function ortakKaydet(k, v) {
@@ -711,7 +802,7 @@
     document.getElementById('ev-geri').onclick = function () { S.ekran = t.grup === 'kulup' ? 'kulup' : 'sec'; sakla(); ciz(); };
     kok.querySelectorAll('[data-coklu]').forEach(function (d) { var k = d.dataset.coklu, guncel = function () { S.veri[k] = [].map.call(d.querySelectorAll('input:checked'), function (i) { return i.value; }); sakla(); }; d.querySelectorAll('input').forEach(function (i) { i.onchange = guncel; }); d.querySelectorAll('[data-hep]').forEach(function (b) { b.onclick = function () { d.querySelectorAll('input').forEach(function (i) { i.checked = b.dataset.hep === '1'; }); guncel(); }; }); });
     rkKoy('form', kok);
-    var eksik = function () { var z = { zumre: ['okul', 'ders'], sok: ['okul', 'sube'], veli: ['okul', 'sube'], bep: ['okul', 'ders'], kulup_plan: ['okul', 'kulup'], kulup_tutanak: ['okul', 'kulup'], kulup_rapor: ['okul', 'kulup'], kulup_aylik: ['okul', 'kulup'], ogr_kurul: ['okul'], egzersiz: ['okul', 'egz'], belirli_gun: ['okul'], gezi: ['okul', 'gezi'], dilekce: ['makam', 'adsoyad'], oys: ['okul'], yillik: ['okul'], gunluk_plan: ['okul'] }[S.tur] || []; if (S.tur === 'gunluk_plan' && !gpSecili(S.veri).ciktilar.length) { bildir('Sınıf ve dersi seçip en az bir öğrenme çıktısı işaretleyin.', 'hata'); return true; } if (S.tur === 'yillik') { var YP = ypDurum(S.veri); if (!YP.sinif || !(YP.ders && YP.ders !== '__' || YP.dersAd) || !YP.uniteler.length || !(+YP.saat)) { bildir('Sınıf, ders, haftalık ders saati ve en az bir ünite gerekli.', 'hata'); return true; } } if (S.tur === 'oys' && !oyDurum(S.veri).sorular.length) { bildir('Önce sınıf, ders ve senaryo seçin (ya da “Soru ekle” ile soruları kendiniz girin).', 'hata'); return true; } var e = z.filter(function (k) { return !String(S.veri[k] || '').trim(); }); if (e.length) { bildir('Lütfen doldurun: ' + e.map(function (k) { return (t.alan.filter(function (a) { return a.k === k; })[0] || { ad: k }).ad; }).join(', '), 'hata'); return true; } return false; };
+    var eksik = function () { var z = { zumre: ['okul', 'ders'], sok: ['okul', 'sube'], veli: ['okul', 'sube'], bep: ['okul', 'ders'], kulup_plan: ['okul', 'kulup'], kulup_tutanak: ['okul', 'kulup'], kulup_rapor: ['okul', 'kulup'], kulup_aylik: ['okul', 'kulup'], ogr_kurul: ['okul'], egzersiz: ['okul', 'egz'], belirli_gun: ['okul'], gezi: ['okul', 'gezi'], dilekce: ['makam', 'adsoyad'], oys: ['okul'], yillik: ['okul'], gunluk_plan: ['okul'], performans: ['okul', 'ders'], dyk: ['okul', 'ders'], rehberlik: ['okul', 'sube'], veli_gorusme: ['ogrenci'], nobet: ['okul', 'ogretmenler'], karne: ['ogrenciler'] }[S.tur] || []; if (S.tur === 'gunluk_plan' && !gpSecili(S.veri).ciktilar.length) { bildir('Sınıf ve dersi seçip en az bir öğrenme çıktısı işaretleyin.', 'hata'); return true; } if (S.tur === 'yillik') { var YP = ypDurum(S.veri); if (!YP.sinif || !(YP.ders && YP.ders !== '__' || YP.dersAd) || !YP.uniteler.length || !(+YP.saat)) { bildir('Sınıf, ders, haftalık ders saati ve en az bir ünite gerekli.', 'hata'); return true; } } if (S.tur === 'oys' && !oyDurum(S.veri).sorular.length) { bildir('Önce sınıf, ders ve senaryo seçin (ya da “Soru ekle” ile soruları kendiniz girin).', 'hata'); return true; } var e = z.filter(function (k) { return !String(S.veri[k] || '').trim(); }); if (e.length) { bildir('Lütfen doldurun: ' + e.map(function (k) { return (t.alan.filter(function (a) { return a.k === k; })[0] || { ad: k }).ad; }).join(', '), 'hata'); return true; } return false; };
     document.getElementById('ev-hizli').onclick = function () { if (eksik()) return; S.ic = varsayilan(S.tur, S.veri); S.ekran = 'onizle'; sakla(); ciz(); };
     var yb = document.getElementById('ev-yz'); if (yb) yb.onclick = function () {
       if (eksik()) return; yb.disabled = true; yb.innerHTML = '<span class="ev-don"></span> Yazılıyor…';
@@ -742,7 +833,7 @@
       return '';
     }).join('');
     cerceve('<section class="ev-izgara"><div class="ev-kagit' + (yatayMi(t) ? ' yatay' : '') + '">' + html + '</div><aside class="ev-yan"><div class="ev-kart"><h3>' + t.ik + ' ' + esc(t.ad) + '</h3><p class="ev-not">Kâğıt üzerindeki gündem, görüşme, karar ve plan metinlerine tıklayıp düzenleyebilirsiniz.</p>' +
-      '<button class="ev-btn ana tam" id="ev-word">⬇ Word (.docx) indir</button><button class="ev-btn tam" id="ev-yazdir">🖨 Yazdır / PDF</button><button class="ev-btn tam" id="ev-kaydet">💾 Evraklarıma kaydet</button><button class="ev-btn hafif tam" id="ev-duzen">✎ Bilgileri düzenle</button><button class="ev-btn hafif tam" id="ev-yeni">＋ Yeni evrak</button></div></aside></section>');
+      '<button class="ev-btn ana tam" id="ev-word">⬇ Word (.docx) indir</button>' + (S.tur === 'oys' ? '<button class="ev-btn tam" id="ev-csv">📊 Excel olarak indir</button>' : '') + '<button class="ev-btn tam" id="ev-yazdir">🖨 Yazdır / PDF</button><button class="ev-btn tam" id="ev-kaydet">💾 Evraklarıma kaydet</button><button class="ev-btn hafif tam" id="ev-duzen">✎ Bilgileri düzenle</button><button class="ev-btn hafif tam" id="ev-yeni">＋ Yeni evrak</button></div></aside></section>');
     rkKoy('yan', kok.querySelector('.ev-yan'));
     kok.querySelectorAll('[data-yol]').forEach(function (e) {
       e.oninput = function () {
@@ -755,7 +846,19 @@
     kok.querySelectorAll('[data-ekle]').forEach(function (b) { b.onclick = function () { var l = S.ic[b.dataset.ekle] = S.ic[b.dataset.ekle] || []; l.push('Yeni madde'); sakla(); vOnizle(); }; });
     document.getElementById('ev-word').onclick = function () { wordIndir(); };
     document.getElementById('ev-yazdir').onclick = function () { yazdir(); };
-    document.getElementById('ev-kaydet').onclick = function () { var l = kayitlar(), id = S.id || Date.now(); l = l.filter(function (x) { return x.id !== id; }); l.unshift({ id: id, tur: S.tur, ad: dosyaAdi(), tarih: bugun(), veri: S.veri, ic: S.ic }); kayitlar(l); S.id = id; sakla(); bildir('Evraklarım’a kaydedildi.', 'ok'); };
+    var csvb = document.getElementById('ev-csv'); if (csvb) csvb.onclick = function () {
+      var Q = oyDurum(S.veri), H = oyHesap(Q), q = function (x) { x = String(x == null ? '' : x); return /[;"\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+      var l = [['No', 'Adı soyadı'].concat(Q.sorular.map(function (s, i) { return (i + 1) + '. soru (' + (s.puan || 0) + ' p)'; }), ['Toplam'])];
+      Q.ogr.forEach(function (o, k) { l.push([o.no || '', o.ad || ''].concat(Q.sorular.map(function (s, j) { var x = (o.p || [])[j]; return x == null ? '' : String(x).replace('.', ','); }), [H.top[k] == null ? '' : String(H.top[k]).replace('.', ',')])); });
+      l.push([]); l.push(['', 'Öğrenme çıktısı']); Q.sorular.forEach(function (s, i) { l.push([String(i + 1), (s.kod ? s.kod + ' ' : '') + (s.cikti || '')]); });
+      var blob = new Blob(['\ufeff' + l.map(function (r) { return r.map(q).join(';'); }).join('\r\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = dosyaAdi().replace(/[\\\/:*?"<>|]+/g, '-') + '.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    };
+    document.getElementById('ev-kaydet').onclick = function () {
+      var l = kayitlar(), id = S.id || Date.now(), x = { id: id, tur: S.tur, ad: dosyaAdi(), tarih: bugun(), veri: S.veri, ic: S.ic }; l = l.filter(function (k) { return k.id !== id; }); l.unshift(x); kayitlar(l); S.id = id; sakla();
+      if (C.uye && KISISEL.indexOf(S.tur) < 0) hesap('kaydet', { veri: JSON.stringify(x) }).then(function () { bildir('Hesabınıza kaydedildi; her cihazdan açabilirsiniz.', 'ok'); }).catch(function () { bildir('Bu tarayıcıya kaydedildi.', 'ok'); });
+      else bildir(C.uye ? 'Öğrenci bilgisi içerdiği için yalnızca bu tarayıcıya kaydedildi.' : 'Bu tarayıcıya kaydedildi. Üye olursanız evraklarınız hesabınıza kaydedilir.', 'ok');
+    };
     document.getElementById('ev-duzen').onclick = function () { S.ekran = 'form'; sakla(); ciz(); };
     document.getElementById('ev-yeni').onclick = function () { S = { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 }; sakla(); ciz(); };
   }
@@ -775,11 +878,14 @@
   }
   var EV_BASKI = '.ev-b{text-align:center;font-weight:700;margin:0 0 3px}.ev-alt{text-align:center;margin-bottom:8px}h4{color:#1e3a8a;margin:14px 0 6px;font-size:11.5pt}p{text-align:justify;margin:0 0 6px}ol{margin:0 0 6px;padding-left:22px}li{margin-bottom:3px}table{border-collapse:collapse;width:100%;margin:6px 0 10px}td,th{border:1px solid #6b7280;padding:4px 6px;vertical-align:top;font-size:10pt;text-align:left}th{background:#e8edf6}.ev-bilgi th{width:30%;background:#f1f4f9}.ev-imza{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-top:8px}.ev-imza b,.ev-imza small,.ev-imza i{display:block}.ev-imza i{color:#888;font-style:normal;margin-top:14px;font-size:9pt}.ev-onay{text-align:center;margin-top:18px}.ev-onay b,.ev-onay span{display:block}.ev-onay span{margin-bottom:6px}.ev-sayfa{page-break-after:always;border:0}';
 
+  var KISISEL = ['bep', 'oys', 'karne', 'veli_gorusme', 'kulup_tutanak', 'dyk', 'gezi', 'egzersiz'], SUNUCU = null;
+  function hesap(is, d) { var fd = new FormData(); fd.append('action', 'osc_ev_hesap'); fd.append('nonce', C.nonce); fd.append('is', is); for (var k in (d || {})) fd.append(k, d[k]); return fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { if (!j.success) throw new Error('hata'); return j.data; }); }
   function vListe() {
-    var l = kayitlar();
-    cerceve('<section class="ev-kart"><h2>📁 Evraklarım</h2><p class="ev-not">Bu tarayıcıda kaydettiğiniz evraklar.</p>' + (l.length ? '<div class="ev-liste">' + l.map(function (x) { var t = tur(x.tur) || { ik: '📄' }; return '<div class="ev-li"><span>' + t.ik + '</span><div><b>' + esc(x.ad) + '</b><small>' + esc(x.tarih) + '</small></div><button class="ev-btn" data-ac="' + x.id + '">Aç</button><button class="ev-btn hafif" data-sil="' + x.id + '">🗑</button></div>'; }).join('') + '</div>' : '<div class="ev-bos">Henüz kaydettiğiniz evrak yok.</div>') + '</section>');
-    kok.querySelectorAll('[data-ac]').forEach(function (b) { b.onclick = function () { var x = kayitlar().filter(function (k) { return String(k.id) === b.dataset.ac; })[0]; if (!x) return; S = { ekran: 'onizle', tur: x.tur, veri: x.veri, ic: x.ic, id: x.id }; sakla(); ciz(); }; });
-    kok.querySelectorAll('[data-sil]').forEach(function (b) { b.onclick = function () { if (!confirm('Silinsin mi?')) return; kayitlar(kayitlar().filter(function (k) { return String(k.id) !== b.dataset.sil; })); vListe(); }; });
+    if (C.uye && SUNUCU === null) { SUNUCU = []; hesap('liste').then(function (l) { SUNUCU = l || []; if (S.ekran === 'liste') vListe(); }).catch(function () {}); }
+    var yerel = kayitlar(), idler = yerel.map(function (x) { return String(x.id); }), l = yerel.concat((SUNUCU || []).filter(function (x) { return idler.indexOf(String(x.id)) < 0; }));
+    cerceve('<section class="ev-kart"><h2>📁 Evraklarım</h2><p class="ev-not">' + (C.uye ? 'Hesabınıza ve bu tarayıcıya kaydettiğiniz evraklar. Öğrenci bilgisi içeren evraklar (BEP, OYS, karne görüşleri vb.) yalnızca bu tarayıcıda saklanır.' : 'Bu tarayıcıda kaydettiğiniz evraklar. Üye olursanız evraklarınız hesabınıza kaydedilir ve her cihazdan açılır.') + '</p>' + (l.length ? '<div class="ev-liste">' + l.map(function (x) { var t = tur(x.tur) || { ik: '📄' }; return '<div class="ev-li"><span>' + t.ik + '</span><div><b>' + esc(x.ad) + '</b><small>' + esc(x.tarih) + '</small></div><button class="ev-btn" data-ac="' + x.id + '">Aç</button><button class="ev-btn hafif" data-sil="' + x.id + '">🗑</button></div>'; }).join('') + '</div>' : '<div class="ev-bos">Henüz kaydettiğiniz evrak yok.</div>') + '</section>');
+    kok.querySelectorAll('[data-ac]').forEach(function (b) { b.onclick = function () { var x = l.filter(function (k) { return String(k.id) === b.dataset.ac; })[0]; if (!x) return; S = { ekran: 'onizle', tur: x.tur, veri: x.veri, ic: x.ic, id: x.id }; sakla(); ciz(); }; });
+    kok.querySelectorAll('[data-sil]').forEach(function (b) { b.onclick = function () { if (!confirm('Silinsin mi?')) return; kayitlar(kayitlar().filter(function (k) { return String(k.id) !== b.dataset.sil; })); if (C.uye) { SUNUCU = (SUNUCU || []).filter(function (k) { return String(k.id) !== b.dataset.sil; }); hesap('sil', { id: b.dataset.sil }).catch(function () {}); } vListe(); }; });
   }
   ciz();
   }

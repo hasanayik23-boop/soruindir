@@ -8,6 +8,7 @@ class OSC_Evrak {
         add_action('admin_init', array($this, 'sayfa_kur'));
         add_shortcode('osc_evrak_hazirla', array($this, 'kisa_kod'));
         add_action('wp_ajax_osc_ev_yz', array($this, 'ajax_yz'));
+        add_action('wp_ajax_osc_ev_hesap', array($this, 'ajax_hesap'));
         add_action('template_redirect', array($this, 'kaynak_servis'), 0);
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
         add_action('template_redirect', array($this, 'tam_sayfa'), 20);
@@ -61,7 +62,7 @@ class OSC_Evrak {
     }
     public static $turler = array('zumre' => 'Zümre öğretmenler kurulu tutanağı', 'ogr_kurul' => 'Öğretmenler kurulu toplantı tutanağı', 'sok' => 'Şube öğretmenler kurulu (ŞÖK) tutanağı', 'veli' => 'Veli toplantısı tutanağı', 'bep' => 'BEP planı',
         'kulup_plan' => 'Sosyal kulüp: yıllık çalışma planı', 'kulup_tutanak' => 'Sosyal kulüp: ilk toplantı ve seçim tutanağı', 'kulup_aylik' => 'Sosyal kulüp: aylık çalışma raporu', 'kulup_rapor' => 'Sosyal kulüp: dönem sonu çalışma raporu',
-        'yillik' => 'Ünitelendirilmiş yıllık plan', 'gunluk_plan' => 'Günlük ders planı', 'egzersiz' => 'Ders dışı egzersiz planı', 'belirli_gun' => 'Belirli gün ve haftalar programı', 'gezi' => 'Gezi planı (Ek-9)', 'dilekce' => 'Dilekçe', 'oys' => 'OYS puan çizelgesi');
+        'yillik' => 'Ünitelendirilmiş yıllık plan', 'gunluk_plan' => 'Günlük ders planı', 'performans' => 'Performans görevi ve rubrik', 'dyk' => 'DYK kurs planı ve devam çizelgesi', 'rehberlik' => 'Sınıf rehberlik planı / raporu', 'veli_gorusme' => 'Veli görüşme formu', 'nobet' => 'Nöbet çizelgesi', 'karne' => 'Karne görüşleri', 'egzersiz' => 'Ders dışı egzersiz planı', 'belirli_gun' => 'Belirli gün ve haftalar programı', 'gezi' => 'Gezi planı (Ek-9)', 'dilekce' => 'Dilekçe', 'oys' => 'OYS puan çizelgesi');
     public static function acik_turler() {
         $v = get_option('osc_ev_turler', false); $hep = array_keys(self::$turler); if (!is_array($v)) return $hep;
         // ayar kaydedildikten sonra eklenen yeni evrak türleri varsayılan olarak açık gelsin
@@ -92,6 +93,24 @@ class OSC_Evrak {
 </table><?php submit_button(); ?></form></div>
 <?php }
     public static function profil() { if (!is_user_logged_in()) return new stdClass(); $p = get_user_meta(get_current_user_id(), 'osc_om_profil', true); if (!is_array($p)) $p = array(); if (empty($p['okul'])) { $o = (string) get_user_meta(get_current_user_id(), 'osc_okul', true); if ($o) $p['okul'] = $o; } if (empty($p['ogretmen'])) $p['ogretmen'] = wp_get_current_user()->display_name; return $p ? $p : new stdClass(); }
+    /** üyelerin evrakları hesapta (öğrenci bilgisi içeren türler hariç; onlar yalnızca tarayıcıda kalır) */
+    public static $kisisel = array('bep', 'oys', 'karne', 'veli_gorusme', 'kulup_tutanak', 'dyk', 'gezi', 'egzersiz');
+    public function ajax_hesap() {
+        if (!is_user_logged_in() || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_ev')) wp_send_json_error('', 403);
+        $uid = get_current_user_id(); $l = get_user_meta($uid, 'osc_ev_kayitlar', true); if (!is_array($l)) $l = array();
+        $is = isset($_POST['is']) ? (string) $_POST['is'] : 'liste';
+        if ($is === 'kaydet') {
+            $x = json_decode(wp_unslash(isset($_POST['veri']) ? $_POST['veri'] : ''), true);
+            if (!is_array($x) || empty($x['id']) || empty($x['tur']) || in_array($x['tur'], self::$kisisel, true) || !isset(self::$turler[$x['tur']])) wp_send_json_error('Kaydedilemedi.');
+            $j = wp_json_encode($x); if (strlen($j) > 200000) wp_send_json_error('Evrak çok büyük.');
+            $x['ad'] = mb_substr(sanitize_text_field(isset($x['ad']) ? $x['ad'] : ''), 0, 160);
+            $l = array_values(array_filter($l, function ($k) use ($x) { return (string) $k['id'] !== (string) $x['id']; })); array_unshift($l, $x); $l = array_slice($l, 0, 60);
+            update_user_meta($uid, 'osc_ev_kayitlar', $l);
+        } elseif ($is === 'sil') {
+            $id = (string) (isset($_POST['id']) ? $_POST['id'] : ''); $l = array_values(array_filter($l, function ($k) use ($id) { return (string) $k['id'] !== $id; })); update_user_meta($uid, 'osc_ev_kayitlar', $l);
+        }
+        wp_send_json_success($l);
+    }
     public static function yz_acik() { return get_option('osc_ev_yz', '0') === '1' && OSC_YZ_API::var_mi(); }
 
     /* ---------- yapay zekâ ---------- */
