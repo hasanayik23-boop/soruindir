@@ -6,7 +6,7 @@
  * ===================================================================== */
 if (!class_exists('OSC_Sayfalar')) {
 class OSC_Sayfalar {
-    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar', 'liderlik' => 'liderlik');
+    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar');
     public function __construct() {
         add_action('template_redirect', array($this, 'yonlendir'), 5);
         add_filter('pre_get_document_title', array($this, 'baslik'), 60);
@@ -151,7 +151,7 @@ class OSC_Sayfalar {
     <div class="osp-k" style="padding:20px"><?php echo do_shortcode('[osc_liderlik]'); ?></div>
     <div style="display:grid;gap:12px">
       <div class="osp-bilgi" style="margin:0"><b>Nasıl XP kazanılır?</b><br>✅ Her test: 10 XP + puanının onda biri<br>📝 Ödev / sınav teslimi: 20 XP<br>🔥 Günlük seri: her gün +1 XP (en fazla 10)<br>🏅 Her rozet: 25 XP</div>
-      <div class="osp-ek" style="grid-template-columns:1fr;margin:0"><a href="<?php echo esc_url($ou); ?>"><span>🎒</span>Rozetlerim ve sınıf ligim</a><a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Test çöz, XP kazan</a><?php if (class_exists('OSC_Forum')): ?><a href="<?php echo esc_url(OSC_Forum::url()); ?>"><span>💬</span>Soru-Cevap’ta yardım et</a><?php endif; ?></div>
+      <div class="osp-ek" style="grid-template-columns:1fr;margin:0"><a href="<?php echo esc_url($ou); ?>"><span>🎒</span>Rozetlerim ve sınıf ligim</a><a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Test çöz, XP kazan</a></div>
     </div>
   </div>
 </div>

@@ -276,7 +276,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
         .sx-mega-h { width:640px; left:auto; right:-120px; grid-template-columns:.9fr 1.3fr; }
         .sx-mega-h .sx-hl { grid-template-columns:1fr 1fr 1fr; }
         .sx-mega-bas { display:block; padding:2px 8px 8px; font-size:11.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#8AA2BA; }
-        .sx-header .sx-mega-menu a.sx-mk { display:flex; align-items:center; gap:12px; padding:10px; border-radius:14px; }
+        .sx-header .sx-mega-menu a.sx-mk { display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:14px; }
         .sx-header .sx-mega-menu a.sx-mk:hover { background:#F4F8FD; }
         .sx-mk i { flex:0 0 40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:19px; background:color-mix(in srgb,var(--r) 13%,#fff); }
         .sx-mk b { display:block; font-size:14.5px; color:#13304F; }
@@ -322,6 +322,8 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                             <a class="sx-mk" href="<?php echo esc_url($sx_menu[0][1]); ?>"><i style="--r:#2F80ED">📝</i><span><b>Yazılı soruları</b><small>Senaryoya uygun, cevap anahtarlı</small></span></a>
                             <a class="sx-mk" href="<?php echo esc_url($sx_menu[1][1]); ?>"><i style="--r:#EF6C57">🗓️</i><span><b>Yıllık planlar</b><small>Tüm sınıf ve dersler, güncel</small></span></a>
                             <a class="sx-mk" href="<?php echo esc_url($sx_menu[2][1]); ?>"><i style="--r:#7C3AED">👥</i><span><b>Zümre tutanakları</b><small>Şube, zümre, kurul tutanakları</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/ogretmen-evraklari/')); ?>"><i style="--r:#0D9488">🗂️</i><span><b>Öğretmen evrakları</b><small>Tutanak, BEP, plan, dilekçe</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/belirli-gun-ve-haftalar/')); ?>"><i style="--r:#DC2626">🎗️</i><span><b>Belirli gün ve haftalar</b><small>Anlam ve önemi, hazır program</small></span></a>
                             <a class="sx-mk" href="<?php echo esc_url($sx_kat); ?>"><i style="--r:#22A06B">📚</i><span><b>Tüm kategoriler</b><small>Test, etkinlik, evrak ve dahası</small></span></a>
                         </div>
                         <div class="sx-mega-sag">
@@ -333,21 +335,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                 </div>
                 <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/test-coz/'); ?>" href="https://soruindir.net/test-coz/">Online testler</a>
                 <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası<?php if ($sx_om_yeni): ?> <span class="sx-yeni">YENİ</span><?php endif; ?></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
-                <div class="sx-dd sx-mega" data-sx-dd>
-                    <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Topluluk <?php echo $sx_chev; ?></button>
-                    <div class="sx-dd-menu sx-mega-menu sx-mega-t">
-                        <div class="sx-mega-sol">
-                            <span class="sx-mega-bas">Birlikte öğren</span>
-                            <a class="sx-mk" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>"><i style="--r:#2F80ED">💬</i><span><b>Soru-Cevap</b><small>Takıldığın soruyu sor, cevapla</small></span></a>
-                            <a class="sx-mk" href="<?php echo esc_url(home_url('/liderlik/')); ?>"><i style="--r:#F59E0B">🏆</i><span><b>Haftanın liderleri</b><small>XP, rozetler ve sınıf ligi</small></span></a>
-                        </div>
-                        <div class="sx-mega-sol">
-                            <span class="sx-mega-bas">Öğretmenler için</span>
-                            <a class="sx-mk" href="<?php echo esc_url(home_url('/ogretmen-evraklari/')); ?>"><i style="--r:#7C3AED">🗂️</i><span><b>Öğretmen evrakları</b><small>Tutanak, BEP, plan, dilekçe</small></span></a>
-                            <a class="sx-mk" href="<?php echo esc_url(home_url('/belirli-gun-ve-haftalar/')); ?>"><i style="--r:#DC2626">🎗️</i><span><b>Belirli gün ve haftalar</b><small>Anlam ve önemi, hazır program</small></span></a>
-                        </div>
-                    </div>
-                </div>
+                <a class="sx-nav-link<?php echo $sx_active(home_url('/soru-cevap/')); ?>" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>">Soru-Cevap</a>
                 <div class="sx-dd sx-mega" data-sx-dd>
                     <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Hesaplamalar <?php echo $sx_chev; ?></button>
                     <div class="sx-dd-menu sx-mega-menu sx-mega-h">
@@ -433,7 +421,6 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             <a class="sx-drawer-link" href="<?php echo esc_url($sx_kat); ?>">Tüm kategoriler</a>
             <a class="sx-drawer-link" href="<?php echo esc_url($sx_rb); ?>">Tercih robotları</a>
             <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>">💬 Soru-Cevap</a>
-            <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/liderlik/')); ?>">🏆 Haftanın liderleri</a>
             <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/ogretmen-evraklari/')); ?>">Öğretmen evrakları</a>
             <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/belirli-gun-ve-haftalar/')); ?>">Belirli gün ve haftalar</a>
             <details>

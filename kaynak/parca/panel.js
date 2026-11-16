@@ -270,14 +270,26 @@
     function yerelKaydet() { clearTimeout(kayT); kayT = setTimeout(function () { try { localStorage.setItem(anahtar, JSON.stringify(T)); } catch (e) {} }, 600); }
     function turSecenek() { return '<option value="">Otomatik (başlıktan algıla)</option>' + C.turler.map(function (t) { return '<option value="' + t.k + '"' + (T.sinav_turu === t.k ? ' selected' : '') + '>' + esc(t.ad) + ' — ' + (t.kural ? t.kural + ' yanlış 1 doğru' : 'yanlış götürmez') + '</option>'; }).join(''); }
     function konular() { var l = []; T.sorular.forEach(function (q) { var k = (q.konu || '').trim(); if (k && l.indexOf(k) < 0) l.push(k); }); return l; }
-    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir: 3/4 yazıp seçin ya da boş kesir ekleyin">a⁄b</button><button type="button" data-a="sembol" title="Matematik sembolü">∈ ℕ</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
+    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir: 3/4 yazıp seçin ya da boş kesir ekleyin">a⁄b</button><button type="button" data-a="num" title="Altı çizili ve altında numara (I, II, III…)"><u>A</u><sub>I</sub></button><button type="button" data-a="mat" title="Matematik: kök, üs, kesir, doğru parçası, semboller…">∑ √ π</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
+    function kokBol(q) { var a = OSCMat.kokAyir(q.root); q.kokYalin = a.kok; q.sutun = a.adlar && a.adlar.length ? a.adlar : null; }
+    function kokYaz(q) { q.root = (q.kokYalin || '') + (q.sutun && q.sutun.length ? OSCMat.sutunBas(q.sutun.length, q.sutun) : ''); }
+    function sikIc(q, k) {
+      var ph = k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı';
+      if (!q.sutun) return '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + ph + '">' + (q.options[k] || '') + '</div>';
+      return '<div class="osc-pn-sut">' + OSCMat.sutunHucre(q.options[k], q.sutun.length).map(function (x, j) { return '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-c="' + j + '" data-ph="' + esc(q.sutun[j] || '') + '">' + x + '</div>'; }).join('') + '</div>';
+    }
+    function sutunUst(q) {
+      if (!q.sutun) return '<button type="button" class="osc-pn-link" data-q="sutun-ac">⊞ Sütunlu şık (I. / II. başlıklı) ekle</button>';
+      return '<div class="osc-pn-sut-ayar"><b>Sütun başlıkları:</b>' + q.sutun.map(function (a, j) { return '<input data-sb="' + j + '" value="' + esc(a) + '">'; }).join('') + '<select data-q="sutun-n">' + [2, 3, 4].map(function (n) { return '<option' + (q.sutun.length === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select> sütun <button type="button" class="osc-pn-link" data-q="sutun-kapat">Sütunları kaldır</button></div>';
+    }
     function soruHtml(q, i) {
+      kokBol(q);
       var h = '<div class="osc-pn-q" data-i="' + i + '"><div class="osc-pn-q-bas"><span class="no">' + (i + 1) + '</span><select data-f="type"><option value="multiple"' + (q.type === 'multiple' ? ' selected' : '') + '>Çoktan seçmeli</option><option value="truefalse"' + (q.type === 'truefalse' ? ' selected' : '') + '>Doğru / Yanlış</option><option value="gap"' + (q.type === 'gap' ? ' selected' : '') + '>Boşluk doldurma</option><option value="classic"' + (q.type === 'classic' ? ' selected' : '') + '>Açık uçlu (klasik)</option></select>' +
         '<input class="konu" data-f="konu" list="osc-pn-kl" value="' + esc(q.konu) + '" placeholder="Konu (ör. Üslü İfadeler)"><span class="bosluk"></span><button type="button" data-q="yukari" title="Yukarı">↑</button><button type="button" data-q="asagi" title="Aşağı">↓</button><button type="button" data-q="kopya" title="Çoğalt">⧉</button><button type="button" data-q="sil" class="sil" title="Sil">🗑</button></div>';
       h += '<div class="osc-pn-alan' + (q.paragraph ? '' : ' kapali') + '"><label>Paragraf / öncül <small>(isteğe bağlı)</small></label>' + araclar() + '<div class="osc-pn-ce" contenteditable="true" data-f="paragraph" data-ph="Okuma parçası, tablo açıklaması ya da öncüller…">' + (q.paragraph || '') + '</div></div>' + (q.paragraph ? '' : '<button type="button" class="osc-pn-link" data-q="para">+ Paragraf / öncül ekle</button>');
-      h += '<div class="osc-pn-alan"><label>Soru kökü</label>' + araclar() + '<div class="osc-pn-ce kok" contenteditable="true" data-f="root" data-ph="Soruyu yazın. Görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.">' + (q.root || '') + '</div></div>';
+      h += '<div class="osc-pn-alan"><label>Soru kökü</label>' + araclar() + '<div class="osc-pn-ce kok" contenteditable="true" data-f="root" data-ph="Soruyu yazın. Görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.">' + (q.kokYalin || '') + '</div></div>';
       if (q.type === 'multiple') {
-        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-alan sik-ic">' + araclar() + '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + (k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı') + '">' + (q.options[k] || '') + '</div></div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
+        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + sutunUst(q) + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-alan sik-ic">' + araclar() + sikIc(q, k) + '</div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
       } else if (q.type === 'truefalse') {
         h += '<div class="osc-pn-dy"><label>Doğru cevap</label><button type="button" data-dogru="A" class="' + (q.correct === 'A' ? 'on' : '') + '">✓ Doğru</button><button type="button" data-dogru="B" class="' + (q.correct === 'B' ? 'on' : '') + '">✗ Yanlış</button></div>';
       } else {
@@ -324,33 +336,41 @@
       if (t.dataset.t) { T[t.dataset.t] = t.value; yerelKaydet(); return; }
       var i = soruNo(t); if (i < 0) return; var q = T.sorular[i];
       if (t.dataset.f === 'konu') { q.konu = t.value; yerelKaydet(); return; }
+      if (t.dataset.sb !== undefined) { q.sutun[+t.dataset.sb] = t.value; kokYaz(q); yerelKaydet(); return; }
       if (t.classList.contains('osc-pn-ce')) {
         var v = temizHtml(t.innerHTML);
-        if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v;
+        if (t.dataset.c !== undefined) q.options[t.dataset.o] = OSCMat.sutunHtml(Array.prototype.map.call(t.parentNode.querySelectorAll('.osc-pn-ce'), function (x) { return temizHtml(x.innerHTML); }));
+        else if (t.dataset.f === 'root') { q.kokYalin = v; kokYaz(q); }
+        else if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v;
         yerelKaydet();
       }
     }
     function degisti(e) {
       var t = e.target;
       if (t.dataset.t) { T[t.dataset.t] = t.value; yerelKaydet(); return; }
+      if (t.dataset.q === 'sutun-n') { var qq = T.sorular[soruNo(t)], n = +t.value; while (qq.sutun.length < n) qq.sutun.push(['I.', 'II.', 'III.', 'IV.'][qq.sutun.length]); qq.sutun = qq.sutun.slice(0, n); ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { qq.options[k] = OSCMat.sutunHtml(OSCMat.sutunHucre(qq.options[k], 4).slice(0, n)); }); kokYaz(qq); yeniden(); return; }
       if (t.dataset.f === 'type') { var i = soruNo(t), q = T.sorular[i]; q.type = t.value; q.correct = ''; if (q.type === 'truefalse') q.options = { A: 'Doğru', B: 'Yanlış', C: '', D: '', E: '' }; else if (q.type !== 'multiple') q.options = { A: '', B: '', C: '', D: '', E: '' }; yeniden(i); }
       if (t.dataset.f === 'konu') { var dl = document.getElementById('osc-pn-kl'); if (dl) dl.innerHTML = konular().map(function (k) { return '<option value="' + esc(k) + '">'; }).join(''); }
     }
     function yeniden(odak) { var y = window.scrollY; document.getElementById('osc-pn-qs').innerHTML = T.sorular.map(soruHtml).join(''); window.scrollTo(0, y); ozet(); yerelKaydet(); if (odak !== undefined) { var e = document.querySelector('.osc-pn-q[data-i="' + odak + '"]'); if (e) e.classList.add('vurgu'); } }
-    var hedefCe = null;
+    var hedefCe = null, sonCe = null;
+    document.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('osc-pn-ce')) sonCe = e.target; });
     function tik(e) {
       var b = e.target.closest('button,[data-q],[data-ekle],[data-e],[data-dogru],[data-a]'); if (!b) return;
       var i = soruNo(b), q = T.sorular[i];
       if (b.dataset.a) {
         e.preventDefault();
         var ce = b.closest('.osc-pn-alan, .osc-pn-q').querySelector('.osc-pn-ce');
-        if (b.closest('.osc-pn-alan')) ce = b.closest('.osc-pn-alan').querySelector('.osc-pn-ce');
+        if (b.closest('.osc-pn-alan')) { var kp2 = b.closest('.osc-pn-alan'); ce = sonCe && kp2.contains(sonCe) ? sonCe : kp2.querySelector('.osc-pn-ce'); }
+        if (b.dataset.a === 'mat' || b.dataset.a === 'num') { ce.focus(); OSCMat.menu(b, ce, b.dataset.a, function (m) { bildir(m, 'hata'); }); return; }
         if (b.dataset.a === 'img') { hedefCe = ce; document.getElementById('osc-pn-dosya').value = ''; document.getElementById('osc-pn-dosya').onchange = function (ev) { var f = ev.target.files[0]; if (f) gorselYukle(f, hedefCe); }; document.getElementById('osc-pn-dosya').click(); return; }
         if (b.dataset.a === 'sembol') { sembolMenu(b, ce); return; }
         if (b.dataset.a === 'kesir') { ce.focus(); var sel = String(window.getSelection() || ''), km = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(sel), kp = km ? km[1] : (sel.trim() || '1'), kd = km ? km[2] : (sel.trim() ? '?' : '2'); document.execCommand('insertHTML', false, '<span class="osc-kesir"><span class="p">' + esc(kp) + '</span><span class="d">' + esc(kd) + '</span></span>&nbsp;'); ce.dispatchEvent(new Event('input', { bubbles: true })); return; }
         ce.focus(); document.execCommand({ b: 'bold', i: 'italic', u: 'underline', sup: 'superscript', sub: 'subscript' }[b.dataset.a]); ce.dispatchEvent(new Event('input', { bubbles: true })); return;
       }
       if (b.dataset.dogru) { q.correct = b.dataset.dogru; yeniden(); return; }
+      if (b.dataset.q === 'sutun-ac') { q.sutun = ['I.', 'II.']; ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHtml(OSCMat.sutunHucre(q.options[k], 2)); }); kokYaz(q); yeniden(i); return; }
+      if (b.dataset.q === 'sutun-kapat') { ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHucre(q.options[k], q.sutun.length).filter(function (x) { return x.replace(/<[^>]*>|\s/g, ''); }).join(' – '); }); q.sutun = null; kokYaz(q); yeniden(i); return; }
       if (b.dataset.q === 'para') { var al = b.previousElementSibling; al.classList.remove('kapali'); b.remove(); al.querySelector('.osc-pn-ce').focus(); return; }
       if (b.dataset.q === 'sil') { if (T.sorular.length === 1) return bildir('Testte en az bir soru olmalı.', 'hata'); if (!confirm((i + 1) + '. soru silinsin mi?')) return; T.sorular.splice(i, 1); yeniden(); return; }
       if (b.dataset.q === 'kopya') { T.sorular.splice(i + 1, 0, JSON.parse(JSON.stringify(q))); yeniden(i + 1); return; }

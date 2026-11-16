@@ -11,6 +11,8 @@ k=open(d+'parca/sinif.php',encoding='utf-8').read()
 k=k.replace('/*__EK_METODLAR__*/',open(d+'parca/ek.php',encoding='utf-8').read())
 for ph,f in (('/*__OGRENCI_CSS__*/','ogrenci.css'),('/*__UYELIK_CSS__*/','uyelik.css'),('/*__OGRPANEL_CSS__*/','ogrpanel.css'),('/*__OGRPANEL_JS__*/','ogrpanel.js'),('/*__PANEL_CSS__*/','panel.css'),('/*__PANEL_JS__*/','panel.js')):
     c=open(d+'parca/'+f,encoding='utf-8').read()
+    if f=='panel.js': c=open(d+'parca/matarac.js',encoding='utf-8').read()+'\n'+c
+    if f.endswith('.css'): c=c+'\n'+open(d+'parca/mat.css',encoding='utf-8').read()
     assert '<?' not in c, f
     assert k.count(ph)==1, ph
     k=k.replace(ph,c)
@@ -28,7 +30,8 @@ k=k+'\n'+h
 k=k+'\n'+open(d+'parca/yzapi.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_arka.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_uret.php',encoding='utf-8').read()
-k=k+'\n'+open(d+'parca/admin_test.php',encoding='utf-8').read()
+_mat=open(d+'parca/matarac.js',encoding='utf-8').read(); _mcss=open(d+'parca/mat.css',encoding='utf-8').read()
+k=k+'\n'+open(d+'parca/admin_test.php',encoding='utf-8').read().replace('/*__MATARAC__*/',_mat).replace('/*__MATCSS__*/',_mcss)
 for _f in ('sayfalar.php','topluluk.php'):
     import os
     if os.path.exists(d+'parca/'+_f): k=k+'\n'+open(d+'parca/'+_f,encoding='utf-8').read()

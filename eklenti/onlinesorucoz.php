@@ -1465,9 +1465,17 @@ if (!class_exists('OnlineSoruCozProV20')) {
                 .osc-q-paragraph img, .osc-q-root img, .osc-opt-text img, .osc-classic-fb img { max-width:100%; height:auto; vertical-align:middle; border-radius:6px; }
                 .osc-q-paragraph img, .osc-q-root img { max-height:340px; display:inline-block; margin:6px 0; }
                 .osc-opt-text img { max-height:160px; }
-                .osc-kesir { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 3px; line-height:1.15; font-size:.95em; }
-                .osc-kesir > span { padding:0 3px; }
-                .osc-kesir > span:first-child { border-bottom:1.6px solid currentColor; }
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.osc-q-root .osc-sut-bas, .osc-q-paragraph .osc-sut-bas { margin-left:68px; }
+.osc-opt-text .osc-sut { width:100%; }
                 .osc-q-table { border-collapse:collapse; margin:8px 0; max-width:100%; font-size:15px; }
                 .osc-q-table td { border:1px solid #64748b; padding:5px 10px; }
                 .osc-q-paragraph { overflow-x:auto; }
@@ -5993,6 +6001,17 @@ body.osc-ogr-body{margin:0;min-height:100vh;background:radial-gradient(1200px 50
 .osc-ogr-logo img{height:36px;width:auto;display:block}
 
 .osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style></head><body class="osc-ogr-body">
 <header class="osc-ogr-ust"><a href="<?php echo esc_url(home_url('/')); ?>" class="osc-ogr-logo" aria-label="soruindir.net ana sayfa"><?php echo self::logo(36); ?></a><?php if ($ot): ?><span class="osc-ogr-rozet"><?php echo $ot->tur === 'odev' ? '📚 Ödev' : '🔴 Canlı sınıf'; ?></span><?php endif; ?></header>
 <main class="osc-ogr-ana<?php echo ($ot && $kt) ? ' genis' : ''; ?>">
@@ -6642,10 +6661,100 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
 .osc-pn-ce img{max-width:100%;max-height:220px;vertical-align:middle}
 .osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}
 .osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+
+.osc-pn-sut{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.osc-pn-sut-ayar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding:8px 10px;background:#f6f7ff;border:1px solid #e0e7ff;border-radius:12px;font-size:13px}.osc-pn-sut-ayar input{width:70px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:8px}
+.osc-mat-m{position:absolute;z-index:99999;width:390px;max-width:calc(100vw - 16px);max-height:420px;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:10px;box-shadow:0 16px 36px -12px rgba(15,23,42,.35);font-family:inherit}
+.osc-mat-m .b{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:6px 2px 4px}.osc-mat-m .i{font-size:12px;color:#64748b;margin-top:6px}
+.osc-mat-m .yp{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.osc-mat-m .sm{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.osc-mat-m .ny{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.osc-mat-m button{border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;min-height:30px;cursor:pointer;font-size:14px;padding:2px;color:#0f172a}.osc-mat-m button:hover{background:#eef2ff;border-color:#a5b4fc}
+
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>window.OSC_PN = <?php echo wp_json_encode($cfg); ?>;</script>
-<script>(function () {
+<script>/* Ortak matematik / biçim araçları: yönetim paneli ve öğretmen paneli soru düzenleyicileri */
+window.OSCMat = window.OSCMat || (function () {
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function secim() { return String(window.getSelection() || ''); }
+  function ekle(ce, html) { ce.focus(); document.execCommand('insertHTML', false, html); ce.dispatchEvent(new Event('input', { bubbles: true })); }
+  var ROMA = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  function etiket(stil, n) { return stil === 'r' ? (ROMA[n - 1] || n) : stil === 'a' ? String.fromCharCode(96 + n) : stil === 'A' ? String.fromCharCode(64 + n) : String(n); }
+  /* altı çizili + altında numara (I, II, III …) */
+  function numarali(ce, stil, uyar) {
+    var s = secim().trim();
+    if (!s) { if (uyar) uyar('Önce numaralanacak sözcüğü seçin.'); return; }
+    var n = ce.querySelectorAll('.osc-num').length + 1;
+    ekle(ce, '<span class="osc-num"><u>' + esc(s) + '</u><span class="osc-num-e">' + etiket(stil, n) + '</span></span>\u200b');
+  }
+  var YAPI = [
+    ['a⁄b', 'Kesir (3/4 yazıp seçebilirsiniz)', function (s) { var m = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(s); return '<span class="osc-kesir"><span class="p">' + esc(m ? m[1] : (s || '1')) + '</span><span class="d">' + esc(m ? m[2] : (s ? '?' : '2')) + '</span></span>&nbsp;'; }],
+    ['a b⁄c', 'Tam sayılı kesir', function (s) { return '1<span class="osc-kesir"><span class="p">2</span><span class="d">3</span></span>&nbsp;'; }],
+    ['√x', 'Karekök', function (s) { return '<span class="osc-kok">√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['∛x', 'Küpkök', function (s) { return '<span class="osc-kok"><span class="osc-kok-d">3</span>√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['ⁿ√x', 'n. dereceden kök', function (s) { return '<span class="osc-kok"><span class="osc-kok-d">n</span>√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['xⁿ', 'Üs', function (s) { return esc(s || 'x') + '<sup>2</sup>&nbsp;'; }],
+    ['xₙ', 'Alt indis', function (s) { return esc(s || 'x') + '<sub>1</sub>&nbsp;'; }],
+    ['0,3̄', 'Devirli ondalık / üst çizgi', function (s) { return '<span class="osc-ust">' + esc(s || '3') + '</span>&nbsp;'; }],
+    ['[AB]', 'Doğru parçası', function (s) { return '<span class="osc-ust">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['AB→', 'Işın', function (s) { return '<span class="osc-isin">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['AB↔', 'Doğru', function (s) { return '<span class="osc-dogru">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['|x|', 'Mutlak değer', function (s) { return '|' + esc(s || 'x') + '|&nbsp;'; }],
+    ['(a⁄b)ⁿ', 'Parantezli kesrin kuvveti', function (s) { return '(<span class="osc-kesir"><span class="p">a</span><span class="d">b</span></span>)<sup>2</sup>&nbsp;'; }],
+    ['x°', 'Derece', function (s) { return esc(s || 'x') + '°'; }],
+    ['m(∠A)', 'Açı ölçüsü', function () { return 'm(∠A)&nbsp;'; }],
+    ['log', 'Logaritma', function (s) { return 'log<sub>2</sub>' + esc(s || 'x') + '&nbsp;'; }],
+    ['∑', 'Toplam sembolü', function () { return '∑<sub>k=1</sub><sup>n</sup>&nbsp;'; }],
+    ['lim', 'Limit', function () { return 'lim<sub>x→0</sub>&nbsp;'; }],
+    ['∫', 'İntegral', function () { return '∫<sub>a</sub><sup>b</sup>&nbsp;'; }]
+  ];
+  var SEMB = [
+    ['İşlem', '+ − × ÷ · ± ∓ = ≠ ≈ ≅ ≡ < > ≤ ≥ ≪ ≫ % ‰ ∝ ∞'],
+    ['Küme / mantık', '∈ ∉ ∋ ⊂ ⊃ ⊆ ⊇ ⊄ ∪ ∩ ∖ ∅ ℕ ℤ ℚ ℝ ℂ ℤ⁺ ℤ⁻ ℝ⁺ ℝ⁻ ∀ ∃ ⇒ ⇔ → ← ↔ ∧ ∨ ¬ ⊻ ∴'],
+    ['Geometri', '∠ ∡ △ □ ○ ⊥ ∥ ∦ ∼ ≅ ° ′ ″ π ⌒'],
+    ['Kuvvet / kesir', '² ³ ⁴ ⁵ ⁿ ⁻¹ ₀ ₁ ₂ ₃ ½ ⅓ ⅔ ¼ ¾ ⅕ ⅛ √ ∛ ∜'],
+    ['Yunan', 'α β γ δ ε θ λ μ π ρ σ τ φ ω Δ Σ Π Ω'],
+    ['Diğer', '∑ ∏ ∫ ∂ ∇ ⌊ ⌋ ⌈ ⌉ … ⋯ ⁄ ✓ ✗']
+  ];
+  function kapat() { var m = document.getElementById('osc-mat-m'); if (m) m.remove(); }
+  function menu(btn, ce, tur, uyar) {
+    kapat(); var sel = secim();
+    var m = document.createElement('div'); m.id = 'osc-mat-m'; m.className = 'osc-mat-m';
+    if (tur === 'num') {
+      m.innerHTML = '<div class="b">Altı çizili + numara</div><div class="ny">' + [['r', 'I  II  III'], ['1', '1  2  3'], ['a', 'a  b  c'], ['A', 'A  B  C']].map(function (x) { return '<button type="button" data-n="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div><div class="i">Sözcüğü seçin, sonra numara biçimine tıklayın. Numara sırayla artar; altındaki numaraya tıklayıp değiştirebilirsiniz.</div>';
+    } else {
+      m.innerHTML = '<div class="b">Matematik yapıları</div><div class="yp">' + YAPI.map(function (y, i) { return '<button type="button" data-y="' + i + '" title="' + esc(y[1]) + '">' + y[0] + '</button>'; }).join('') + '</div>' +
+        SEMB.map(function (g) { return '<div class="b">' + g[0] + '</div><div class="sm">' + g[1].split(' ').map(function (x) { return '<button type="button" data-s="' + esc(x) + '">' + x + '</button>'; }).join('') + '</div>'; }).join('');
+    }
+    var r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 400)) + window.scrollX + 'px'; m.style.top = (r.bottom + window.scrollY + 4) + 'px';
+    m.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    m.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.n) { numarali(ce, b.dataset.n, uyar); kapat(); return; }
+      if (b.dataset.y) { ekle(ce, YAPI[+b.dataset.y][2](sel.trim())); kapat(); return; }
+      if (b.dataset.s) { ce.focus(); document.execCommand('insertText', false, b.dataset.s); ce.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    document.body.appendChild(m);
+    setTimeout(function () { document.addEventListener('mousedown', function k(e) { if (!m.contains(e.target)) { kapat(); document.removeEventListener('mousedown', k); } }); }, 0);
+  }
+  /* sütunlu şıklar: "I. / II." başlıklı tablo biçimi */
+  function sutunBas(n, adlar) { return '<div class="osc-sut-bas osc-n' + n + '">' + adlar.slice(0, n).map(function (a) { return '<span>' + esc(a) + '</span>'; }).join('') + '</div>'; }
+  function sutunHucre(h, n) { var d = document.createElement('div'); d.innerHTML = h || ''; var s = d.querySelector('.osc-sut'); var o = []; if (s) { for (var i = 0; i < s.children.length; i++) o.push(s.children[i].innerHTML); } else if (h) o.push(h); while (o.length < n) o.push(''); return o.slice(0, n); }
+  function sutunHtml(hucreler) { return hucreler.some(function (x) { return String(x).replace(/<[^>]*>|&nbsp;|\s/g, ''); }) ? '<span class="osc-sut osc-n' + hucreler.length + '">' + hucreler.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</span>' : ''; }
+  function kokAyir(root) { var d = document.createElement('div'); d.innerHTML = root || ''; var b = d.querySelector('.osc-sut-bas'); var adlar = null; if (b) { adlar = Array.prototype.map.call(b.children, function (x) { return x.textContent; }); b.remove(); } return { kok: d.innerHTML.replace(/(<br>\s*)+$/, ''), adlar: adlar }; }
+  return { menu: menu, numarali: numarali, kapat: kapat, sutunBas: sutunBas, sutunHucre: sutunHucre, sutunHtml: sutunHtml, kokAyir: kokAyir };
+})();
+
+(function () {
   'use strict';
   var C = window.OSC_PN, kok = document.getElementById('osc-pn');
   if (!C || !kok) return;
@@ -6917,14 +7026,26 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
     function yerelKaydet() { clearTimeout(kayT); kayT = setTimeout(function () { try { localStorage.setItem(anahtar, JSON.stringify(T)); } catch (e) {} }, 600); }
     function turSecenek() { return '<option value="">Otomatik (başlıktan algıla)</option>' + C.turler.map(function (t) { return '<option value="' + t.k + '"' + (T.sinav_turu === t.k ? ' selected' : '') + '>' + esc(t.ad) + ' — ' + (t.kural ? t.kural + ' yanlış 1 doğru' : 'yanlış götürmez') + '</option>'; }).join(''); }
     function konular() { var l = []; T.sorular.forEach(function (q) { var k = (q.konu || '').trim(); if (k && l.indexOf(k) < 0) l.push(k); }); return l; }
-    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir: 3/4 yazıp seçin ya da boş kesir ekleyin">a⁄b</button><button type="button" data-a="sembol" title="Matematik sembolü">∈ ℕ</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
+    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir: 3/4 yazıp seçin ya da boş kesir ekleyin">a⁄b</button><button type="button" data-a="num" title="Altı çizili ve altında numara (I, II, III…)"><u>A</u><sub>I</sub></button><button type="button" data-a="mat" title="Matematik: kök, üs, kesir, doğru parçası, semboller…">∑ √ π</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
+    function kokBol(q) { var a = OSCMat.kokAyir(q.root); q.kokYalin = a.kok; q.sutun = a.adlar && a.adlar.length ? a.adlar : null; }
+    function kokYaz(q) { q.root = (q.kokYalin || '') + (q.sutun && q.sutun.length ? OSCMat.sutunBas(q.sutun.length, q.sutun) : ''); }
+    function sikIc(q, k) {
+      var ph = k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı';
+      if (!q.sutun) return '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + ph + '">' + (q.options[k] || '') + '</div>';
+      return '<div class="osc-pn-sut">' + OSCMat.sutunHucre(q.options[k], q.sutun.length).map(function (x, j) { return '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-c="' + j + '" data-ph="' + esc(q.sutun[j] || '') + '">' + x + '</div>'; }).join('') + '</div>';
+    }
+    function sutunUst(q) {
+      if (!q.sutun) return '<button type="button" class="osc-pn-link" data-q="sutun-ac">⊞ Sütunlu şık (I. / II. başlıklı) ekle</button>';
+      return '<div class="osc-pn-sut-ayar"><b>Sütun başlıkları:</b>' + q.sutun.map(function (a, j) { return '<input data-sb="' + j + '" value="' + esc(a) + '">'; }).join('') + '<select data-q="sutun-n">' + [2, 3, 4].map(function (n) { return '<option' + (q.sutun.length === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select> sütun <button type="button" class="osc-pn-link" data-q="sutun-kapat">Sütunları kaldır</button></div>';
+    }
     function soruHtml(q, i) {
+      kokBol(q);
       var h = '<div class="osc-pn-q" data-i="' + i + '"><div class="osc-pn-q-bas"><span class="no">' + (i + 1) + '</span><select data-f="type"><option value="multiple"' + (q.type === 'multiple' ? ' selected' : '') + '>Çoktan seçmeli</option><option value="truefalse"' + (q.type === 'truefalse' ? ' selected' : '') + '>Doğru / Yanlış</option><option value="gap"' + (q.type === 'gap' ? ' selected' : '') + '>Boşluk doldurma</option><option value="classic"' + (q.type === 'classic' ? ' selected' : '') + '>Açık uçlu (klasik)</option></select>' +
         '<input class="konu" data-f="konu" list="osc-pn-kl" value="' + esc(q.konu) + '" placeholder="Konu (ör. Üslü İfadeler)"><span class="bosluk"></span><button type="button" data-q="yukari" title="Yukarı">↑</button><button type="button" data-q="asagi" title="Aşağı">↓</button><button type="button" data-q="kopya" title="Çoğalt">⧉</button><button type="button" data-q="sil" class="sil" title="Sil">🗑</button></div>';
       h += '<div class="osc-pn-alan' + (q.paragraph ? '' : ' kapali') + '"><label>Paragraf / öncül <small>(isteğe bağlı)</small></label>' + araclar() + '<div class="osc-pn-ce" contenteditable="true" data-f="paragraph" data-ph="Okuma parçası, tablo açıklaması ya da öncüller…">' + (q.paragraph || '') + '</div></div>' + (q.paragraph ? '' : '<button type="button" class="osc-pn-link" data-q="para">+ Paragraf / öncül ekle</button>');
-      h += '<div class="osc-pn-alan"><label>Soru kökü</label>' + araclar() + '<div class="osc-pn-ce kok" contenteditable="true" data-f="root" data-ph="Soruyu yazın. Görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.">' + (q.root || '') + '</div></div>';
+      h += '<div class="osc-pn-alan"><label>Soru kökü</label>' + araclar() + '<div class="osc-pn-ce kok" contenteditable="true" data-f="root" data-ph="Soruyu yazın. Görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.">' + (q.kokYalin || '') + '</div></div>';
       if (q.type === 'multiple') {
-        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-alan sik-ic">' + araclar() + '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + (k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı') + '">' + (q.options[k] || '') + '</div></div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
+        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + sutunUst(q) + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-alan sik-ic">' + araclar() + sikIc(q, k) + '</div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
       } else if (q.type === 'truefalse') {
         h += '<div class="osc-pn-dy"><label>Doğru cevap</label><button type="button" data-dogru="A" class="' + (q.correct === 'A' ? 'on' : '') + '">✓ Doğru</button><button type="button" data-dogru="B" class="' + (q.correct === 'B' ? 'on' : '') + '">✗ Yanlış</button></div>';
       } else {
@@ -6971,33 +7092,41 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
       if (t.dataset.t) { T[t.dataset.t] = t.value; yerelKaydet(); return; }
       var i = soruNo(t); if (i < 0) return; var q = T.sorular[i];
       if (t.dataset.f === 'konu') { q.konu = t.value; yerelKaydet(); return; }
+      if (t.dataset.sb !== undefined) { q.sutun[+t.dataset.sb] = t.value; kokYaz(q); yerelKaydet(); return; }
       if (t.classList.contains('osc-pn-ce')) {
         var v = temizHtml(t.innerHTML);
-        if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v;
+        if (t.dataset.c !== undefined) q.options[t.dataset.o] = OSCMat.sutunHtml(Array.prototype.map.call(t.parentNode.querySelectorAll('.osc-pn-ce'), function (x) { return temizHtml(x.innerHTML); }));
+        else if (t.dataset.f === 'root') { q.kokYalin = v; kokYaz(q); }
+        else if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v;
         yerelKaydet();
       }
     }
     function degisti(e) {
       var t = e.target;
       if (t.dataset.t) { T[t.dataset.t] = t.value; yerelKaydet(); return; }
+      if (t.dataset.q === 'sutun-n') { var qq = T.sorular[soruNo(t)], n = +t.value; while (qq.sutun.length < n) qq.sutun.push(['I.', 'II.', 'III.', 'IV.'][qq.sutun.length]); qq.sutun = qq.sutun.slice(0, n); ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { qq.options[k] = OSCMat.sutunHtml(OSCMat.sutunHucre(qq.options[k], 4).slice(0, n)); }); kokYaz(qq); yeniden(); return; }
       if (t.dataset.f === 'type') { var i = soruNo(t), q = T.sorular[i]; q.type = t.value; q.correct = ''; if (q.type === 'truefalse') q.options = { A: 'Doğru', B: 'Yanlış', C: '', D: '', E: '' }; else if (q.type !== 'multiple') q.options = { A: '', B: '', C: '', D: '', E: '' }; yeniden(i); }
       if (t.dataset.f === 'konu') { var dl = document.getElementById('osc-pn-kl'); if (dl) dl.innerHTML = konular().map(function (k) { return '<option value="' + esc(k) + '">'; }).join(''); }
     }
     function yeniden(odak) { var y = window.scrollY; document.getElementById('osc-pn-qs').innerHTML = T.sorular.map(soruHtml).join(''); window.scrollTo(0, y); ozet(); yerelKaydet(); if (odak !== undefined) { var e = document.querySelector('.osc-pn-q[data-i="' + odak + '"]'); if (e) e.classList.add('vurgu'); } }
-    var hedefCe = null;
+    var hedefCe = null, sonCe = null;
+    document.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('osc-pn-ce')) sonCe = e.target; });
     function tik(e) {
       var b = e.target.closest('button,[data-q],[data-ekle],[data-e],[data-dogru],[data-a]'); if (!b) return;
       var i = soruNo(b), q = T.sorular[i];
       if (b.dataset.a) {
         e.preventDefault();
         var ce = b.closest('.osc-pn-alan, .osc-pn-q').querySelector('.osc-pn-ce');
-        if (b.closest('.osc-pn-alan')) ce = b.closest('.osc-pn-alan').querySelector('.osc-pn-ce');
+        if (b.closest('.osc-pn-alan')) { var kp2 = b.closest('.osc-pn-alan'); ce = sonCe && kp2.contains(sonCe) ? sonCe : kp2.querySelector('.osc-pn-ce'); }
+        if (b.dataset.a === 'mat' || b.dataset.a === 'num') { ce.focus(); OSCMat.menu(b, ce, b.dataset.a, function (m) { bildir(m, 'hata'); }); return; }
         if (b.dataset.a === 'img') { hedefCe = ce; document.getElementById('osc-pn-dosya').value = ''; document.getElementById('osc-pn-dosya').onchange = function (ev) { var f = ev.target.files[0]; if (f) gorselYukle(f, hedefCe); }; document.getElementById('osc-pn-dosya').click(); return; }
         if (b.dataset.a === 'sembol') { sembolMenu(b, ce); return; }
         if (b.dataset.a === 'kesir') { ce.focus(); var sel = String(window.getSelection() || ''), km = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(sel), kp = km ? km[1] : (sel.trim() || '1'), kd = km ? km[2] : (sel.trim() ? '?' : '2'); document.execCommand('insertHTML', false, '<span class="osc-kesir"><span class="p">' + esc(kp) + '</span><span class="d">' + esc(kd) + '</span></span>&nbsp;'); ce.dispatchEvent(new Event('input', { bubbles: true })); return; }
         ce.focus(); document.execCommand({ b: 'bold', i: 'italic', u: 'underline', sup: 'superscript', sub: 'subscript' }[b.dataset.a]); ce.dispatchEvent(new Event('input', { bubbles: true })); return;
       }
       if (b.dataset.dogru) { q.correct = b.dataset.dogru; yeniden(); return; }
+      if (b.dataset.q === 'sutun-ac') { q.sutun = ['I.', 'II.']; ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHtml(OSCMat.sutunHucre(q.options[k], 2)); }); kokYaz(q); yeniden(i); return; }
+      if (b.dataset.q === 'sutun-kapat') { ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHucre(q.options[k], q.sutun.length).filter(function (x) { return x.replace(/<[^>]*>|\s/g, ''); }).join(' – '); }); q.sutun = null; kokYaz(q); yeniden(i); return; }
       if (b.dataset.q === 'para') { var al = b.previousElementSibling; al.classList.remove('kapali'); b.remove(); al.querySelector('.osc-pn-ce').focus(); return; }
       if (b.dataset.q === 'sil') { if (T.sorular.length === 1) return bildir('Testte en az bir soru olmalı.', 'hata'); if (!confirm((i + 1) + '. soru silinsin mi?')) return; T.sorular.splice(i, 1); yeniden(); return; }
       if (b.dataset.q === 'kopya') { T.sorular.splice(i + 1, 0, JSON.parse(JSON.stringify(q))); yeniden(i + 1); return; }
@@ -7472,6 +7601,17 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
 .osc-uy-onay a{color:#4f46e5;font-weight:700;text-decoration:underline}
 .osc-uy-aciklama{color:#475569;font-size:14px;margin:0}
 .osc-uy[data-sekme=sifre] .osc-uy-google{display:none}
+
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 <script>(function(){var k=document.querySelector('.osc-uy');if(!k)return;function s(x){k.dataset.sekme=x;}k.querySelectorAll('.osc-uy-sek button').forEach(function(b){b.onclick=function(){s(b.dataset.s);};});k.querySelectorAll('[data-sifre]').forEach(function(a){a.onclick=function(e){e.preventDefault();s('sifre');};});k.querySelectorAll('[data-s2]').forEach(function(a){a.onclick=function(e){e.preventDefault();s(a.dataset.s2);};});function r(){var c=k.querySelector('.osc-uy-rol input:checked');k.dataset.rol=c?c.value:'ogretmen';}k.querySelectorAll('.osc-uy-rol input').forEach(function(i){i.onchange=r;});r();})();</script>
 <?php $this->rc_betik(); if ($gid): ?>
@@ -7690,6 +7830,17 @@ a.osc-op-odev:hover{border-color:#818cf8}
 .osc-op-ust .lg{flex-basis:100%;display:flex}.osc-op-ust .lg img{height:34px;width:auto;background:#fff;border-radius:12px;padding:6px 10px;box-sizing:content-box}
 
 .osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 <script>window.OSC_OP = <?php echo wp_json_encode($cfg); ?>;</script>
 <script>(function () {
@@ -10173,8 +10324,23 @@ class OSC_Admin_Test {
 .oq-link{border:0;background:none;color:#2271b1;cursor:pointer;padding:0;margin:0 0 10px;font-size:13px}
 #oq-ust{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f6f7ff;border:1px solid #e0e7ff;border-radius:12px;padding:10px 14px;margin:0 0 14px}
 #oq-ust input{min-width:220px}#oq-ust .ozet{margin-left:auto;color:#50575e}#oq-ust .ozet .uy{color:#b32d2e;font-weight:600}
-.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}
-.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}
+.osc-kok{display:inline-flex;align-items:flex-start;white-space:nowrap;line-height:1.3}.osc-kok-ic{border-top:1.5px solid currentColor;padding:0 2px;margin-left:1px}.osc-kok-d{font-size:.62em;margin-right:-.3em;line-height:1}
+.osc-ust{border-top:1.5px solid currentColor;padding-top:1px}
+.osc-isin,.osc-dogru{position:relative;display:inline-block;padding-top:.5em;line-height:1.2}.osc-isin:before,.osc-dogru:before{position:absolute;left:0;right:0;top:-.15em;text-align:center;font-size:.85em;line-height:1}.osc-isin:before{content:"→"}.osc-dogru:before{content:"↔"}
+.osc-num{display:inline-flex;flex-direction:column;align-items:center;vertical-align:text-top;line-height:1.35}.osc-num>u{text-decoration:none;border-bottom:1.6px solid currentColor;padding:0 1px 1px}.osc-num-e{font-size:.78em;font-weight:600;line-height:1.1;margin-top:1px}
+.osc-sut,.osc-sut-bas{display:inline-grid;grid-template-columns:repeat(2,150px);column-gap:14px;vertical-align:middle}
+.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,130px)}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,110px)}
+.osc-sut-bas{display:grid;margin:10px 0 2px;font-weight:700}.osc-sut-bas>span{border-top:1.6px solid currentColor;padding-top:2px;text-align:left}
+@media(max-width:520px){.osc-sut,.osc-sut-bas{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}.osc-sut.osc-n3,.osc-sut-bas.osc-n3{grid-template-columns:repeat(3,minmax(0,1fr))}.osc-sut.osc-n4,.osc-sut-bas.osc-n4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.oq-sut{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.oq-sut-ayar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding:8px 10px;background:#f6f7ff;border:1px solid #e0e7ff;border-radius:10px;font-size:13px}.oq-sut-ayar input{width:70px}
+.osc-mat-m{position:absolute;z-index:100002;width:390px;max-height:420px;overflow:auto;background:#fff;border:1px solid #c3c4c7;border-radius:14px;padding:10px;box-shadow:0 16px 36px -12px rgba(0,0,0,.35);font-family:system-ui,sans-serif}
+.osc-mat-m .b{font-size:11px;font-weight:700;color:#646970;text-transform:uppercase;letter-spacing:.05em;margin:6px 2px 4px}.osc-mat-m .i{font-size:12px;color:#646970;margin-top:6px}
+.osc-mat-m .yp{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.osc-mat-m .sm{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.osc-mat-m .ny{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.osc-mat-m button{border:1px solid #e2e4e7;background:#f6f7f7;border-radius:7px;min-height:30px;cursor:pointer;font-size:14px;padding:2px}.osc-mat-m button:hover{background:#eef2ff;border-color:#a5b4fc}
 </style>
 <div id="osc-bicim" role="toolbar" aria-label="Biçim"><button type="button" data-e="u" title="Altı çizili (Ctrl+U)"><u>A</u></button><button type="button" data-e="b" title="Kalın (Ctrl+B)"><b>K</b></button><button type="button" data-e="i" title="İtalik (Ctrl+I)"><i>İ</i></button><button type="button" data-e="sup" title="Üs">x²</button><button type="button" data-e="sub" title="Alt simge">x₂</button><button type="button" data-e="temizle" title="Seçimdeki biçimi kaldır">⌫</button><span class="ip">Sözcüğü seçip tıklayın</span></div>
 <script>
@@ -10224,6 +10390,78 @@ class OSC_Admin_Test {
 })();
 </script>
 <input type="file" id="oq-dosya" accept="image/*" hidden>
+<script>/* Ortak matematik / biçim araçları: yönetim paneli ve öğretmen paneli soru düzenleyicileri */
+window.OSCMat = window.OSCMat || (function () {
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function secim() { return String(window.getSelection() || ''); }
+  function ekle(ce, html) { ce.focus(); document.execCommand('insertHTML', false, html); ce.dispatchEvent(new Event('input', { bubbles: true })); }
+  var ROMA = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  function etiket(stil, n) { return stil === 'r' ? (ROMA[n - 1] || n) : stil === 'a' ? String.fromCharCode(96 + n) : stil === 'A' ? String.fromCharCode(64 + n) : String(n); }
+  /* altı çizili + altında numara (I, II, III …) */
+  function numarali(ce, stil, uyar) {
+    var s = secim().trim();
+    if (!s) { if (uyar) uyar('Önce numaralanacak sözcüğü seçin.'); return; }
+    var n = ce.querySelectorAll('.osc-num').length + 1;
+    ekle(ce, '<span class="osc-num"><u>' + esc(s) + '</u><span class="osc-num-e">' + etiket(stil, n) + '</span></span>\u200b');
+  }
+  var YAPI = [
+    ['a⁄b', 'Kesir (3/4 yazıp seçebilirsiniz)', function (s) { var m = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(s); return '<span class="osc-kesir"><span class="p">' + esc(m ? m[1] : (s || '1')) + '</span><span class="d">' + esc(m ? m[2] : (s ? '?' : '2')) + '</span></span>&nbsp;'; }],
+    ['a b⁄c', 'Tam sayılı kesir', function (s) { return '1<span class="osc-kesir"><span class="p">2</span><span class="d">3</span></span>&nbsp;'; }],
+    ['√x', 'Karekök', function (s) { return '<span class="osc-kok">√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['∛x', 'Küpkök', function (s) { return '<span class="osc-kok"><span class="osc-kok-d">3</span>√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['ⁿ√x', 'n. dereceden kök', function (s) { return '<span class="osc-kok"><span class="osc-kok-d">n</span>√<span class="osc-kok-ic">' + esc(s || 'x') + '</span></span>&nbsp;'; }],
+    ['xⁿ', 'Üs', function (s) { return esc(s || 'x') + '<sup>2</sup>&nbsp;'; }],
+    ['xₙ', 'Alt indis', function (s) { return esc(s || 'x') + '<sub>1</sub>&nbsp;'; }],
+    ['0,3̄', 'Devirli ondalık / üst çizgi', function (s) { return '<span class="osc-ust">' + esc(s || '3') + '</span>&nbsp;'; }],
+    ['[AB]', 'Doğru parçası', function (s) { return '<span class="osc-ust">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['AB→', 'Işın', function (s) { return '<span class="osc-isin">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['AB↔', 'Doğru', function (s) { return '<span class="osc-dogru">' + esc(s || 'AB') + '</span>&nbsp;'; }],
+    ['|x|', 'Mutlak değer', function (s) { return '|' + esc(s || 'x') + '|&nbsp;'; }],
+    ['(a⁄b)ⁿ', 'Parantezli kesrin kuvveti', function (s) { return '(<span class="osc-kesir"><span class="p">a</span><span class="d">b</span></span>)<sup>2</sup>&nbsp;'; }],
+    ['x°', 'Derece', function (s) { return esc(s || 'x') + '°'; }],
+    ['m(∠A)', 'Açı ölçüsü', function () { return 'm(∠A)&nbsp;'; }],
+    ['log', 'Logaritma', function (s) { return 'log<sub>2</sub>' + esc(s || 'x') + '&nbsp;'; }],
+    ['∑', 'Toplam sembolü', function () { return '∑<sub>k=1</sub><sup>n</sup>&nbsp;'; }],
+    ['lim', 'Limit', function () { return 'lim<sub>x→0</sub>&nbsp;'; }],
+    ['∫', 'İntegral', function () { return '∫<sub>a</sub><sup>b</sup>&nbsp;'; }]
+  ];
+  var SEMB = [
+    ['İşlem', '+ − × ÷ · ± ∓ = ≠ ≈ ≅ ≡ < > ≤ ≥ ≪ ≫ % ‰ ∝ ∞'],
+    ['Küme / mantık', '∈ ∉ ∋ ⊂ ⊃ ⊆ ⊇ ⊄ ∪ ∩ ∖ ∅ ℕ ℤ ℚ ℝ ℂ ℤ⁺ ℤ⁻ ℝ⁺ ℝ⁻ ∀ ∃ ⇒ ⇔ → ← ↔ ∧ ∨ ¬ ⊻ ∴'],
+    ['Geometri', '∠ ∡ △ □ ○ ⊥ ∥ ∦ ∼ ≅ ° ′ ″ π ⌒'],
+    ['Kuvvet / kesir', '² ³ ⁴ ⁵ ⁿ ⁻¹ ₀ ₁ ₂ ₃ ½ ⅓ ⅔ ¼ ¾ ⅕ ⅛ √ ∛ ∜'],
+    ['Yunan', 'α β γ δ ε θ λ μ π ρ σ τ φ ω Δ Σ Π Ω'],
+    ['Diğer', '∑ ∏ ∫ ∂ ∇ ⌊ ⌋ ⌈ ⌉ … ⋯ ⁄ ✓ ✗']
+  ];
+  function kapat() { var m = document.getElementById('osc-mat-m'); if (m) m.remove(); }
+  function menu(btn, ce, tur, uyar) {
+    kapat(); var sel = secim();
+    var m = document.createElement('div'); m.id = 'osc-mat-m'; m.className = 'osc-mat-m';
+    if (tur === 'num') {
+      m.innerHTML = '<div class="b">Altı çizili + numara</div><div class="ny">' + [['r', 'I  II  III'], ['1', '1  2  3'], ['a', 'a  b  c'], ['A', 'A  B  C']].map(function (x) { return '<button type="button" data-n="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div><div class="i">Sözcüğü seçin, sonra numara biçimine tıklayın. Numara sırayla artar; altındaki numaraya tıklayıp değiştirebilirsiniz.</div>';
+    } else {
+      m.innerHTML = '<div class="b">Matematik yapıları</div><div class="yp">' + YAPI.map(function (y, i) { return '<button type="button" data-y="' + i + '" title="' + esc(y[1]) + '">' + y[0] + '</button>'; }).join('') + '</div>' +
+        SEMB.map(function (g) { return '<div class="b">' + g[0] + '</div><div class="sm">' + g[1].split(' ').map(function (x) { return '<button type="button" data-s="' + esc(x) + '">' + x + '</button>'; }).join('') + '</div>'; }).join('');
+    }
+    var r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 400)) + window.scrollX + 'px'; m.style.top = (r.bottom + window.scrollY + 4) + 'px';
+    m.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    m.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.n) { numarali(ce, b.dataset.n, uyar); kapat(); return; }
+      if (b.dataset.y) { ekle(ce, YAPI[+b.dataset.y][2](sel.trim())); kapat(); return; }
+      if (b.dataset.s) { ce.focus(); document.execCommand('insertText', false, b.dataset.s); ce.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    document.body.appendChild(m);
+    setTimeout(function () { document.addEventListener('mousedown', function k(e) { if (!m.contains(e.target)) { kapat(); document.removeEventListener('mousedown', k); } }); }, 0);
+  }
+  /* sütunlu şıklar: "I. / II." başlıklı tablo biçimi */
+  function sutunBas(n, adlar) { return '<div class="osc-sut-bas osc-n' + n + '">' + adlar.slice(0, n).map(function (a) { return '<span>' + esc(a) + '</span>'; }).join('') + '</div>'; }
+  function sutunHucre(h, n) { var d = document.createElement('div'); d.innerHTML = h || ''; var s = d.querySelector('.osc-sut'); var o = []; if (s) { for (var i = 0; i < s.children.length; i++) o.push(s.children[i].innerHTML); } else if (h) o.push(h); while (o.length < n) o.push(''); return o.slice(0, n); }
+  function sutunHtml(hucreler) { return hucreler.some(function (x) { return String(x).replace(/<[^>]*>|&nbsp;|\s/g, ''); }) ? '<span class="osc-sut osc-n' + hucreler.length + '">' + hucreler.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</span>' : ''; }
+  function kokAyir(root) { var d = document.createElement('div'); d.innerHTML = root || ''; var b = d.querySelector('.osc-sut-bas'); var adlar = null; if (b) { adlar = Array.prototype.map.call(b.children, function (x) { return x.textContent; }); b.remove(); } return { kok: d.innerHTML.replace(/(<br>\s*)+$/, ''), adlar: adlar }; }
+  return { menu: menu, numarali: numarali, kapat: kapat, sutunBas: sutunBas, sutunHucre: sutunHucre, sutunHtml: sutunHtml, kokAyir: kokAyir };
+})();
+</script>
 <script>
 /* Test oluşturucu: öğretmen panelindeki gibi görsel düzenleyici (şıklarda altı çizili, kesir, görsel) */
 (function () {
@@ -10232,7 +10470,7 @@ class OSC_Admin_Test {
   function goster(h) { h = String(h || ''); return /<(br|div|p|table)\b/i.test(h) ? h : h.replace(/\r?\n/g, '<br>'); }
   function temiz(h) { return String(h || '').replace(/<(\/?)(div|p)[^>]*>/gi, function (m, s) { return s ? '' : '<br>'; }).replace(/^(<br>)+/, '').replace(/(<br>\s*)+$/, '').replace(/ style="[^"]*"/gi, function (m) { return /width/.test(m) ? m : ''; }).replace(/<span>([^<]*)<\/span>/gi, '$1').replace(/&nbsp;/g, ' ').replace(/<font[^>]*>|<\/font>/gi, ''); }
   function bos(h) { return !String(h || '').replace(/<br\s*\/?>/gi, '').replace(/&nbsp;/g, ' ').replace(/<(?!img)[^>]+>/gi, '').trim(); }
-  function sync() { document.getElementById('osc_data').value = JSON.stringify(Q); ozet(); }
+  function sync() { document.getElementById('osc_data').value = JSON.stringify(Q, function (k, v) { return k === '_kb' || k === 'kokYalin' ? undefined : v; }); ozet(); }
   function dogrula(q) {
     if (bos(q.root) && bos(q.paragraph)) return false;
     if (q.type === 'multiple') { var d = ['A', 'B', 'C', 'D', 'E'].filter(function (k) { return !bos(q.options[k]); }); return d.length >= 2 && q.correct && !bos(q.options[q.correct]); }
@@ -10241,14 +10479,25 @@ class OSC_Admin_Test {
     return true;
   }
   function ozet() { var e = document.querySelector('#oq-ust .ozet'); if (!e || !Q) return; var x = Q.filter(function (q) { return !dogrula(q); }).length; e.innerHTML = '<b>' + Q.length + '</b> soru' + (x ? ' · <span class="uy">' + x + ' soruda eksik var</span>' : ' · hazır ✓'); }
-  function arac() { return '<div class="oq-arac"><button type="button" data-a="u" title="Altı çizili (Ctrl+U)"><u>A</u></button><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir (3/4 yazıp seçin ya da boş kesir ekleyin)">a⁄b</button><button type="button" data-a="sembol" title="Matematik sembolü">∈ ℕ</button><button type="button" data-a="img" title="Görsel ekle">🖼</button><button type="button" data-a="temizle" title="Biçimi kaldır">⌫</button></div>'; }
+  function arac() { return '<div class="oq-arac"><button type="button" data-a="u" title="Altı çizili (Ctrl+U)"><u>A</u></button><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir (3/4 yazıp seçin ya da boş kesir ekleyin)">a⁄b</button><button type="button" data-a="num" title="Altı çizili ve altında numara (I, II, III…)"><u>A</u><sub>I</sub></button><button type="button" data-a="mat" title="Matematik: kök, üs, kesir, doğru parçası, semboller…">∑ √ π</button><button type="button" data-a="img" title="Görsel ekle">🖼</button><button type="button" data-a="temizle" title="Biçimi kaldır">⌫</button></div>'; }
   function ce(f, v, ph, cls, o) { return '<div class="oq-ce' + (cls ? ' ' + cls : '') + '" contenteditable="true" ' + (o ? 'data-o="' + o + '"' : 'data-f="' + f + '"') + ' data-ph="' + esc(ph) + '">' + goster(v) + '</div>'; }
+  function kokBol(q) { var a = OSCMat.kokAyir(q.root); q.kokYalin = a.kok; q.sutun = a.adlar && a.adlar.length ? a.adlar : null; }
+  function kokYaz(q) { q.root = (q.kokYalin || '') + (q.sutun && q.sutun.length ? OSCMat.sutunBas(q.sutun.length, q.sutun) : ''); }
+  function sikHtml(q, k) {
+    if (!q.sutun) return arac() + ce('', q.options[k], k === 'E' ? 'E şıkkı (4 şıklı testlerde boş bırakın)' : k + ' şıkkı', 'sik', k);
+    var hc = OSCMat.sutunHucre(q.options[k], q.sutun.length);
+    return arac() + '<div class="oq-sut">' + hc.map(function (x, j) { return '<div class="oq-ce sik" contenteditable="true" data-o="' + k + '" data-c="' + j + '" data-ph="' + esc(q.sutun[j] || '') + '">' + x + '</div>'; }).join('') + '</div>';
+  }
+  function sutunUst(q) {
+    if (!q.sutun) return '<button type="button" class="oq-link" data-q="sutun-ac" title="Şıklar I. ve II. gibi başlıklı sütunlardan oluşuyorsa">⊞ Sütunlu şık (I. / II. başlıklı) ekle</button>';
+    return '<div class="oq-sut-ayar"><b>Sütun başlıkları:</b>' + q.sutun.map(function (a, j) { return '<input data-sb="' + j + '" value="' + esc(a) + '">'; }).join('') + '<select data-q="sutun-n">' + [2, 3, 4].map(function (n) { return '<option' + (q.sutun.length === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select> sütun <button type="button" class="oq-link" data-q="sutun-kapat">Sütunları kaldır</button></div>';
+  }
   function soru(q, i) {
-    q.options = q.options || {}; ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { if (q.options[k] === undefined) q.options[k] = ''; });
+    q.options = q.options || {}; kokBol(q); ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { if (q.options[k] === undefined) q.options[k] = ''; });
     var h = '<div class="oq" data-i="' + i + '"><div class="oq-bas"><span class="no">' + (i + 1) + '</span><select data-f="type"><option value="multiple"' + (q.type === 'multiple' ? ' selected' : '') + '>Çoktan seçmeli</option><option value="truefalse"' + (q.type === 'truefalse' ? ' selected' : '') + '>Doğru / Yanlış</option><option value="gap"' + (q.type === 'gap' ? ' selected' : '') + '>Boşluk doldurma</option><option value="classic"' + (q.type === 'classic' ? ' selected' : '') + '>Açık uçlu (klasik)</option></select><span class="bos"></span><button type="button" data-q="yukari" title="Yukarı">↑</button><button type="button" data-q="asagi" title="Aşağı">↓</button><button type="button" data-q="kopya" title="Çoğalt">⧉</button><button type="button" data-q="sil" class="sil" title="Sil">🗑</button></div>';
     h += '<div class="oq-alan' + (bos(q.paragraph) ? ' kapali' : '') + '"><label>Paragraf / öncül</label>' + arac() + ce('paragraph', q.paragraph, 'Okuma parçası, tablo, öncüller…') + '</div>' + (bos(q.paragraph) ? '<button type="button" class="oq-link" data-q="para">+ Paragraf / öncül ekle</button>' : '');
-    h += '<div class="oq-alan"><label>Soru kökü</label>' + arac() + ce('root', q.root, 'Soruyu yazın; görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.', 'kok') + '</div>';
-    if (q.type === 'multiple') h += '<span class="oq-sik-bas">Şıklar — doğru şıkkın harfine tıklayın. Şıklara görsel, kesir, altı çizili sözcük eklenebilir.</span>' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="oq-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap">' + k + '</button><div class="ic">' + arac() + ce('', q.options[k], k === 'E' ? 'E şıkkı (4 şıklı testlerde boş bırakın)' : k + ' şıkkı', 'sik', k) + '</div></div>'; }).join('');
+    h += '<div class="oq-alan"><label>Soru kökü</label>' + arac() + ce('root', q.kokYalin, 'Soruyu yazın; görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.', 'kok') + '</div>';
+    if (q.type === 'multiple') h += '<span class="oq-sik-bas">Şıklar — doğru şıkkın harfine tıklayın. Şıklara görsel, kesir, kök, altı çizili sözcük eklenebilir.</span>' + sutunUst(q) + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="oq-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap">' + k + '</button><div class="ic">' + sikHtml(q, k) + '</div></div>'; }).join('');
     else if (q.type === 'truefalse') h += '<div class="oq-dy"><label class="oq-sik-bas">Doğru cevap</label><button type="button" data-dogru="A" class="' + (q.correct === 'A' ? 'on' : '') + '">✓ Doğru</button><button type="button" data-dogru="B" class="' + (q.correct === 'B' ? 'on' : '') + '">✗ Yanlış</button></div>';
     else h += '<div class="oq-alan"><label>' + (q.type === 'gap' ? 'Doğru cevap (alternatifleri / ile ayırın)' : 'Model cevap') + '</label>' + arac() + ce('', q.options.A, 'Cevap', '', 'A') + '</div>';
     return h + '</div>';
@@ -10271,15 +10520,28 @@ class OSC_Admin_Test {
     window.scrollTo(0, y); sync();
   };
   function no(el) { var q = el.closest('.oq'); return q ? +q.dataset.i : -1; }
-  function kaydetAlan(t) { var i = no(t); if (i < 0) return; var q = Q[i], v = temiz(t.innerHTML); if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v; sync(); }
-  liste.addEventListener('input', function (e) { if (e.target.classList.contains('oq-ce')) kaydetAlan(e.target); });
-  liste.addEventListener('change', function (e) { var t = e.target; if (t.dataset.f !== 'type') return; var q = Q[no(t)]; q.type = t.value; q.correct = ''; if (q.type === 'truefalse') q.options = { A: 'Doğru', B: 'Yanlış', C: '', D: '', E: '' }; window.render(); });
+  function kaydetAlan(t) {
+    var i = no(t); if (i < 0) return; var q = Q[i], v = temiz(t.innerHTML);
+    if (t.dataset.c !== undefined) { var hs = Array.prototype.map.call(t.parentNode.querySelectorAll('.oq-ce'), function (x) { return temiz(x.innerHTML); }); q.options[t.dataset.o] = OSCMat.sutunHtml(hs); }
+    else if (t.dataset.f === 'root') { q.kokYalin = v; kokYaz(q); }
+    else if (t.dataset.f) q[t.dataset.f] = v; else if (t.dataset.o) q.options[t.dataset.o] = v;
+    sync();
+  }
+  var sonCe = null; liste.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('oq-ce')) sonCe = e.target; });
+  liste.addEventListener('input', function (e) {
+    if (e.target.classList.contains('oq-ce')) return kaydetAlan(e.target);
+    if (e.target.dataset.sb !== undefined) { var q = Q[no(e.target)]; q.sutun[+e.target.dataset.sb] = e.target.value; kokYaz(q); sync(); }
+  });
+  liste.addEventListener('change', function (e) { var t = e.target;
+    if (t.dataset.q === 'sutun-n') { var qq = Q[no(t)], n = +t.value; while (qq.sutun.length < n) qq.sutun.push(['I.', 'II.', 'III.', 'IV.'][qq.sutun.length]); qq.sutun = qq.sutun.slice(0, n); ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { var hc = OSCMat.sutunHucre(qq.options[k], 4).slice(0, n); qq.options[k] = OSCMat.sutunHtml(hc); }); kokYaz(qq); window.render(); return; }
+    if (t.dataset.f !== 'type') return; var q = Q[no(t)]; q.type = t.value; q.correct = ''; if (q.type === 'truefalse') q.options = { A: 'Doğru', B: 'Yanlış', C: '', D: '', E: '' }; window.render(); });
   liste.addEventListener('mousedown', function (e) { if (e.target.closest('[data-a]')) e.preventDefault(); });
   var hedef = null;
   liste.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return; var i = no(b), q = Q[i];
     if (b.dataset.a) {
-      var c = b.closest('.oq-alan, .ic').querySelector('.oq-ce'); var a = b.dataset.a;
+      var kap = b.closest('.oq-alan, .ic'), c = sonCe && kap.contains(sonCe) ? sonCe : kap.querySelector('.oq-ce'); var a = b.dataset.a;
+      if (a === 'mat' || a === 'num') { c.focus(); OSCMat.menu(b, c, a, function (m) { alert(m); }); return; }
       if (a === 'img') { hedef = c; var f = document.getElementById('oq-dosya'); f.value = ''; f.onchange = function () { if (f.files[0]) gorsel(f.files[0], hedef); }; f.click(); return; }
       c.focus();
       if (a === 'kesir') { var sel = String(window.getSelection() || ''), m = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(sel), p = m ? m[1] : (sel.trim() || '1'), d = m ? m[2] : (sel.trim() ? '?' : '2'); document.execCommand('insertHTML', false, '<span class="osc-kesir"><span class="p">' + esc(p) + '</span><span class="d">' + esc(d) + '</span></span>&nbsp;'); }
@@ -10289,6 +10551,8 @@ class OSC_Admin_Test {
       kaydetAlan(c); return;
     }
     if (b.dataset.dogru) { q.correct = b.dataset.dogru; var k = b.closest('.oq'); k.querySelectorAll('.oq-sik').forEach(function (s) { s.classList.toggle('dogru', s.querySelector('[data-dogru]').dataset.dogru === q.correct); }); k.querySelectorAll('.oq-dy button').forEach(function (s) { s.classList.toggle('on', s.dataset.dogru === q.correct); }); k.classList.remove('hata'); sync(); return; }
+    if (b.dataset.q === 'sutun-ac') { q.sutun = ['I.', 'II.']; ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHtml(OSCMat.sutunHucre(q.options[k], 2)); }); kokYaz(q); window.render(); return; }
+    if (b.dataset.q === 'sutun-kapat') { ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { q.options[k] = OSCMat.sutunHucre(q.options[k], q.sutun.length).filter(function (x) { return x.replace(/<[^>]*>|\s/g, ''); }).join(' – '); }); q.sutun = null; kokYaz(q); window.render(); return; }
     if (b.dataset.q === 'para') { var al = b.previousElementSibling; al.classList.remove('kapali'); b.remove(); al.querySelector('.oq-ce').focus(); return; }
     if (b.dataset.q === 'sil') { if (confirm((i + 1) + '. soru silinsin mi?')) { Q.splice(i, 1); window.render(); } return; }
     if (b.dataset.q === 'kopya') { Q.splice(i + 1, 0, JSON.parse(JSON.stringify(q))); window.render(); return; }
@@ -10362,7 +10626,7 @@ new OSC_Admin_Test();
  * ===================================================================== */
 if (!class_exists('OSC_Sayfalar')) {
 class OSC_Sayfalar {
-    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar', 'liderlik' => 'liderlik');
+    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar');
     public function __construct() {
         add_action('template_redirect', array($this, 'yonlendir'), 5);
         add_filter('pre_get_document_title', array($this, 'baslik'), 60);
@@ -10507,7 +10771,7 @@ class OSC_Sayfalar {
     <div class="osp-k" style="padding:20px"><?php echo do_shortcode('[osc_liderlik]'); ?></div>
     <div style="display:grid;gap:12px">
       <div class="osp-bilgi" style="margin:0"><b>Nasıl XP kazanılır?</b><br>✅ Her test: 10 XP + puanının onda biri<br>📝 Ödev / sınav teslimi: 20 XP<br>🔥 Günlük seri: her gün +1 XP (en fazla 10)<br>🏅 Her rozet: 25 XP</div>
-      <div class="osp-ek" style="grid-template-columns:1fr;margin:0"><a href="<?php echo esc_url($ou); ?>"><span>🎒</span>Rozetlerim ve sınıf ligim</a><a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Test çöz, XP kazan</a><?php if (class_exists('OSC_Forum')): ?><a href="<?php echo esc_url(OSC_Forum::url()); ?>"><span>💬</span>Soru-Cevap’ta yardım et</a><?php endif; ?></div>
+      <div class="osp-ek" style="grid-template-columns:1fr;margin:0"><a href="<?php echo esc_url($ou); ?>"><span>🎒</span>Rozetlerim ve sınıf ligim</a><a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Test çöz, XP kazan</a></div>
     </div>
   </div>
 </div>
@@ -10592,7 +10856,6 @@ class OSC_Oyun {
         'seri7'   => array('⚡', 'Bir hafta durmadan', '7 gün üst üste test çöz'),
         'seri30'  => array('🌋', 'Durdurulamaz', '30 gün üst üste test çöz'),
         'odev5'   => array('📝', 'Sorumluluk sahibi', '5 ödev ya da sınav teslim et'),
-        'yildiz'  => array('⭐', 'Haftanın yıldızı', 'Haftayı seviyende ilk 3’te bitir'),
         'yardim'  => array('🤝', 'Yardımsever', 'Soru-Cevap’ta 10 cevap yaz'),
         'cozum'   => array('🧠', 'Çözüm ortağı', 'Bir cevabın çözüm olarak seçilsin'),
         'cozum10' => array('🏆', 'Usta çözücü', '10 cevabın çözüm olarak seçilsin'),
@@ -10602,11 +10865,9 @@ class OSC_Oyun {
         add_action('osc_teslim_edildi', array($this, 'teslim'), 10, 3);
         add_action('wp_ajax_osc_oyun_ozet', array($this, 'ajax_ozet'));
         add_action('wp_ajax_osc_oyun_profil', array($this, 'ajax_profil'));
-        add_action('wp_ajax_osc_oyun_lig', array($this, 'ajax_lig'));
-        add_action('wp_ajax_nopriv_osc_oyun_lig', array($this, 'ajax_lig'));
-        add_shortcode('osc_liderlik', array($this, 'kisa_kod'));
+        add_shortcode('osc_liderlik', '__return_empty_string');
         add_action('wp_footer', array($this, 'panel_betik'), 50);
-        add_action('osc_tk_gunluk', array($this, 'hafta_kapat'));
+
     }
     public static function hafta($t = null) { return wp_date('oW', $t ? $t : time()); }
     public static function hk($h = null) { return 'osc_xph_' . ($h ? $h : self::hafta()); }
@@ -10684,7 +10945,7 @@ class OSC_Oyun {
     public function ajax_ozet() {
         $uid = get_current_user_id(); if (!$uid) wp_send_json_error('Giriş yapın.');
         $o = self::ozet($uid); $o['lig'] = array();
-        foreach (array('sinif', 'okul', 'seviye', 'genel') as $k) $o['lig'][$k] = self::lig($k, $uid, 10);
+
         wp_send_json_success($o);
     }
     public function ajax_profil() {
@@ -10749,17 +11010,12 @@ class OSC_Oyun {
   var AD = { sinif: 'Sınıfım', okul: 'Okulum', seviye: 'Seviyem (Türkiye)', genel: 'Türkiye geneli' };
   function ciz() {
     if (!kap) return;
-    var p = D.sv_son > D.sv_bas ? Math.round((D.xp - D.sv_bas) / (D.sv_son - D.sv_bas) * 100) : 0, L = D.lig[sek] || { liste: [] };
+    var p = D.sv_son > D.sv_bas ? Math.round((D.xp - D.sv_bas) / (D.sv_son - D.sv_bas) * 100) : 0;
     var form = (!D.okul || !D.seviye) ? '<div class="oy-form"><b>Sınıf ve okul ligine katıl:</b><input type="text" id="oy-okul" placeholder="Okulunun adı (ör. Atatürk Ortaokulu, Kadıköy)" value="' + esc(D.okul) + '"><select id="oy-sv"><option value="">Sınıf</option>' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function (s) { return '<option value="' + s + '"' + (D.seviye === s ? ' selected' : '') + '>' + s + '. sınıf</option>'; }).join('') + '</select><button type="button" id="oy-kay">Kaydet</button></div>' : '';
     kap.innerHTML = '<div class="oy-ust"><div class="oy-sv" style="--p:' + p + '"><b>' + D.sv + '<small>SEVİYE</small></b></div><div><h3>' + D.xp + ' XP</h3><p>Bir sonraki seviyeye <b>' + Math.max(0, D.sv_son - D.xp) + ' XP</b> kaldı</p><div class="oy-cub"><i style="width:' + p + '%"></i></div></div><div class="oy-mini"><div><b>' + D.hafta + '</b><small>Bu hafta XP</small></div><div><b>' + (D.seri ? '🔥 ' + D.seri : '0') + '</b><small>Günlük seri</small></div></div></div>' +
       '<div class="oy-roz">' + D.rozet.map(function (r) { return '<div class="' + (r.var ? 'var' : 'yok') + '" title="' + esc(r.ac + (r.var ? ' · ' + r.var : '')) + '"><span>' + r.ik + '</span><b>' + esc(r.ad) + '</b>' + esc(r.var ? r.var : r.ac) + '</div>'; }).join('') + '</div>' +
-      '<div class="oy-lig"><h3 style="margin:0 !important;font-size:17px">🏆 Haftalık liderlik tablosu</h3><div class="oy-sek">' + Object.keys(AD).map(function (k) { return '<button type="button" data-s="' + k + '" class="' + (k === sek ? 'on' : '') + '">' + AD[k] + '</button>'; }).join('') + '</div>' + form +
-      (L.liste.length ? L.liste.map(function (x) { return '<div class="oy-sat' + (x.ben ? ' ben' : '') + '"><b class="s">' + (['🥇', '🥈', '🥉'][x.s - 1] || x.s) + '</b><span>' + esc(x.ad) + (x.ben ? ' (sen)' : '') + ' <small style="color:#8AA2BA">Sv ' + x.sv + '</small></span><em>' + x.xp + ' XP</em></div>'; }).join('') : '<p style="color:#5B7189;font-size:14px">' + (L.eksik ? 'Bu lig için okulunu ve sınıfını yaz.' : 'Bu hafta bu ligde henüz puan toplayan yok. Bir test çöz, ilk sen ol!') + '</p>') +
-      (L.sira > 10 ? '<div class="oy-sat ben"><b class="s">' + L.sira + '</b><span>Sen</span><em>' + D.hafta + ' XP</em></div>' : '') +
-      '<p style="color:#8AA2BA;font-size:12px;margin-top:8px !important">Her test 10 XP + puanının onda biri, ödev ve sınav teslimi 20 XP, rozetler 25 XP kazandırır. Lig her pazartesi sıfırlanır. <label><input type="checkbox" id="oy-gizli"' + (D.gizli ? ' checked' : '') + '> Adım listelerde görünmesin</label></p></div>';
-    kap.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { sek = b.dataset.s; ciz(); }; });
-    var kb = kap.querySelector('#oy-kay'); if (kb) kb.onclick = function () { kaydet(); };
-    kap.querySelector('#oy-gizli').onchange = function () { kaydet(); };
+      '<p style="color:#8AA2BA;font-size:12px;margin:12px 0 0 !important">Her test 10 XP + puanının onda biri, ödev ve sınav teslimi 20 XP, rozetler 25 XP kazandırır. XP ve rozetlerini yalnızca sen görürsün.</p>';
+
   }
   function kaydet() { var f = new FormData(); f.append('action', 'osc_oyun_profil'); f.append('nonce', N); var o = kap.querySelector('#oy-okul'), s = kap.querySelector('#oy-sv'); f.append('okul', o ? o.value : D.okul); f.append('seviye', s ? s.value : D.seviye); if (kap.querySelector('#oy-gizli').checked) f.append('gizli', 1); al(f); }
   al();
@@ -10781,11 +11037,46 @@ class OSC_Forum {
         add_action('wp_ajax_nopriv_osc_sc_sor', array($this, 'giris_gerek')); add_action('wp_ajax_nopriv_osc_sc_cevap', array($this, 'giris_gerek'));
         add_action('transition_post_status', function ($y, $e, $p) { if ($p->post_type === self::TUR && $y === 'publish' && $e !== 'publish') { delete_transient('osc_sc_sayi'); } }, 10, 3);
         add_action('admin_init', array($this, 'ayar_kayit'));
+        add_action('admin_menu', array($this, 'onay_menu'));
+        add_action('admin_post_osc_sc_onay', array($this, 'onay_islem'));
+        add_filter('post_row_actions', function ($a, $p) { if ($p->post_type === self::TUR && $p->post_status === 'pending' && current_user_can('edit_others_posts')) $a = array('osc_onay' => '<a style="color:#008a20;font-weight:600" href="' . esc_url(self::onay_url('p', $p->ID, 'onay')) . '">✓ Onayla</a>') + $a; return $a; }, 10, 2);
     }
     public function kayit() {
         register_post_type(self::TUR, array('label' => 'Soru-Cevap', 'labels' => array('name' => 'Soru-Cevap', 'singular_name' => 'Soru', 'menu_name' => 'Soru-Cevap', 'all_items' => 'Tüm sorular'), 'public' => false, 'show_ui' => true, 'menu_icon' => 'dashicons-format-chat', 'menu_position' => 27, 'supports' => array('title', 'editor', 'author', 'comments'), 'capability_type' => 'post'));
     }
     public static function url($id = 0) { if (!$id) return home_url('/soru-cevap/'); $p = get_post($id); return home_url('/soru-cevap/' . (int) $id . '-' . ($p ? sanitize_title(remove_accents(mb_substr($p->post_title, 0, 70, 'UTF-8'))) : '') . '/'); }
+    public static function onay_url($tip, $id, $is) { return wp_nonce_url(admin_url('admin-post.php?action=osc_sc_onay&t=' . $tip . '&id=' . (int) $id . '&is=' . $is), 'osc_sc_onay'); }
+    public static function bekleyen() { return (int) wp_count_posts(self::TUR)->pending + (int) get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'count' => true)); }
+    public function onay_menu() {
+        $n = self::bekleyen();
+        add_submenu_page('edit.php?post_type=' . self::TUR, 'Onay bekleyenler', 'Onay bekleyenler' . ($n ? ' <span class="awaiting-mod">' . $n . '</span>' : ''), 'edit_others_posts', 'osc-sc-onay', array($this, 'onay_sayfa'));
+        if ($n) { global $menu; foreach ((array) $menu as $i => $m) if (isset($m[2]) && $m[2] === 'edit.php?post_type=' . self::TUR) $menu[$i][0] .= ' <span class="awaiting-mod">' . $n . '</span>'; }
+    }
+    public function onay_islem() {
+        if (!current_user_can('edit_others_posts')) wp_die('Yetkiniz yok.'); check_admin_referer('osc_sc_onay');
+        $t = $_GET['t'] ?? ''; $id = (int) ($_GET['id'] ?? 0); $is = $_GET['is'] ?? '';
+        if ($t === 'p' && get_post_type($id) === self::TUR) { if ($is === 'onay') wp_update_post(array('ID' => $id, 'post_status' => 'publish')); elseif ($is === 'sil') wp_trash_post($id); }
+        if ($t === 'c' && ($c = get_comment($id)) && $c->comment_type === 'osc_cevap') { if ($is === 'onay') { wp_set_comment_status($id, 'approve'); $this->cevap_sayac((int) $c->comment_post_ID); do_action('osc_sc_cevap', (int) $c->comment_post_ID, $id); } elseif ($is === 'sil') wp_trash_comment($id); }
+        if ($t === 'hepsi' && $is === 'onay') { foreach (get_posts(array('post_type' => self::TUR, 'post_status' => 'pending', 'numberposts' => 200, 'fields' => 'ids')) as $p) wp_update_post(array('ID' => $p, 'post_status' => 'publish')); foreach (get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'number' => 200)) as $c) { wp_set_comment_status($c->comment_ID, 'approve'); $this->cevap_sayac((int) $c->comment_post_ID); } }
+        wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url('edit.php?post_type=' . self::TUR . '&page=osc-sc-onay')); exit;
+    }
+    public function onay_sayfa() {
+        $ps = get_posts(array('post_type' => self::TUR, 'post_status' => 'pending', 'numberposts' => 100));
+        $cs = get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'number' => 100)); ?>
+<div class="wrap"><h1 class="wp-heading-inline">Soru-Cevap: onay bekleyenler</h1>
+<?php if ($ps || $cs): ?> <a class="page-title-action" href="<?php echo esc_url(self::onay_url('hepsi', 0, 'onay')); ?>" onclick="return confirm('Bekleyenlerin hepsi onaylansın mı?')">Hepsini onayla</a><?php endif; ?>
+<style>.osc-on{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:14px 16px;margin:10px 0;display:flex;gap:14px;align-items:flex-start}.osc-on .m{flex:1}.osc-on h3{margin:0 0 4px}.osc-on p{margin:6px 0 0;color:#3c434a;white-space:pre-wrap}.osc-on small{color:#646970}.osc-on .b{display:flex;gap:6px;flex-shrink:0}.osc-on .b a.on{background:#008a20;border-color:#008a20;color:#fff}</style>
+<h2>Sorular (<?php echo count($ps); ?>)</h2>
+<?php if (!$ps) echo '<p>Onay bekleyen soru yok.</p>'; foreach ($ps as $p) { $u = get_userdata($p->post_author); ?>
+<div class="osc-on"><div class="m"><h3><?php echo esc_html($p->post_title); ?></h3><small><?php echo esc_html($u ? $u->display_name . ' · ' . $u->user_email : ''); ?> · <?php echo esc_html(human_time_diff(get_post_time('U', true, $p)) . ' önce'); ?></small><p><?php echo esc_html(wp_strip_all_tags($p->post_content)); ?></p></div>
+<div class="b"><a class="button on" href="<?php echo esc_url(self::onay_url('p', $p->ID, 'onay')); ?>">✓ Onayla</a><a class="button" href="<?php echo esc_url(get_edit_post_link($p->ID)); ?>">Düzenle</a><a class="button" style="color:#b32d2e" href="<?php echo esc_url(self::onay_url('p', $p->ID, 'sil')); ?>">Sil</a></div></div>
+<?php } ?>
+<h2 style="margin-top:24px">Cevaplar (<?php echo count($cs); ?>)</h2>
+<?php if (!$cs) echo '<p>Onay bekleyen cevap yok.</p>'; foreach ($cs as $c) { ?>
+<div class="osc-on"><div class="m"><h3 style="font-size:14px">Soru: <?php echo esc_html(get_the_title($c->comment_post_ID)); ?></h3><small><?php echo esc_html($c->comment_author . ' · ' . $c->comment_author_email . ' · ' . human_time_diff(strtotime($c->comment_date_gmt . ' UTC')) . ' önce'); ?></small><p><?php echo esc_html($c->comment_content); ?></p></div>
+<div class="b"><a class="button on" href="<?php echo esc_url(self::onay_url('c', $c->comment_ID, 'onay')); ?>">✓ Onayla</a><a class="button" style="color:#b32d2e" href="<?php echo esc_url(self::onay_url('c', $c->comment_ID, 'sil')); ?>">Sil</a></div></div>
+<?php } ?></div>
+<?php }
     public function giris_gerek() { wp_send_json_error('Soru sormak ve cevap yazmak için giriş yapın.'); }
     public function ayar_kayit() { register_setting('osc_tk', 'osc_sc_yasak', array('sanitize_callback' => 'sanitize_textarea_field')); }
     /* ---- spam / güvenlik ---- */
@@ -11079,7 +11370,7 @@ class OSC_Hatirlat {
         foreach ($g as $k => $t) if ($t < $now - 30 * DAY_IN_SECONDS) unset($g[$k]); update_option('osc_ht_gonderilen', $g, false);
     }
     private static function ogrenci_govde($uid) {
-        $o = OSC_Oyun::ozet($uid); $lig = OSC_Oyun::lig('seviye', $uid, 3); $r = array_filter($o['rozet'], function ($x) { return $x['var']; });
+        $o = OSC_Oyun::ozet($uid); $lig = array('sira' => 0); $r = array_filter($o['rozet'], function ($x) { return $x['var']; });
         return '<p>Bu hafta <b>' . (int) $o['hafta'] . ' XP</b> topladın' . ($lig['sira'] ? ' ve ' . ($o['seviye'] ? $o['seviye'] . '. sınıflar arasında ' : '') . '<b>' . (int) $lig['sira'] . '. sıradasın</b>' : '') . '. Toplam ' . (int) $o['xp'] . ' XP ile <b>' . (int) $o['sv'] . '. seviyedesin</b>.</p>'
             . ($r ? '<p>Rozetlerin: ' . implode(' ', array_map(function ($x) { return $x['ik']; }, $r)) . '</p>' : '')
             . '<p>Yeni hafta pazartesi başlıyor; lig sıfırlanıyor. Her gün bir test çözersen seri bonusu da kazanırsın 🔥</p>';

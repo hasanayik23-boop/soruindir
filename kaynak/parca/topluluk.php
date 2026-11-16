@@ -48,7 +48,6 @@ class OSC_Oyun {
         'seri7'   => array('⚡', 'Bir hafta durmadan', '7 gün üst üste test çöz'),
         'seri30'  => array('🌋', 'Durdurulamaz', '30 gün üst üste test çöz'),
         'odev5'   => array('📝', 'Sorumluluk sahibi', '5 ödev ya da sınav teslim et'),
-        'yildiz'  => array('⭐', 'Haftanın yıldızı', 'Haftayı seviyende ilk 3’te bitir'),
         'yardim'  => array('🤝', 'Yardımsever', 'Soru-Cevap’ta 10 cevap yaz'),
         'cozum'   => array('🧠', 'Çözüm ortağı', 'Bir cevabın çözüm olarak seçilsin'),
         'cozum10' => array('🏆', 'Usta çözücü', '10 cevabın çözüm olarak seçilsin'),
@@ -58,11 +57,9 @@ class OSC_Oyun {
         add_action('osc_teslim_edildi', array($this, 'teslim'), 10, 3);
         add_action('wp_ajax_osc_oyun_ozet', array($this, 'ajax_ozet'));
         add_action('wp_ajax_osc_oyun_profil', array($this, 'ajax_profil'));
-        add_action('wp_ajax_osc_oyun_lig', array($this, 'ajax_lig'));
-        add_action('wp_ajax_nopriv_osc_oyun_lig', array($this, 'ajax_lig'));
-        add_shortcode('osc_liderlik', array($this, 'kisa_kod'));
+        add_shortcode('osc_liderlik', '__return_empty_string');
         add_action('wp_footer', array($this, 'panel_betik'), 50);
-        add_action('osc_tk_gunluk', array($this, 'hafta_kapat'));
+
     }
     public static function hafta($t = null) { return wp_date('oW', $t ? $t : time()); }
     public static function hk($h = null) { return 'osc_xph_' . ($h ? $h : self::hafta()); }
@@ -140,7 +137,7 @@ class OSC_Oyun {
     public function ajax_ozet() {
         $uid = get_current_user_id(); if (!$uid) wp_send_json_error('Giriş yapın.');
         $o = self::ozet($uid); $o['lig'] = array();
-        foreach (array('sinif', 'okul', 'seviye', 'genel') as $k) $o['lig'][$k] = self::lig($k, $uid, 10);
+
         wp_send_json_success($o);
     }
     public function ajax_profil() {
@@ -205,17 +202,12 @@ class OSC_Oyun {
   var AD = { sinif: 'Sınıfım', okul: 'Okulum', seviye: 'Seviyem (Türkiye)', genel: 'Türkiye geneli' };
   function ciz() {
     if (!kap) return;
-    var p = D.sv_son > D.sv_bas ? Math.round((D.xp - D.sv_bas) / (D.sv_son - D.sv_bas) * 100) : 0, L = D.lig[sek] || { liste: [] };
+    var p = D.sv_son > D.sv_bas ? Math.round((D.xp - D.sv_bas) / (D.sv_son - D.sv_bas) * 100) : 0;
     var form = (!D.okul || !D.seviye) ? '<div class="oy-form"><b>Sınıf ve okul ligine katıl:</b><input type="text" id="oy-okul" placeholder="Okulunun adı (ör. Atatürk Ortaokulu, Kadıköy)" value="' + esc(D.okul) + '"><select id="oy-sv"><option value="">Sınıf</option>' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function (s) { return '<option value="' + s + '"' + (D.seviye === s ? ' selected' : '') + '>' + s + '. sınıf</option>'; }).join('') + '</select><button type="button" id="oy-kay">Kaydet</button></div>' : '';
     kap.innerHTML = '<div class="oy-ust"><div class="oy-sv" style="--p:' + p + '"><b>' + D.sv + '<small>SEVİYE</small></b></div><div><h3>' + D.xp + ' XP</h3><p>Bir sonraki seviyeye <b>' + Math.max(0, D.sv_son - D.xp) + ' XP</b> kaldı</p><div class="oy-cub"><i style="width:' + p + '%"></i></div></div><div class="oy-mini"><div><b>' + D.hafta + '</b><small>Bu hafta XP</small></div><div><b>' + (D.seri ? '🔥 ' + D.seri : '0') + '</b><small>Günlük seri</small></div></div></div>' +
       '<div class="oy-roz">' + D.rozet.map(function (r) { return '<div class="' + (r.var ? 'var' : 'yok') + '" title="' + esc(r.ac + (r.var ? ' · ' + r.var : '')) + '"><span>' + r.ik + '</span><b>' + esc(r.ad) + '</b>' + esc(r.var ? r.var : r.ac) + '</div>'; }).join('') + '</div>' +
-      '<div class="oy-lig"><h3 style="margin:0 !important;font-size:17px">🏆 Haftalık liderlik tablosu</h3><div class="oy-sek">' + Object.keys(AD).map(function (k) { return '<button type="button" data-s="' + k + '" class="' + (k === sek ? 'on' : '') + '">' + AD[k] + '</button>'; }).join('') + '</div>' + form +
-      (L.liste.length ? L.liste.map(function (x) { return '<div class="oy-sat' + (x.ben ? ' ben' : '') + '"><b class="s">' + (['🥇', '🥈', '🥉'][x.s - 1] || x.s) + '</b><span>' + esc(x.ad) + (x.ben ? ' (sen)' : '') + ' <small style="color:#8AA2BA">Sv ' + x.sv + '</small></span><em>' + x.xp + ' XP</em></div>'; }).join('') : '<p style="color:#5B7189;font-size:14px">' + (L.eksik ? 'Bu lig için okulunu ve sınıfını yaz.' : 'Bu hafta bu ligde henüz puan toplayan yok. Bir test çöz, ilk sen ol!') + '</p>') +
-      (L.sira > 10 ? '<div class="oy-sat ben"><b class="s">' + L.sira + '</b><span>Sen</span><em>' + D.hafta + ' XP</em></div>' : '') +
-      '<p style="color:#8AA2BA;font-size:12px;margin-top:8px !important">Her test 10 XP + puanının onda biri, ödev ve sınav teslimi 20 XP, rozetler 25 XP kazandırır. Lig her pazartesi sıfırlanır. <label><input type="checkbox" id="oy-gizli"' + (D.gizli ? ' checked' : '') + '> Adım listelerde görünmesin</label></p></div>';
-    kap.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { sek = b.dataset.s; ciz(); }; });
-    var kb = kap.querySelector('#oy-kay'); if (kb) kb.onclick = function () { kaydet(); };
-    kap.querySelector('#oy-gizli').onchange = function () { kaydet(); };
+      '<p style="color:#8AA2BA;font-size:12px;margin:12px 0 0 !important">Her test 10 XP + puanının onda biri, ödev ve sınav teslimi 20 XP, rozetler 25 XP kazandırır. XP ve rozetlerini yalnızca sen görürsün.</p>';
+
   }
   function kaydet() { var f = new FormData(); f.append('action', 'osc_oyun_profil'); f.append('nonce', N); var o = kap.querySelector('#oy-okul'), s = kap.querySelector('#oy-sv'); f.append('okul', o ? o.value : D.okul); f.append('seviye', s ? s.value : D.seviye); if (kap.querySelector('#oy-gizli').checked) f.append('gizli', 1); al(f); }
   al();
@@ -237,11 +229,46 @@ class OSC_Forum {
         add_action('wp_ajax_nopriv_osc_sc_sor', array($this, 'giris_gerek')); add_action('wp_ajax_nopriv_osc_sc_cevap', array($this, 'giris_gerek'));
         add_action('transition_post_status', function ($y, $e, $p) { if ($p->post_type === self::TUR && $y === 'publish' && $e !== 'publish') { delete_transient('osc_sc_sayi'); } }, 10, 3);
         add_action('admin_init', array($this, 'ayar_kayit'));
+        add_action('admin_menu', array($this, 'onay_menu'));
+        add_action('admin_post_osc_sc_onay', array($this, 'onay_islem'));
+        add_filter('post_row_actions', function ($a, $p) { if ($p->post_type === self::TUR && $p->post_status === 'pending' && current_user_can('edit_others_posts')) $a = array('osc_onay' => '<a style="color:#008a20;font-weight:600" href="' . esc_url(self::onay_url('p', $p->ID, 'onay')) . '">✓ Onayla</a>') + $a; return $a; }, 10, 2);
     }
     public function kayit() {
         register_post_type(self::TUR, array('label' => 'Soru-Cevap', 'labels' => array('name' => 'Soru-Cevap', 'singular_name' => 'Soru', 'menu_name' => 'Soru-Cevap', 'all_items' => 'Tüm sorular'), 'public' => false, 'show_ui' => true, 'menu_icon' => 'dashicons-format-chat', 'menu_position' => 27, 'supports' => array('title', 'editor', 'author', 'comments'), 'capability_type' => 'post'));
     }
     public static function url($id = 0) { if (!$id) return home_url('/soru-cevap/'); $p = get_post($id); return home_url('/soru-cevap/' . (int) $id . '-' . ($p ? sanitize_title(remove_accents(mb_substr($p->post_title, 0, 70, 'UTF-8'))) : '') . '/'); }
+    public static function onay_url($tip, $id, $is) { return wp_nonce_url(admin_url('admin-post.php?action=osc_sc_onay&t=' . $tip . '&id=' . (int) $id . '&is=' . $is), 'osc_sc_onay'); }
+    public static function bekleyen() { return (int) wp_count_posts(self::TUR)->pending + (int) get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'count' => true)); }
+    public function onay_menu() {
+        $n = self::bekleyen();
+        add_submenu_page('edit.php?post_type=' . self::TUR, 'Onay bekleyenler', 'Onay bekleyenler' . ($n ? ' <span class="awaiting-mod">' . $n . '</span>' : ''), 'edit_others_posts', 'osc-sc-onay', array($this, 'onay_sayfa'));
+        if ($n) { global $menu; foreach ((array) $menu as $i => $m) if (isset($m[2]) && $m[2] === 'edit.php?post_type=' . self::TUR) $menu[$i][0] .= ' <span class="awaiting-mod">' . $n . '</span>'; }
+    }
+    public function onay_islem() {
+        if (!current_user_can('edit_others_posts')) wp_die('Yetkiniz yok.'); check_admin_referer('osc_sc_onay');
+        $t = $_GET['t'] ?? ''; $id = (int) ($_GET['id'] ?? 0); $is = $_GET['is'] ?? '';
+        if ($t === 'p' && get_post_type($id) === self::TUR) { if ($is === 'onay') wp_update_post(array('ID' => $id, 'post_status' => 'publish')); elseif ($is === 'sil') wp_trash_post($id); }
+        if ($t === 'c' && ($c = get_comment($id)) && $c->comment_type === 'osc_cevap') { if ($is === 'onay') { wp_set_comment_status($id, 'approve'); $this->cevap_sayac((int) $c->comment_post_ID); do_action('osc_sc_cevap', (int) $c->comment_post_ID, $id); } elseif ($is === 'sil') wp_trash_comment($id); }
+        if ($t === 'hepsi' && $is === 'onay') { foreach (get_posts(array('post_type' => self::TUR, 'post_status' => 'pending', 'numberposts' => 200, 'fields' => 'ids')) as $p) wp_update_post(array('ID' => $p, 'post_status' => 'publish')); foreach (get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'number' => 200)) as $c) { wp_set_comment_status($c->comment_ID, 'approve'); $this->cevap_sayac((int) $c->comment_post_ID); } }
+        wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url('edit.php?post_type=' . self::TUR . '&page=osc-sc-onay')); exit;
+    }
+    public function onay_sayfa() {
+        $ps = get_posts(array('post_type' => self::TUR, 'post_status' => 'pending', 'numberposts' => 100));
+        $cs = get_comments(array('type' => 'osc_cevap', 'status' => 'hold', 'number' => 100)); ?>
+<div class="wrap"><h1 class="wp-heading-inline">Soru-Cevap: onay bekleyenler</h1>
+<?php if ($ps || $cs): ?> <a class="page-title-action" href="<?php echo esc_url(self::onay_url('hepsi', 0, 'onay')); ?>" onclick="return confirm('Bekleyenlerin hepsi onaylansın mı?')">Hepsini onayla</a><?php endif; ?>
+<style>.osc-on{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:14px 16px;margin:10px 0;display:flex;gap:14px;align-items:flex-start}.osc-on .m{flex:1}.osc-on h3{margin:0 0 4px}.osc-on p{margin:6px 0 0;color:#3c434a;white-space:pre-wrap}.osc-on small{color:#646970}.osc-on .b{display:flex;gap:6px;flex-shrink:0}.osc-on .b a.on{background:#008a20;border-color:#008a20;color:#fff}</style>
+<h2>Sorular (<?php echo count($ps); ?>)</h2>
+<?php if (!$ps) echo '<p>Onay bekleyen soru yok.</p>'; foreach ($ps as $p) { $u = get_userdata($p->post_author); ?>
+<div class="osc-on"><div class="m"><h3><?php echo esc_html($p->post_title); ?></h3><small><?php echo esc_html($u ? $u->display_name . ' · ' . $u->user_email : ''); ?> · <?php echo esc_html(human_time_diff(get_post_time('U', true, $p)) . ' önce'); ?></small><p><?php echo esc_html(wp_strip_all_tags($p->post_content)); ?></p></div>
+<div class="b"><a class="button on" href="<?php echo esc_url(self::onay_url('p', $p->ID, 'onay')); ?>">✓ Onayla</a><a class="button" href="<?php echo esc_url(get_edit_post_link($p->ID)); ?>">Düzenle</a><a class="button" style="color:#b32d2e" href="<?php echo esc_url(self::onay_url('p', $p->ID, 'sil')); ?>">Sil</a></div></div>
+<?php } ?>
+<h2 style="margin-top:24px">Cevaplar (<?php echo count($cs); ?>)</h2>
+<?php if (!$cs) echo '<p>Onay bekleyen cevap yok.</p>'; foreach ($cs as $c) { ?>
+<div class="osc-on"><div class="m"><h3 style="font-size:14px">Soru: <?php echo esc_html(get_the_title($c->comment_post_ID)); ?></h3><small><?php echo esc_html($c->comment_author . ' · ' . $c->comment_author_email . ' · ' . human_time_diff(strtotime($c->comment_date_gmt . ' UTC')) . ' önce'); ?></small><p><?php echo esc_html($c->comment_content); ?></p></div>
+<div class="b"><a class="button on" href="<?php echo esc_url(self::onay_url('c', $c->comment_ID, 'onay')); ?>">✓ Onayla</a><a class="button" style="color:#b32d2e" href="<?php echo esc_url(self::onay_url('c', $c->comment_ID, 'sil')); ?>">Sil</a></div></div>
+<?php } ?></div>
+<?php }
     public function giris_gerek() { wp_send_json_error('Soru sormak ve cevap yazmak için giriş yapın.'); }
     public function ayar_kayit() { register_setting('osc_tk', 'osc_sc_yasak', array('sanitize_callback' => 'sanitize_textarea_field')); }
     /* ---- spam / güvenlik ---- */
@@ -535,7 +562,7 @@ class OSC_Hatirlat {
         foreach ($g as $k => $t) if ($t < $now - 30 * DAY_IN_SECONDS) unset($g[$k]); update_option('osc_ht_gonderilen', $g, false);
     }
     private static function ogrenci_govde($uid) {
-        $o = OSC_Oyun::ozet($uid); $lig = OSC_Oyun::lig('seviye', $uid, 3); $r = array_filter($o['rozet'], function ($x) { return $x['var']; });
+        $o = OSC_Oyun::ozet($uid); $lig = array('sira' => 0); $r = array_filter($o['rozet'], function ($x) { return $x['var']; });
         return '<p>Bu hafta <b>' . (int) $o['hafta'] . ' XP</b> topladın' . ($lig['sira'] ? ' ve ' . ($o['seviye'] ? $o['seviye'] . '. sınıflar arasında ' : '') . '<b>' . (int) $lig['sira'] . '. sıradasın</b>' : '') . '. Toplam ' . (int) $o['xp'] . ' XP ile <b>' . (int) $o['sv'] . '. seviyedesin</b>.</p>'
             . ($r ? '<p>Rozetlerin: ' . implode(' ', array_map(function ($x) { return $x['ik']; }, $r)) . '</p>' : '')
             . '<p>Yeni hafta pazartesi başlıyor; lig sıfırlanıyor. Her gün bir test çözersen seri bonusu da kazanırsın 🔥</p>';
