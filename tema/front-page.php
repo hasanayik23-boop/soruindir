@@ -441,43 +441,134 @@ $grades = array(
     <div class="sph2-ad"><div><?php echo stripslashes($ad_home_top); ?></div></div>
     <?php endif; ?>
 
-    <!-- GİRİŞ: arama + sınıflar + ne yapmak istiyorsun -->
-    <section class="sx3-hero" aria-labelledby="sph2-h">
-        <h1 id="sph2-h">Yazılı, test, plan ve evrak <span>tek yerde</span></h1>
-        <p class="sx3-lead">Aradığın dosyayı bul, ücretsiz indir ya da testi ekranda çöz.</p>
-        <form role="search" method="get" class="sx3-search" action="<?php echo esc_url(home_url('/')); ?>">
-            <?php echo $ico_search; ?>
-            <label for="sph2-s" style="position:absolute;left:-9999px;">Sitede ara</label>
-            <input type="search" id="sph2-s" name="s" value="<?php echo esc_attr(get_search_query()); ?>" placeholder="Örn: 8. sınıf matematik 1. yazılı" autocomplete="off" required>
-            <button type="submit">Ara</button>
-        </form>
-        <nav class="sx3-siniflar" aria-label="Sınıflar">
-            <?php foreach ($grades as $label => $nums): ?>
-            <div><span><?php echo esc_html($label); ?></span><?php foreach ($nums as $n): ?><a href="<?php echo esc_url(home_url('/category/' . $n . '-sinif')); ?>"><?php echo $n; ?>. sınıf</a><?php endforeach; ?></div>
-            <?php endforeach; ?>
+    <!-- GİRİŞ: karşılama + arama + giriş düğmeleri; hizmet kartları + yan sütun -->
+    <?php
+    $sx4_om  = class_exists('OSC_Masa') && OSC_Masa::yayinda();
+    $sx4_lgs = class_exists('LGS_Tercih_Robotu') && method_exists('LGS_Tercih_Robotu', 'robot_url') ? LGS_Tercih_Robotu::robot_url() : '';
+    $sx4_yks = class_exists('YKS_Tercih_Robotu') && method_exists('YKS_Tercih_Robotu', 'robot_url') ? YKS_Tercih_Robotu::robot_url() : '';
+    $sx4_svg = array(
+        'test'  => '<svg viewBox="0 0 96 80"><rect x="22" y="6" width="44" height="66" rx="7" fill="#1E3A5F"/><rect x="26" y="12" width="36" height="52" rx="3" fill="#fff"/><g stroke-linecap="round" stroke-width="3"><path d="M31 22l3 3 5-6" stroke="#22A06B" fill="none"/><path d="M43 22h14" stroke="#CBD5E1"/><path d="M31 35l3 3 5-6" stroke="#22A06B" fill="none"/><path d="M43 35h14" stroke="#CBD5E1"/><path d="M31 48l3 3 5-6" stroke="#22A06B" fill="none"/><path d="M43 48h10" stroke="#CBD5E1"/></g><circle cx="72" cy="58" r="14" fill="#FDBA3B"/><path d="M66 58l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        'indir' => '<svg viewBox="0 0 96 80"><rect x="30" y="4" width="36" height="30" rx="2" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><path d="M36 13h24M36 20h24M36 27h16" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/><rect x="14" y="30" width="68" height="30" rx="8" fill="#3B5B7D"/><rect x="24" y="52" width="48" height="24" rx="2" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><path d="M31 61h34M31 68h22" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/><circle cx="72" cy="40" r="3" fill="#4ADE80"/></svg>',
+        'yazili'=> '<svg viewBox="0 0 96 80"><rect x="14" y="10" width="46" height="62" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="2" transform="rotate(-6 37 41)"/><rect x="28" y="6" width="46" height="62" rx="4" fill="#fff" stroke="#94A3B8" stroke-width="2"/><path d="M35 18h30M35 27h30M35 36h22M35 45h28M35 54h18" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/><path d="M33 18h0M33 27h0" stroke="#2F80ED"/><g transform="rotate(35 74 50)"><rect x="70" y="22" width="9" height="40" rx="2" fill="#F59E0B"/><path d="M70 62l4.5 9 4.5-9z" fill="#FDE68A"/><rect x="70" y="18" width="9" height="6" rx="2" fill="#F87171"/></g></svg>',
+        'plan'  => '<svg viewBox="0 0 96 80"><rect x="14" y="12" width="60" height="58" rx="8" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><rect x="14" y="12" width="60" height="16" rx="8" fill="#EF6C57"/><rect x="14" y="20" width="60" height="8" fill="#EF6C57"/><path d="M28 6v12M60 6v12" stroke="#1E3A5F" stroke-width="4" stroke-linecap="round"/><g fill="#E2E8F0"><rect x="22" y="35" width="9" height="8" rx="2"/><rect x="35" y="35" width="9" height="8" rx="2"/><rect x="48" y="35" width="9" height="8" rx="2"/><rect x="61" y="35" width="7" height="8" rx="2"/><rect x="22" y="48" width="9" height="8" rx="2"/><rect x="48" y="48" width="9" height="8" rx="2"/><rect x="61" y="48" width="7" height="8" rx="2"/><rect x="22" y="60" width="9" height="6" rx="2"/></g><rect x="35" y="48" width="9" height="8" rx="2" fill="#2F80ED"/><circle cx="76" cy="60" r="13" fill="#22A06B"/><path d="M76 53v7l5 3" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',
+        'masa'  => '<svg viewBox="0 0 96 80"><rect x="8" y="50" width="80" height="7" rx="3" fill="#8B5E3C"/><path d="M16 57v18M80 57v18" stroke="#8B5E3C" stroke-width="5" stroke-linecap="round"/><rect x="18" y="20" width="38" height="26" rx="3" fill="#1E3A5F"/><rect x="21" y="23" width="32" height="20" rx="1" fill="#DBEAFE"/><path d="M25 30h14M25 36h20" stroke="#2F80ED" stroke-width="2.5" stroke-linecap="round"/><path d="M14 50h46" stroke="#334155" stroke-width="3" stroke-linecap="round"/><rect x="62" y="32" width="18" height="6" rx="1.5" fill="#22A06B"/><rect x="60" y="38" width="22" height="6" rx="1.5" fill="#2F80ED"/><rect x="63" y="44" width="18" height="6" rx="1.5" fill="#F59E0B"/><circle cx="74" cy="22" r="6" fill="#EF4444"/><path d="M74 16c0-3 2-5 4-5" stroke="#16A34A" stroke-width="2" fill="none"/></svg>',
+        'tercih'=> '<svg viewBox="0 0 96 80"><path d="M48 10L8 28l40 18 40-18z" fill="#1E3A5F"/><path d="M24 36v16c0 6 11 12 24 12s24-6 24-12V36L48 47z" fill="#3B5B7D"/><path d="M84 30v22" stroke="#F59E0B" stroke-width="3"/><circle cx="84" cy="55" r="4" fill="#F59E0B"/><rect x="58" y="56" width="30" height="20" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="2"/><path d="M63 70l6-6 5 4 9-9" stroke="#22A06B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    );
+    $sx4_kart = array(
+        array('test', 'Online test çöz', 'Deneme, yaprak test ve LGS–YKS sorularını ekranda çöz; puanını ve yanlışlarını anında gör.', $test_page_url, '#E9F7EF'),
+        array('indir', 'İndir & yazdır', 'Cevap anahtarlı yazılı, deneme ve çalışma kâğıtları; PDF ve Word olarak.', home_url('/category/yazili-sorulari/'), '#EAF2FD'),
+        array('yazili', 'Yazılı soruları', 'Senaryolara uygun 1. ve 2. dönem yazılıları; sınıf ve derse göre.', home_url('/category/yazili-sorulari/'), '#FFF6E5'),
+        array('plan', 'Yıllık planlar', 'Tüm sınıf ve dersler için güncel, ünitelendirilmiş yıllık planlar.', $sx4_om ? OSC_Masa::url() . '#yillik' : home_url('/category/yillik-planlar/'), '#FDEDEA'),
+    );
+    if ($sx4_om) $sx4_kart[] = array('masa', 'Öğretmen Masası', 'Yazılı hazırla, tutanak, BEP, kulüp evrakı ve OYS çizelgesi; dakikalar içinde.', OSC_Masa::url(), '#EEF0FE');
+    if ($sx4_lgs || $sx4_yks) $sx4_kart[] = array('tercih', 'Tercih robotları', 'LGS ve YKS taban puanlarıyla puanına uygun okul ve bölümleri gör.', $sx4_lgs ? $sx4_lgs : $sx4_yks, '#E8F6F8');
+    $sx4_yan = $popular ? array_slice($popular, 0, 5) : array();
+    ?>
+    <style>
+    .sx4-hero{position:relative;margin:22px 0 0;padding:40px 24px 34px;border-radius:28px;background:linear-gradient(180deg,#EAF4FC 0%,#F4F9FE 100%);border:1px solid #DCEAF7;overflow:hidden;text-align:center}
+    .sx4-hero:before{content:"";position:absolute;inset:auto -10% -60% -10%;height:70%;background:radial-gradient(closest-side,rgba(255,255,255,.9),transparent);pointer-events:none}
+    .sx4-ill{position:absolute;bottom:0;width:210px;height:auto;pointer-events:none}
+    .sx4-ill.sol{left:18px}.sx4-ill.sag{right:18px}
+    .sx4-ic{position:relative;max-width:700px;margin:0 auto}
+    .sx4-hero h1{font-size:clamp(27px,3.6vw,40px);line-height:1.12;letter-spacing:-.025em;font-weight:800;color:#13304F;margin:0 !important}
+    .sx4-hero h1 span{color:#2F80ED}
+    .sx4-lead{margin:10px auto 0 !important;color:#46607A;font-size:16.5px}
+    .sx4-search{position:relative;display:flex;align-items:center;gap:8px;margin:22px auto 0;background:#fff;border:1.5px solid #D3E2F1;border-radius:999px;padding:6px 6px 6px 48px;box-shadow:0 16px 34px -26px rgba(19,48,79,.55)}
+    .sx4-search:focus-within{border-color:#2F80ED;box-shadow:0 0 0 4px rgba(47,128,237,.14)}
+    .sx4-search svg{position:absolute;left:18px;width:20px;height:20px;color:#8AA2BA}
+    .sx4-search input{flex:1;min-width:0;border:0 !important;outline:0;background:transparent;font:inherit;font-size:16px;padding:10px 4px !important;box-shadow:none !important;color:#13304F}
+    .sph2 .sx4-search button{border:0;background:#2F80ED;color:#fff;font-weight:700;font-size:15px;font-family:inherit;padding:12px 24px;border-radius:999px;cursor:pointer}
+    .sph2 .sx4-search button:hover{background:#1F6FD8}
+    .sx4-btns{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:18px auto 0;padding:8px;background:rgba(255,255,255,.75);border:1px solid #DCEAF7;border-radius:20px;box-shadow:0 18px 36px -30px rgba(19,48,79,.5)}
+    .sph2 .sx4-btn{display:flex;align-items:center;gap:10px;padding:10px 18px 10px 12px;border-radius:14px;color:#fff;text-align:left;min-width:178px;transition:transform .15s,filter .15s}
+    .sph2 .sx4-btn:hover{transform:translateY(-2px);filter:brightness(1.05);color:#fff}
+    .sx4-btn i{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-style:normal}
+    .sx4-btn i svg{width:19px;height:19px}
+    .sx4-btn b{display:block;font-size:15.5px;line-height:1.2}.sx4-btn small{display:block;font-size:12px;opacity:.85}
+    .sx4-btn.yesil{background:#22A06B}.sx4-btn.mavi{background:#2F80ED}.sx4-btn.lacivert{background:#1E4E79}
+    .sx4-sinif{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:20px auto 0;max-width:600px;position:relative}
+    .sph2 .sx4-sinif a{padding:5px 11px;border-radius:99px;background:#fff;border:1px solid #DCEAF7;font-size:13px;font-weight:600;color:#46607A}
+    .sph2 .sx4-sinif a:hover{border-color:#2F80ED;color:#2F80ED}
+    .sx4-govde{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:22px;align-items:start}
+    .sx4-kartlar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .sph2 .sx4-kart{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:20px;background:#fff;border:1px solid #E3EBF3;box-shadow:0 1px 2px rgba(19,48,79,.04);transition:transform .18s,box-shadow .18s,border-color .18s;min-height:118px}
+    .sph2 .sx4-kart:hover{transform:translateY(-3px);border-color:#C9DCF0;box-shadow:0 20px 36px -28px rgba(19,48,79,.55)}
+    .sx4-kart .yz{flex:1;min-width:0}
+    .sx4-kart b{display:block;font-size:18px;color:#13304F;letter-spacing:-.01em}
+    .sx4-kart small{display:block;margin-top:5px;font-size:13.5px;line-height:1.5;color:#5B7189}
+    .sx4-kart .re{flex:0 0 104px;height:88px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+    .sx4-kart .re svg{width:92px;height:76px}
+    .sx4-yan{display:flex;flex-direction:column;gap:14px}
+    .sx4-kutu{background:#fff;border:1px solid #E3EBF3;border-radius:20px;padding:16px 16px 10px}
+    .sx4-kutu h3{margin:0 0 8px !important;font-size:16px;color:#13304F;display:flex;align-items:center;gap:8px}
+    .sx4-kutu h3:before{content:"";width:8px;height:8px;border-radius:50%;background:#2F80ED}
+    .sx4-kutu.pop h3:before{background:#F59E0B}
+    .sx4-kutu ul{list-style:none;margin:0;padding:0}
+    .sx4-kutu li{border-top:1px solid #EEF3F8}.sx4-kutu li:first-child{border-top:0}
+    .sph2 .sx4-kutu li a{display:flex;gap:8px;padding:9px 2px;font-size:14px;line-height:1.4;color:#24405E;font-weight:600}
+    .sph2 .sx4-kutu li a:hover{color:#2F80ED}
+    .sx4-kutu li a em{flex:0 0 auto;font-style:normal;color:#8AA2BA;font-weight:700;font-size:12px;min-width:16px;padding-top:2px}
+    .sx4-kutu li a span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .sx4-kutu .alt{display:block;font-size:12px;color:#8AA2BA;font-weight:500;margin-top:2px}
+    @media (max-width:1100px){.sx4-ill{width:150px;opacity:.55}}
+    @media (max-width:960px){.sx4-ill{display:none}.sx4-govde{grid-template-columns:1fr}.sx4-yan{display:grid;grid-template-columns:1fr 1fr}}
+    @media (max-width:640px){.sx4-hero{padding:28px 14px 24px;border-radius:22px}.sx4-kartlar{grid-template-columns:1fr}.sx4-yan{grid-template-columns:1fr}.sph2 .sx4-btn{min-width:0;flex:1 1 100%}.sx4-btns{display:flex}.sx4-search{padding-left:42px}.sx4-search svg{left:15px}.sph2 .sx4-search button{padding:11px 16px}.sx4-kart .re{flex-basis:84px;height:76px}.sx4-kart .re svg{width:74px;height:62px}}
+    </style>
+    <section class="sx4-hero" aria-labelledby="sph2-h">
+        <svg class="sx4-ill sol" viewBox="0 0 220 170" aria-hidden="true"><rect x="10" y="14" width="150" height="96" rx="8" fill="#8B5E3C"/><rect x="17" y="21" width="136" height="82" rx="4" fill="#2E5E4E"/><text x="32" y="52" fill="#E8F5E9" font-size="17" font-family="Georgia,serif" font-style="italic">a² + b² = c²</text><path d="M32 66h70M32 80h46" stroke="#A7D3B8" stroke-width="3" stroke-linecap="round" opacity=".8"/><path d="M118 72l22-22M118 50h22v22" stroke="#FDE68A" stroke-width="2.5" fill="none" opacity=".9"/><rect x="40" y="103" width="90" height="5" rx="2" fill="#6B4528"/><rect x="128" y="96" width="14" height="4" rx="1" fill="#fff"/><rect x="0" y="150" width="220" height="20" fill="#DCEAF7"/><rect x="138" y="112" width="70" height="40" rx="4" fill="#C08457"/><rect x="146" y="98" width="52" height="8" rx="2" fill="#2F80ED"/><rect x="142" y="90" width="58" height="8" rx="2" fill="#22A06B"/><rect x="148" y="82" width="48" height="8" rx="2" fill="#F59E0B"/><circle cx="60" cy="140" r="12" fill="#F4C7A1"/><path d="M48 168c0-14 6-20 12-20s12 6 12 20z" fill="#2F80ED"/><circle cx="94" cy="142" r="11" fill="#C68B5E"/><path d="M83 168c0-13 5-18 11-18s11 5 11 18z" fill="#F59E0B"/><circle cx="26" cy="143" r="11" fill="#E8B48A"/><path d="M15 168c0-13 5-18 11-18s11 5 11 18z" fill="#22A06B"/></svg>
+        <svg class="sx4-ill sag" viewBox="0 0 220 170" aria-hidden="true"><rect x="60" y="10" width="130" height="92" rx="8" fill="#D9A066"/><rect x="66" y="16" width="118" height="80" rx="4" fill="#F3D9B1"/><rect x="74" y="24" width="34" height="28" rx="2" fill="#fff" transform="rotate(-4 91 38)"/><rect x="116" y="22" width="30" height="24" rx="2" fill="#FDE68A"/><rect x="152" y="26" width="26" height="30" rx="2" fill="#BFDBFE" transform="rotate(5 165 41)"/><rect x="82" y="58" width="40" height="30" rx="2" fill="#fff"/><rect x="130" y="56" width="44" height="32" rx="2" fill="#BBF7D0" transform="rotate(-3 152 72)"/><circle cx="90" cy="25" r="3" fill="#EF4444"/><circle cx="131" cy="22" r="3" fill="#2F80ED"/><circle cx="165" cy="27" r="3" fill="#22A06B"/><circle cx="102" cy="59" r="3" fill="#F59E0B"/><path d="M80 32h20M80 39h16M88 68h26M88 75h18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/><rect x="0" y="150" width="220" height="20" fill="#DCEAF7"/><circle cx="40" cy="96" r="13" fill="#E8B48A"/><path d="M27 96c0-10 6-15 13-15s13 5 13 15c-3-5-8-7-13-7s-10 2-13 7z" fill="#3F2A1D"/><path d="M24 168l4-46c1-8 6-12 12-12s11 4 12 12l4 46z" fill="#1E4E79"/><rect x="34" y="112" width="12" height="18" rx="2" fill="#fff"/><path d="M52 118l14-12" stroke="#E8B48A" stroke-width="6" stroke-linecap="round"/><circle cx="188" cy="140" r="11" fill="#F4C7A1"/><path d="M176 168c0-13 5-19 12-19s12 6 12 19z" fill="#EF6C57"/><rect x="172" y="146" width="10" height="16" rx="3" fill="#F59E0B"/></svg>
+        <div class="sx4-ic">
+            <h1 id="sph2-h">Eğitimde aradığın her şey <span>tek çatı altında</span></h1>
+            <p class="sx4-lead">Yazılı soruları, testler, planlar ve evraklar. Ara, indir ya da ekranda çöz.</p>
+            <form role="search" method="get" class="sx4-search" action="<?php echo esc_url(home_url('/')); ?>">
+                <?php echo $ico_search; ?>
+                <label for="sph2-s" style="position:absolute;left:-9999px;">Sitede ara</label>
+                <input type="search" id="sph2-s" name="s" value="<?php echo esc_attr(get_search_query()); ?>" placeholder="Örn: 8. sınıf matematik 1. yazılı" autocomplete="off" required>
+                <button type="submit">Ara</button>
+            </form>
+        </div>
+        <div class="sx4-btns">
+            <?php if ($sph_giris): ?>
+            <a class="sx4-btn yesil" href="<?php echo esc_url($sph_rol === 'ogrenci' ? $ogr_panel : $ogt_panel); ?>"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></i><span><b>Panelime git</b><small><?php echo $sph_rol === 'ogrenci' ? 'Ödevler, sınavlar, netler' : 'Canlı sınav, ödev, test'; ?></small></span></a>
+            <?php if ($sx4_om): ?><a class="sx4-btn lacivert" href="<?php echo esc_url(OSC_Masa::url()); ?>"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg></i><span><b>Öğretmen Masası</b><small>Yazılı, plan, evrak</small></span></a><?php endif; ?>
+            <?php else: ?>
+            <a class="sx4-btn yesil" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogretmen', 'git' => $ogt_panel), $uye_url)); ?>"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></i><span><b>Öğretmen girişi</b><small>Canlı sınav, ödev, test</small></span></a>
+            <a class="sx4-btn mavi" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogrenci', 'git' => $ogr_panel), $uye_url)); ?>"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V6a2 2 0 0 1 2-2h12v15H6a2 2 0 0 0-2 2z"/><path d="M8 8h6"/></svg></i><span><b>Öğrenci girişi</b><small>Netler, ödevler, sınavlar</small></span></a>
+            <a class="sx4-btn lacivert" href="<?php echo esc_url(add_query_arg('kayit', '1', $uye_url)); ?>"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M19 8v6M16 11h6"/></svg></i><span><b>Ücretsiz üye ol</b><small>Tüm araçlar ücretsiz</small></span></a>
+            <?php endif; ?>
+        </div>
+        <nav class="sx4-sinif" aria-label="Sınıflar">
+            <?php foreach ($grades as $label => $nums) foreach ($nums as $n): ?><a href="<?php echo esc_url(home_url('/category/' . $n . '-sinif')); ?>"><?php echo $n; ?>. sınıf</a><?php endforeach; ?>
         </nav>
-        <?php
-        $sx3_om = class_exists('OSC_Masa') && OSC_Masa::yayinda();
-        $sx3_lgs = class_exists('LGS_Tercih_Robotu') && method_exists('LGS_Tercih_Robotu', 'robot_url') ? LGS_Tercih_Robotu::robot_url() : '';
-        $sx3_yks = class_exists('YKS_Tercih_Robotu') ? YKS_Tercih_Robotu::robot_url() : '';
-        $sx3_kart = array(
-            array('📄', 'Dosya indir', 'Yazılı soruları, deneme ve yaprak testler; cevap anahtarlı PDF ve Word.', home_url('/category/yazili-sorulari/'), 'a'),
-            array('✅', 'Online test çöz', 'Ekranda çöz, puanını ve yanlışlarını hemen gör.', $test_page_url, 'b'),
-        );
-        $sx3_kart[] = $sx3_om ? array('🧑‍🏫', 'Öğretmen Masası', 'Senaryoya uygun yazılı, tutanak, BEP, kulüp evrakları ve OYS çizelgesi hazırla.', OSC_Masa::url(), 'c') : array('🗓️', 'Yıllık planlar', 'Tüm sınıf ve dersler için güncel ünitelendirilmiş yıllık planlar.', home_url('/category/yillik-planlar/'), 'c');
-        $sx3_kart[] = ($sx3_lgs || $sx3_yks) ? array('🎓', 'Tercih robotları', 'LGS ve YKS taban puanları; puanınla yerleşebileceğin okulları gör.', $sx3_lgs ? $sx3_lgs : $sx3_yks, 'd') : array('🧮', 'Hesaplamalar', 'LGS, YKS ve karne puanı hesaplama araçları.', home_url('/'), 'd');
-        ?>
-        <div class="sx3-kartlar">
-            <?php foreach ($sx3_kart as $k): ?>
-            <a class="sx3-kart sx3-<?php echo $k[4]; ?>" href="<?php echo esc_url($k[3]); ?>"><span class="sx3-ik" aria-hidden="true"><?php echo $k[0]; ?></span><b><?php echo esc_html($k[1]); ?></b><small><?php echo esc_html($k[2]); ?></small><i aria-hidden="true"><?php echo $ico_go; ?></i></a>
+    </section>
+
+    <div class="sx4-govde">
+        <div class="sx4-kartlar">
+            <?php foreach ($sx4_kart as $k): ?>
+            <a class="sx4-kart" href="<?php echo esc_url($k[3]); ?>"><span class="yz"><b><?php echo esc_html($k[1]); ?></b><small><?php echo esc_html($k[2]); ?></small></span><span class="re" style="background:<?php echo $k[4]; ?>" aria-hidden="true"><?php echo $sx4_svg[$k[0]]; ?></span></a>
             <?php endforeach; ?>
         </div>
-    </section>
+        <aside class="sx4-yan" aria-label="Öne çıkanlar">
+            <div class="sx4-kutu"><h3>Son eklenenler</h3><ul>
+                <?php foreach (array_slice($latest, 0, 5) as $p): ?><li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span><?php echo esc_html(get_the_title($p)); ?><small class="alt"><?php echo $sph_istest($p) ? 'Online test · ' : ''; ?><?php echo esc_html($sph_ago($p)); ?></small></span></a></li><?php endforeach; ?>
+                <?php if (!$latest): ?><li><a href="#">Henüz içerik yok</a></li><?php endif; ?>
+            </ul></div>
+            <?php if ($sx4_yan): ?>
+            <div class="sx4-kutu pop"><h3>Bu hafta en çok indirilenler</h3><ul>
+                <?php foreach ($sx4_yan as $i => $row): ?><li><a href="<?php echo esc_url(get_permalink($row[0])); ?>"><em><?php echo $i + 1; ?></em><span><?php echo esc_html(get_the_title($row[0])); ?></span></a></li><?php endforeach; ?>
+            </ul></div>
+            <?php elseif ($top_tests): ?>
+            <div class="sx4-kutu pop"><h3>Bu hafta en çok çözülen testler</h3><ul>
+                <?php foreach ($top_tests as $i => $row): ?><li><a href="<?php echo esc_url(get_permalink($row[0])); ?>"><em><?php echo $i + 1; ?></em><span><?php echo esc_html(get_the_title($row[0])); ?></span></a></li><?php endforeach; ?>
+            </ul></div>
+            <?php endif; ?>
+        </aside>
+    </div>
 
     <!-- SON EKLENENLER -->
     <section class="sph2-sec" aria-labelledby="sph2-l">
         <div class="sph2-head">
-            <h2 id="sph2-l">Son eklenenler</h2>
+            <h2 id="sph2-l">Yeni içerikler</h2>
             <?php $kinds = array(); foreach ($latest as $p) $kinds[$sph_istest($p) ? 'test' : 'file'] = 1; if (count($kinds) > 1): ?>
             <div class="sph2-tabs" role="tablist" aria-label="Son eklenenleri süz">
                 <button type="button" role="tab" aria-selected="true" data-f="all">Tümü</button>

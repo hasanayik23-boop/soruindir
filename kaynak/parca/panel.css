@@ -264,3 +264,10 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
 }
 
 .osc-pn-marka .lg{background:#fff;border-radius:12px;padding:6px 10px;display:flex;align-items:center}.osc-pn-marka .lg img{height:28px;width:auto;display:block}
+
+.osc-pn-sik{align-items:flex-start}.osc-pn-sik .harf{margin-top:30px}.osc-pn-sik .tik{margin-top:40px}
+.osc-pn-sik .osc-pn-alan.sik-ic{flex:1;min-width:0;margin:0}
+.osc-pn-sik .osc-pn-alan.sik-ic .osc-pn-arac{margin-bottom:2px}
+.osc-pn-ce img{max-width:100%;max-height:220px;vertical-align:middle}
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}
+.osc-kesir>span{padding:0 3px;min-width:.8em;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}

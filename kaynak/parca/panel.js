@@ -46,6 +46,7 @@
     var sc = document.createElement('script'); sc.id = 'osc-yz-js'; sc.src = C.yz_js; sc.onerror = function () { var e = document.getElementById('osc-yz'); if (e) e.innerHTML = '<div class="yz-yuk">Yazılı aracı yüklenemedi. Sayfayı yenileyin.</div>'; }; document.head.appendChild(sc);
   }
   window.addEventListener('hashchange', yonlendir);
+  document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href^="#"]'); if (a && kok && kok.contains(a) && a.getAttribute('href').length > 1 && a.getAttribute('href') === location.hash) { e.preventDefault(); yonlendir(); } });
 
   /* ======================= oturum listesi ======================= */
   function vOturumlar() {
@@ -269,14 +270,14 @@
     function yerelKaydet() { clearTimeout(kayT); kayT = setTimeout(function () { try { localStorage.setItem(anahtar, JSON.stringify(T)); } catch (e) {} }, 600); }
     function turSecenek() { return '<option value="">Otomatik (başlıktan algıla)</option>' + C.turler.map(function (t) { return '<option value="' + t.k + '"' + (T.sinav_turu === t.k ? ' selected' : '') + '>' + esc(t.ad) + ' — ' + (t.kural ? t.kural + ' yanlış 1 doğru' : 'yanlış götürmez') + '</option>'; }).join(''); }
     function konular() { var l = []; T.sorular.forEach(function (q) { var k = (q.konu || '').trim(); if (k && l.indexOf(k) < 0) l.push(k); }); return l; }
-    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
+    function araclar() { return '<div class="osc-pn-arac"><button type="button" data-a="b" title="Kalın"><b>K</b></button><button type="button" data-a="i" title="İtalik"><i>İ</i></button><button type="button" data-a="u" title="Altı çizili"><u>A</u></button><button type="button" data-a="sup" title="Üs">x²</button><button type="button" data-a="sub" title="Alt simge">x₂</button><button type="button" data-a="kesir" title="Kesir: 3/4 yazıp seçin ya da boş kesir ekleyin">a⁄b</button><button type="button" data-a="sembol" title="Matematik sembolü">∈ ℕ</button><button type="button" data-a="img" title="Görsel ekle">🖼 Görsel</button></div>'; }
     function soruHtml(q, i) {
       var h = '<div class="osc-pn-q" data-i="' + i + '"><div class="osc-pn-q-bas"><span class="no">' + (i + 1) + '</span><select data-f="type"><option value="multiple"' + (q.type === 'multiple' ? ' selected' : '') + '>Çoktan seçmeli</option><option value="truefalse"' + (q.type === 'truefalse' ? ' selected' : '') + '>Doğru / Yanlış</option><option value="gap"' + (q.type === 'gap' ? ' selected' : '') + '>Boşluk doldurma</option><option value="classic"' + (q.type === 'classic' ? ' selected' : '') + '>Açık uçlu (klasik)</option></select>' +
         '<input class="konu" data-f="konu" list="osc-pn-kl" value="' + esc(q.konu) + '" placeholder="Konu (ör. Üslü İfadeler)"><span class="bosluk"></span><button type="button" data-q="yukari" title="Yukarı">↑</button><button type="button" data-q="asagi" title="Aşağı">↓</button><button type="button" data-q="kopya" title="Çoğalt">⧉</button><button type="button" data-q="sil" class="sil" title="Sil">🗑</button></div>';
       h += '<div class="osc-pn-alan' + (q.paragraph ? '' : ' kapali') + '"><label>Paragraf / öncül <small>(isteğe bağlı)</small></label>' + araclar() + '<div class="osc-pn-ce" contenteditable="true" data-f="paragraph" data-ph="Okuma parçası, tablo açıklaması ya da öncüller…">' + (q.paragraph || '') + '</div></div>' + (q.paragraph ? '' : '<button type="button" class="osc-pn-link" data-q="para">+ Paragraf / öncül ekle</button>');
       h += '<div class="osc-pn-alan"><label>Soru kökü</label>' + araclar() + '<div class="osc-pn-ce kok" contenteditable="true" data-f="root" data-ph="Soruyu yazın. Görseli yapıştırabilir ya da 🖼 ile ekleyebilirsiniz.">' + (q.root || '') + '</div></div>';
       if (q.type === 'multiple') {
-        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + (k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı') + '">' + (q.options[k] || '') + '</div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
+        h += '<div class="osc-pn-siklar"><label>Şıklar <small>— doğru şıkkın harfine tıklayın</small></label>' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div class="osc-pn-sik' + (q.correct === k ? ' dogru' : '') + '"><button type="button" class="harf" data-dogru="' + k + '" title="Doğru cevap olarak işaretle">' + k + '</button><div class="osc-pn-alan sik-ic">' + araclar() + '<div class="osc-pn-ce tek" contenteditable="true" data-o="' + k + '" data-ph="' + (k === 'E' ? 'E şıkkı (LGS gibi 4 şıklı testlerde boş bırakın)' : k + ' şıkkı') + '">' + (q.options[k] || '') + '</div></div>' + (q.correct === k ? '<span class="tik">✓ Doğru</span>' : '') + '</div>'; }).join('') + '</div>';
       } else if (q.type === 'truefalse') {
         h += '<div class="osc-pn-dy"><label>Doğru cevap</label><button type="button" data-dogru="A" class="' + (q.correct === 'A' ? 'on' : '') + '">✓ Doğru</button><button type="button" data-dogru="B" class="' + (q.correct === 'B' ? 'on' : '') + '">✗ Yanlış</button></div>';
       } else {
@@ -345,6 +346,8 @@
         var ce = b.closest('.osc-pn-alan, .osc-pn-q').querySelector('.osc-pn-ce');
         if (b.closest('.osc-pn-alan')) ce = b.closest('.osc-pn-alan').querySelector('.osc-pn-ce');
         if (b.dataset.a === 'img') { hedefCe = ce; document.getElementById('osc-pn-dosya').value = ''; document.getElementById('osc-pn-dosya').onchange = function (ev) { var f = ev.target.files[0]; if (f) gorselYukle(f, hedefCe); }; document.getElementById('osc-pn-dosya').click(); return; }
+        if (b.dataset.a === 'sembol') { sembolMenu(b, ce); return; }
+        if (b.dataset.a === 'kesir') { ce.focus(); var sel = String(window.getSelection() || ''), km = /^\s*(.+?)\s*[\/÷]\s*(.+?)\s*$/.exec(sel), kp = km ? km[1] : (sel.trim() || '1'), kd = km ? km[2] : (sel.trim() ? '?' : '2'); document.execCommand('insertHTML', false, '<span class="osc-kesir"><span class="p">' + esc(kp) + '</span><span class="d">' + esc(kd) + '</span></span>&nbsp;'); ce.dispatchEvent(new Event('input', { bubbles: true })); return; }
         ce.focus(); document.execCommand({ b: 'bold', i: 'italic', u: 'underline', sup: 'superscript', sub: 'subscript' }[b.dataset.a]); ce.dispatchEvent(new Event('input', { bubbles: true })); return;
       }
       if (b.dataset.dogru) { q.correct = b.dataset.dogru; yeniden(); return; }
@@ -362,6 +365,17 @@
       if (b.dataset.e === 'onizle') { onizle(); return; }
       if (b.dataset.e === 'dosya') { var fi = document.getElementById('osc-pn-ice'); fi.value = ''; fi.onchange = function (ev) { var f = ev.target.files[0]; if (f) iceAktar(f, b); }; fi.click(); return; }
       if (b.dataset.e === 'taslak' || b.dataset.e === 'gonder') kaydet(b.dataset.e === 'gonder', b);
+    }
+    var SEMB = ['∈', '∉', '⊂', '⊆', '⊄', '∪', '∩', '∅', 'ℕ', 'ℤ', 'ℚ', 'ℝ', 'ℤ⁺', 'ℤ⁻', '≤', '≥', '≠', '≈', '±', '×', '÷', '·', '√', '∛', 'π', '°', '∠', '△', '⊥', '∥', '≅', '∞', '→', '⇒', '⇔', 'α', 'β', 'θ', 'Δ', '½', '¼', '¾', '²', '³'];
+    function sembolMenu(b, ce) {
+      var m = document.getElementById('osc-pn-semb'); if (m) m.remove();
+      m = document.createElement('div'); m.id = 'osc-pn-semb'; m.style.cssText = 'position:absolute;z-index:99999;background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:6px;display:grid;grid-template-columns:repeat(9,32px);gap:2px;box-shadow:0 12px 28px -10px rgba(15,23,42,.35)';
+      m.innerHTML = SEMB.map(function (x) { return '<button type="button" style="height:32px;border:0;background:#f1f5f9;border-radius:7px;cursor:pointer;font-size:16px">' + x + '</button>'; }).join('');
+      var r = b.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(r.left, innerWidth - 330) + scrollX) + 'px'; m.style.top = (r.bottom + scrollY + 4) + 'px';
+      m.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      m.addEventListener('click', function (e) { var x = e.target.closest('button'); if (!x) return; ce.focus(); document.execCommand('insertText', false, x.textContent); ce.dispatchEvent(new Event('input', { bubbles: true })); m.remove(); });
+      document.body.appendChild(m);
+      setTimeout(function () { document.addEventListener('mousedown', function k(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('mousedown', k); } }); }, 0);
     }
     function yapistir(e) {
       var ce = e.target.closest && e.target.closest('.osc-pn-ce'); if (!ce) return;

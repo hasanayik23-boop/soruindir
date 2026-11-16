@@ -25,3 +25,5 @@ body.osc-ogr-body{margin:0;min-height:100vh;background:radial-gradient(1200px 50
 .osc-ogr-ana .osc-wrapper{margin-top:0}
 
 .osc-ogr-logo img{height:36px;width:auto;display:block}
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}

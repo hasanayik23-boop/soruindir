@@ -46,3 +46,5 @@ a.osc-op-odev:hover{border-color:#818cf8}
 @media(max-width:820px){.osc-op-kartlar{grid-template-columns:1fr 1fr}.osc-op-iki{grid-template-columns:1fr}.osc-op-ust{padding:20px}.osc-op-ust h2{font-size:22px}.osc-op-katil input{flex:1}}
 
 .osc-op-ust .lg{flex-basis:100%;display:flex}.osc-op-ust .lg img{height:34px;width:auto;background:#fff;border-radius:12px;padding:6px 10px;box-sizing:content-box}
+
+.osc-kesir{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;line-height:1.15;font-size:.95em}.osc-kesir>span{padding:0 3px;text-align:center}.osc-kesir>span:first-child{border-bottom:1.6px solid currentColor}

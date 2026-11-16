@@ -1439,7 +1439,10 @@ if (!class_exists('OnlineSoruCozProV20')) {
 
                 .osc-q-paragraph img, .osc-q-root img, .osc-opt-text img, .osc-classic-fb img { max-width:100%; height:auto; vertical-align:middle; border-radius:6px; }
                 .osc-q-paragraph img, .osc-q-root img { max-height:340px; display:inline-block; margin:6px 0; }
-                .osc-opt-text img { max-height:120px; }
+                .osc-opt-text img { max-height:160px; }
+                .osc-kesir { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 3px; line-height:1.15; font-size:.95em; }
+                .osc-kesir > span { padding:0 3px; }
+                .osc-kesir > span:first-child { border-bottom:1.6px solid currentColor; }
                 .osc-q-table { border-collapse:collapse; margin:8px 0; max-width:100%; font-size:15px; }
                 .osc-q-table td { border:1px solid #64748b; padding:5px 10px; }
                 .osc-q-paragraph { overflow-x:auto; }
@@ -4095,6 +4098,19 @@ var OSCExtract = (function () {
 
     /* MathMagic / Symbol gibi Unicode karşılığı olmayan matematik yazı tiplerini düzelt:
        glifler tek tek konumlandırıldığı için her harfi ayrı öğeye böl (sıra bozulmasın) */
+    /* Symbol yazı tipi (Word'de Ekle > Simge; ∈ ∉ ⊂ ∪ ∩ ∅ ≤ ≥ × ÷ π …): Unicode'a çevir */
+    var SYM_TAB = { 0x22: '∀', 0x24: '∃', 0x27: '∋', 0x2D: '−', 0x40: '≅', 0x5C: '∴', 0x5E: '⊥', 0x60: '‾', 0x7E: '∼', 0xA2: '′', 0xA3: '≤', 0xA4: '⁄', 0xA5: '∞', 0xA6: 'ƒ', 0xAB: '↔', 0xAC: '←', 0xAD: '↑', 0xAE: '→', 0xAF: '↓', 0xB0: '°', 0xB1: '±', 0xB2: '″', 0xB3: '≥', 0xB4: '×', 0xB5: '∝', 0xB6: '∂', 0xB7: '•', 0xB8: '÷', 0xB9: '≠', 0xBA: '≡', 0xBB: '≈', 0xBC: '…', 0xC0: 'ℵ', 0xC4: '⊗', 0xC5: '⊕', 0xC6: '∅', 0xC7: '∩', 0xC8: '∪', 0xC9: '⊃', 0xCA: '⊇', 0xCB: '⊄', 0xCC: '⊂', 0xCD: '⊆', 0xCE: '∈', 0xCF: '∉', 0xD0: '∠', 0xD1: '∇', 0xD5: '∏', 0xD6: '√', 0xD7: '⋅', 0xD8: '¬', 0xD9: '∧', 0xDA: '∨', 0xDB: '⇔', 0xDC: '⇐', 0xDD: '⇑', 0xDE: '⇒', 0xDF: '⇓', 0xE0: '◊', 0xE1: '〈', 0xE5: '∑', 0xF1: '〉', 0xF2: '∫' };
+    var SYM_GR = 'ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ', SYM_gr = 'αβχδεφγηιϕκλμνοπθρστυϖωξψζ';
+    function symChar(code) {
+        if (code >= 0xF000 && code <= 0xF0FF) code -= 0xF000;
+        if (SYM_TAB[code]) return SYM_TAB[code];
+        if (code >= 0x41 && code <= 0x5A) return SYM_GR.charAt(code - 0x41);
+        if (code >= 0x61 && code <= 0x7A) return SYM_gr.charAt(code - 0x61);
+        return code >= 0x20 && code < 0x7F ? String.fromCharCode(code) : '';
+    }
+    function symText(t) { var o = ''; for (var i = 0; i < t.length; i++) o += symChar(t.charCodeAt(i)); return o; }
+    // Word'ün özel alana (U+F020–F0FF) yazdığı Symbol karakterleri
+    function symPUA(t) { return String(t || '').replace(/[-]/g, function (c) { return symChar(c.charCodeAt(0)); }); }
     var MM_MAP = [
         [/MMVariableA/i, { '^': '(', 'h': ')', '6': '[', '@': ']' }],
         [/MMVariableB/i, { '6': '[', '@': ']', '^': '(', 'h': ')' }],
@@ -4108,6 +4124,8 @@ var OSCExtract = (function () {
         items.forEach(function (it) {
             var n = it.fontName ? fname(it.fontName) : '', map = null;
             for (var i = 0; i < MM_MAP.length; i++) if (MM_MAP[i][0].test(n)) { map = MM_MAP[i][1]; break; }
+            if (!map && /Symbol/i.test(n) && !/MMSymbol/i.test(n) && /[\u00A0-\u00FF\uF020-\uF0FF]/.test(it.str || '')) { out.push(Object.assign({}, it, { str: it.str.replace(/[\u00A0-\u00FF\uF020-\uF0FF]/g, function (c) { return symChar(c.charCodeAt(0)) || c; }) })); return; }
+            if (!map && /[\uF020-\uF0FF]/.test(it.str || '')) { out.push(Object.assign({}, it, { str: symPUA(it.str) })); return; }
             if (!map && !/^[A-Z]{6}\+MM/.test(n)) { out.push(it); return; }
             map = map || {};
             var s = it.str, L = s.length, w = it.width || 0, t = it.transform;
@@ -4347,9 +4365,11 @@ var OSCExtract = (function () {
             var t = '', vaEl = null, rp = child(r, 'rPr');
             if (rp) vaEl = child(rp, 'vertAlign');
             var va = vaEl ? A(vaEl, 'val') : '';
+            var rf = rp && child(rp, 'rFonts'), symF = rf && /^Symbol$/i.test(A(rf, 'ascii') || A(rf, 'hAnsi') || A(rf, 'cs'));
             kids(r).forEach(function (c) {
                 switch (c.localName) {
-                    case 't': t += c.textContent; break;
+                    case 't': t += symF ? symText(c.textContent) : symPUA(c.textContent); break;
+                    case 'sym': { var sf = A(c, 'font'), sc = parseInt(A(c, 'char') || '0', 16); if (sc) t += /symbol/i.test(sf) || !sf ? (symChar(sc) || '') : /wingdings/i.test(sf) ? ({ 0xF0FC: '✓', 0xF0FB: '✗', 0xF06F: '□', 0xF0A8: '□', 0xF078: '☒', 0xF0FE: '☑' }[sc] || '') : String.fromCharCode(sc >= 0xF000 ? sc - 0xF000 : sc); break; }
                     case 'tab': t += ' '; break;
                     case 'br': case 'cr': t += '\n'; break;
                     case 'noBreakHyphen': t += '-'; break;
@@ -4378,8 +4398,8 @@ var OSCExtract = (function () {
                 var ln = e.localName;
                 if (/Pr$/.test(ln)) return;
                 switch (ln) {
-                    case 't': out += e.textContent; break;
-                    case 'f': out += wrap(kidsOf(e, 'num')) + '/' + wrap(kidsOf(e, 'den')); break;
+                    case 't': out += symPUA(e.textContent); break;
+                    case 'f': out += DOCX_ALTI && !DOCX_LATEX ? '\uE012' + kidsOf(e, 'num').trim() + '\uE013' + kidsOf(e, 'den').trim() + '\uE014' : wrap(kidsOf(e, 'num')) + '/' + wrap(kidsOf(e, 'den')); break;
                     case 'sSup': { var b = kidsOf(e, 'e'), p = kidsOf(e, 'sup'), m1 = mapChars(p.trim(), SUP); out += b + (m1 !== null ? m1 : '^' + wrap(p)); break; }
                     case 'sSub': { var b2 = kidsOf(e, 'e'), s2 = kidsOf(e, 'sub'), m2 = mapChars(s2.trim(), SUB); out += b2 + (m2 !== null ? m2 : '_' + wrap(s2)); break; }
                     case 'sSubSup': { var b3 = kidsOf(e, 'e'), s3 = kidsOf(e, 'sub'), p3 = kidsOf(e, 'sup'), ms = mapChars(s3.trim(), SUB), mp = mapChars(p3.trim(), SUP); out += b3 + (ms !== null ? ms : '_' + wrap(s3)) + (mp !== null ? mp : '^' + wrap(p3)); break; }
@@ -4595,6 +4615,7 @@ var OSCExtract = (function () {
     }
 
     function altiCizili(h) {
+        h = String(h || '').replace(/\uE012([^\uE012-\uE014]*)\uE013([^\uE012-\uE014]*)\uE014/g, '<span class="osc-kesir"><span class="p">$1</span><span class="d">$2</span></span>').replace(/[\uE012-\uE014]/g, '');
         return String(h || '').replace(/\uE011(\s*)\uE010/g, '$1').replace(/\uE010(\s*)\uE011/g, '$1').replace(/\uE010/g, '<u>').replace(/\uE011/g, '</u>');
     }
     function restoreImages(html, images, tables) {
@@ -4805,6 +4826,7 @@ var OSCExtract = (function () {
                 function oscPrev(v, small){ v = String(v || ''); if (!/<img|<table/i.test(v)) return ''; return '<div class="osc-prev' + (small ? ' osc-prev-s' : '') + '">' + v + '</div>'; }
                 function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
                 window.render = function() {
+                    if (window.oscYeniRender) return window.oscYeniRender(questions);
                     const list = $('#osc-q-list'); list.empty();
                     questions.forEach((q, i) => {
                         let inputs = '';
