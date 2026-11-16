@@ -7,6 +7,14 @@
 (function () {
   function BASLAT() {
   var C = window.OSC_EV || {}, kok = document.getElementById('osc-ev'); if (!kok) return;
+  // ders listesi tek parça (ilkokul/ortaokul/lise ayrımı yok); yalnızca meslek alanları gruplu
+  function dersSecHtml(dl, sec) {
+    var duz = [], mes = [], gor = {};
+    (dl || []).forEach(function (g) { if (/meslek|alan/i.test(g.g)) mes.push(g); else g.d.forEach(function (x) { if (!gor[x]) { gor[x] = 1; duz.push(x); } }); });
+    duz.sort(function (a, b) { return a.localeCompare(b, 'tr'); });
+    var o = function (x) { return '<option' + (sec === x ? ' selected' : '') + '>' + esc(x) + '</option>'; };
+    return duz.map(o).join('') + mes.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.filter(function (x) { return !gor[x]; }).map(o).join('') + '</optgroup>'; }).join('');
+  }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
   function trUp(s) { return String(s || '').replace(/i/g, 'İ').replace(/ı/g, 'I').toUpperCase(); }
@@ -384,7 +392,7 @@
     var kay = { meb: '✅ MEB ' + (P.mebTur ? P.mebTur + ' ' : '') + 'taslak yıllık planından (hafta hafta; tarihler çalışma takvimine göre)', program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
     var h = '<div class="ev-oys"><h3>1. Ders ve süre</h3><div class="ev-form">' +
       '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
-      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dl.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.map(function (x) { return '<option' + (P.ders === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
+      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.dersElle || P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
       (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
       '<label><span>Haftalık ders saati</span><input type="number" min="1" max="20" data-yp="saat" value="' + esc(P.saat || '') + '" placeholder="ör. 5"></label>' +
@@ -422,7 +430,7 @@
     var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []), U = P.uniteler || [];
     var h = '<div class="ev-oys"><h3>1. Ders ve öğrenme çıktıları</h3><div class="ev-form">' +
       '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
-      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dl.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.map(function (x) { return '<option' + (P.ders === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
+      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
       (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
       (U.length ? '<label><span>Ünite / tema</span><select data-gp="unite">' + U.map(function (u, i) { return '<option value="' + i + '"' + (+P.gu === i ? ' selected' : '') + '>' + esc(u.ad) + '</option>'; }).join('') + '</select></label>' : '') + '</div>';

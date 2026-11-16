@@ -25,7 +25,10 @@ class OSC_YPlan {
     private static function meb_bul($tur, $sinif, $ders) {
         $m = self::meb(); $lise = (int) $sinif >= 9; $turlar = array($tur, '');
         if ($lise) $turlar[] = 'Anadolu Lisesi';   // MTAL, AİHL ve diğer liseler: Anadolu Lisesi planı
-        foreach (array((string) $sinif, $lise ? 'L' : null) as $sx) { if ($sx === null) continue; foreach ($turlar as $t) { $k = $t . '|' . $sx . '|' . $ders; if (isset($m[$k])) return array($k, $m[$k]); } }
+        $oo = (int) $sinif >= 5 && (int) $sinif <= 8;
+        foreach (array((string) $sinif, $lise ? 'L' : ($oo ? 'O' : null)) as $sx) { if ($sx === null) continue; foreach ($turlar as $t) { $k = $t . '|' . $sx . '|' . $ders; if (isset($m[$k])) return array($k, $m[$k]); } }
+        // başka okul türünün planı (ör. İmam Hatip Ortaokulu Arapça) varsa onu kullan
+        foreach ($m as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) === 3 && $p3[2] === $ders && ($p3[1] === (string) $sinif || ($lise && $p3[1] === 'L') || ($oo && $p3[1] === 'O'))) return array($k, $v); }
         return null;
     }
     public function ajax_meb_kaydet() {
@@ -53,13 +56,19 @@ class OSC_YPlan {
             'resmi' => array(
                 array('ad' => 'Cumhuriyet Bayramı', 'bas' => '2026-10-29', 'bit' => '2026-10-29'),
                 array('ad' => 'Yılbaşı', 'bas' => '2027-01-01', 'bit' => '2027-01-01'),
+                array('ad' => 'Ramazan Bayramı (arife yarım gün)', 'bas' => '2027-03-08', 'bit' => '2027-03-11'),
                 array('ad' => 'Ulusal Egemenlik ve Çocuk Bayramı', 'bas' => '2027-04-23', 'bit' => '2027-04-23'),
                 array('ad' => 'Emek ve Dayanışma Günü', 'bas' => '2027-05-01', 'bit' => '2027-05-01'),
-                array('ad' => 'Kurban Bayramı', 'bas' => '2027-05-15', 'bit' => '2027-05-19'),
+                array('ad' => 'Kurban Bayramı (arife yarım gün)', 'bas' => '2027-05-15', 'bit' => '2027-05-19'),
                 array('ad' => 'Atatürk’ü Anma, Gençlik ve Spor Bayramı', 'bas' => '2027-05-19', 'bit' => '2027-05-19')),
             'donem2' => '2027-02-08');
     }
-    public static function takvim() { $t = get_option('osc_yp_takvim'); return is_array($t) && !empty($t['baslangic']) ? $t : self::varsayilan_takvim(); }
+    public static function takvim() {
+        $t = get_option('osc_yp_takvim'); if (!is_array($t) || empty($t['baslangic'])) return self::varsayilan_takvim();
+        // 2026-2027 için daha önce kaydedilmiş takvimde Ramazan Bayramı yoksa ekle
+        if ((isset($t['yil']) ? $t['yil'] : '') === '2026-2027') { $var = false; foreach ((array) $t['resmi'] as $x) if (stripos($x['ad'], 'Ramazan') !== false) $var = true; if (!$var) $t['resmi'][] = array('ad' => 'Ramazan Bayramı (arife yarım gün)', 'bas' => '2027-03-08', 'bit' => '2027-03-11'); }
+        return $t;
+    }
 
     /* ---------- ders kataloğu (tüm sınıflar) ---------- */
     /** sınıf => [ ['g' => grup adı, 'd' => [ders, ...]], ... ] */
@@ -81,7 +90,7 @@ class OSC_YPlan {
                 if (!empty($g['alanlar'])) foreach ($g['alanlar'] as $al) if (!empty($al['dersler'])) foreach ($al['dersler'] as $x) if (!empty($x['ad']) && !empty($x['s'])) $ekle('Meslek: ' . (isset($al['ad']) ? $al['ad'] : ''), $x['ad'], (array) $x['s']);
             }
         }
-        foreach (self::meb() as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) < 3) continue; foreach ($p3[1] === 'L' ? range(9, 12) : array((int) $p3[1]) as $si) { if ($si < 1) continue; $var = false; if (isset($c[$si])) foreach ($c[$si] as $l2) if (in_array($p3[2], $l2, true)) $var = true; if (!$var) $ekle('MEB yıllık planı olan diğer dersler', $p3[2], array($si)); } }
+        foreach (self::meb() as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) < 3) continue; foreach ($p3[1] === 'L' ? range(9, 12) : ($p3[1] === 'O' ? range(5, 8) : array((int) $p3[1])) as $si) { if ($si < 1) continue; $var = false; if (isset($c[$si])) foreach ($c[$si] as $l2) if (in_array($p3[2], $l2, true)) $var = true; if (!$var) $ekle('MEB yıllık planı olan diğer dersler', $p3[2], array($si)); } }
         foreach (self::kutuphane() as $k => $v) { list($s, $ad) = explode('|', $k, 2); $var = false; if (isset($c[(int) $s])) foreach ($c[(int) $s] as $l) if (in_array($ad, $l, true)) $var = true; if (!$var) $ekle('Diğer', $ad, array((int) $s)); }
         $out = array(); ksort($c);
         foreach ($c as $s => $gr) { $o2 = array(); foreach ($gr as $g => $l) { usort($l, function ($a, $b) { return strcmp(OSC_YPlan::tr_sira($a), OSC_YPlan::tr_sira($b)); }); $o2[] = array('g' => $g, 'd' => $l); } $out[$s] = $o2; }
@@ -214,8 +223,15 @@ class OSC_YPlan {
 <?php $mb = self::meb(); $say = array(); foreach ($mb as $kk => $vv) { $t0 = explode('|', $kk); $t0 = $t0[0] !== '' ? $t0[0] : 'Tüm okullar'; $say[$t0] = (isset($say[$t0]) ? $say[$t0] : 0) + 1; } ?>
 <p>Şu an <b><?php echo count($mb); ?></b> sınıf/ders planı yüklü<?php echo $say ? ' (' . esc_html(implode(', ', array_map(function ($a, $b) { return $a . ': ' . $b; }, array_keys($say), $say))) . ')' : ''; ?>. Öğretmen sınıf, ders ve okul türünü seçince plan hafta hafta bu dosyalardan gelir; tarihler aşağıdaki çalışma takvimine göre yeniden hesaplanır.</p>
 <p><b>Her yıl:</b> MEB’in yayımladığı <b>.zip</b> ya da <b>.xlsx</b> taslak yıllık plan dosyalarını seçin (birden çok dosya seçilebilir). Excel’deki her sayfa (Hazırlık, 9, 10, 11, 12…) ayrı sınıf olarak okunur; okul türü (Anadolu, Fen, Sosyal Bilimler Lisesi) dosya adından anlaşılır. Mesleki ve Teknik Anadolu Lisesi, İmam Hatip ve diğer liselerde Anadolu Lisesi planı kullanılır.</p>
-<p><input type="file" id="yp-meb-f" multiple accept=".zip,.xlsx"> <label><input type="checkbox" id="yp-meb-ilk"> Önce mevcut planları sil (yeni eğitim yılı)</label> <button class="button button-primary" id="yp-meb-oku">Dosyaları oku</button> <button class="button" id="yp-meb-sif" title="Yüklediklerinizi silip eklentiyle gelen 2026-2027 planlarına döner">Varsayılana dön</button> <span id="yp-meb-d"></span></p>
-<div id="yp-meb-l"></div></div>
+<p><input type="file" id="yp-meb-f" multiple accept=".zip,.xlsx,.xlsm,.xls,.ods,.csv"> <label><input type="checkbox" id="yp-meb-ilk"> Önce mevcut planları sil (yeni eğitim yılı)</label> <button class="button button-primary" id="yp-meb-oku">Dosyaları oku</button> <button class="button" id="yp-meb-sif" title="Yüklediklerinizi silip eklentiyle gelen 2026-2027 planlarına döner">Varsayılana dön</button> <span id="yp-meb-d"></span></p>
+<div id="yp-meb-l"></div>
+<details style="margin-top:10px"><summary><b>Yüklü planların listesi (1–12. sınıf, tüm okul türleri)</b></summary>
+<?php $ls = array(); foreach ($mb as $kk => $vv) { $p3 = explode('|', $kk, 3); if (count($p3) < 3) continue; $ls[] = array($p3[1], $p3[2], $p3[0], isset($vv['h']) ? count($vv['h']) : 0, isset($vv['d']) ? $vv['d'] : ''); }
+$sir = function ($s) { return $s === 'H' ? 8.5 : ($s === 'O' ? 4.5 : ($s === 'L' ? 12.5 : (float) $s)); };
+usort($ls, function ($a, $b) use ($sir) { $x = $sir($a[0]) - $sir($b[0]); return $x ? ($x > 0 ? 1 : -1) : strcmp(OSC_YPlan::tr_sira($a[1]), OSC_YPlan::tr_sira($b[1])); }); ?>
+<table class="widefat striped" style="margin-top:8px"><thead><tr><th>Sınıf</th><th>Ders</th><th>Okul türü</th><th>Hafta</th><th>Dosya</th></tr></thead><tbody>
+<?php foreach ($ls as $x) echo '<tr><td>' . esc_html($x[0] === 'L' ? 'Lise' : ($x[0] === 'O' ? 'Ortaokul' : ($x[0] === 'H' ? 'Hazırlık' : $x[0] . '. sınıf'))) . '</td><td>' . esc_html($x[1]) . '</td><td>' . esc_html($x[2] !== '' ? $x[2] : 'Tüm okullar') . '</td><td>' . (int) $x[3] . '</td><td style="font-size:11px;color:#666">' . esc_html($x[4]) . '</td></tr>'; ?>
+</tbody></table></details></div>
 
 <div class="yp-k"><h2>Öğretim programı ekle / güncelle</h2>
 <p><label>Sınıf <select id="yp-s"><?php for ($i = 1; $i <= 12; $i++) echo '<option value="' . $i . '">' . $i . '. sınıf</option>'; ?></select></label> &nbsp; <label>Ders <input id="yp-d" list="yp-dl" style="width:320px" placeholder="Ders adı"></label><datalist id="yp-dl"></datalist> &nbsp; <label>Kaynak <input id="yp-ka" value="MEB öğretim programı <?php echo esc_attr($t['yil']); ?>" style="width:240px"></label></p>
@@ -229,6 +245,7 @@ class OSC_YPlan {
 <?php if (!$l) echo '<tr><td colspan="8">Henüz program yüklenmedi. Senaryo tablosu olan derslerde (5–12. sınıf temel dersler) planlar şimdiden senaryodaki çıktılarla oluşur.</td></tr>'; foreach ($l as $i => $x) echo '<tr><td>' . $x['sinif'] . '</td><td>' . esc_html($x['ders']) . '</td><td>' . $x['unite'] . '</td><td>' . $x['cikti'] . '</td><td>' . esc_html($x['yil']) . '</td><td>' . esc_html($x['kaynak_ad']) . '</td><td>' . ($x['durum'] === 'taslak' ? '<b style="color:#b45309">İnceleme bekliyor</b>' : '✅ Onaylı') . '</td><td><a href="#" data-duz="' . $i . '">Düzenle</a> · <a href="#" data-sil="' . esc_attr($x['anahtar']) . '" style="color:#b91c1c">Sil</a></td></tr>'; ?>
 </tbody></table></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>/*__YPXLSX__*/</script>
 <script>
 (function () {
@@ -239,9 +256,10 @@ class OSC_YPlan {
     D.textContent = 'Okunuyor…';
     Promise.all([].map.call(fs, function (f) { return f.arrayBuffer().then(function (b) { return { ad: f.name, veri: b }; }); })).then(ypOku).then(function (r) {
       BUL = r; var adsiz = r.filter(function (x) { return !x.ders; }).length;
-      L.innerHTML = '<p><b>' + r.length + '</b> sınıf/ders planı bulundu. Ders adı boş ya da yanlış olanları düzeltin, sonra kaydedin.</p><table class="widefat striped"><thead><tr><th>Okul türü</th><th>Sınıf</th><th>Ders</th><th>Hafta</th><th>Dosya</th></tr></thead><tbody>' + r.map(function (x, i) { return '<tr><td>' + (x.tur || 'Tüm okullar') + '</td><td>' + (x.sinif === 'L' ? 'Lise (tüm sınıflar)' : x.sinif === 'H' ? 'Hazırlık' : x.sinif) + '</td><td><input data-i="' + i + '" value="' + String(x.ders || '').replace(/"/g, '&quot;') + '" style="width:260px"></td><td>' + x.haftalar.length + '</td><td style="font-size:11px;color:#666">' + x.dosya.split('/').slice(-2).join('/') + '</td></tr>'; }).join('') + '</tbody></table><p><button class="button button-primary" id="yp-meb-kay">Hepsini kaydet</button></p>';
+      L.innerHTML = '<p><b>' + r.length + '</b> sınıf/ders planı bulundu. Ders adı boş ya da yanlış olanları düzeltin, sonra kaydedin.</p><table class="widefat striped"><thead><tr><th>Okul türü</th><th>Sınıf</th><th>Ders</th><th>Hafta</th><th>Dosya</th></tr></thead><tbody>' + r.map(function (x, i) { return '<tr><td>' + (x.tur || 'Tüm okullar') + '</td><td>' + (x.sinif === 'L' ? 'Lise (tüm sınıflar)' : x.sinif === 'O' ? 'Ortaokul (5–8)' : x.sinif === 'H' ? 'Hazırlık' : x.sinif) + '</td><td><input data-i="' + i + '" value="' + String(x.ders || '').replace(/"/g, '&quot;') + '" style="width:260px"></td><td>' + x.haftalar.length + '</td><td style="font-size:11px;color:#666">' + x.dosya.split('/').slice(-2).join('/') + '</td></tr>'; }).join('') + '</tbody></table><p><button class="button button-primary" id="yp-meb-kay">Hepsini kaydet</button></p>';
       L.querySelectorAll('[data-i]').forEach(function (i) { i.oninput = function () { BUL[+i.dataset.i].ders = i.value.trim(); }; });
-      D.textContent = r.length ? (adsiz ? adsiz + ' planın ders adı boş; düzeltin.' : '') : 'Dosyada yıllık plan tablosu bulunamadı (.xls ve .rar dosyaları okunamaz; .xlsx olarak kaydedin).';
+      var hata = (window.YP_HATA || []).splice(0); D.textContent = r.length ? (adsiz ? adsiz + ' planın ders adı boş; düzeltin. ' : '') + (hata.length ? hata.length + ' dosya okunamadı.' : '') : 'Dosyada yıllık plan tablosu bulunamadı. Tabloda “HAFTA” ve “KAZANIM / ÖĞRENME ÇIKTILARI” sütunları olmalı.';
+      if (hata.length) L.insertAdjacentHTML('beforeend', '<p style="color:#b32d2e">Okunamayanlar: ' + hata.map(function (x) { return x.replace(/</g, '&lt;'); }).join('<br>') + '</p>');
       var kb = document.getElementById('yp-meb-kay'); if (kb) kb.onclick = function (ev) {
         ev.preventDefault(); var l = BUL.filter(function (x) { return x.ders; }), parca = [], top = 0; for (var j = 0; j < l.length; j += 12) parca.push(l.slice(j, j + 12));
         var yil = (document.getElementById('yp-yil') || {}).value || '';
