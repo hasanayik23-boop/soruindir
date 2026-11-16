@@ -465,9 +465,9 @@ $grades = array(
     if ($sx4_om) $sx4_kart[] = array('masa', 'Öğretmen Masası', 'Yazılı hazırla, tutanak, BEP, kulüp evrakı ve OYS çizelgesi; dakikalar içinde.', OSC_Masa::url(), '#EEF0FE');
     if ($sx4_lgs || $sx4_yks) $sx4_kart[] = array('tercih', 'Tercih robotları', 'LGS ve YKS taban puanlarıyla puanına uygun okul ve bölümleri gör.', $sx4_lgs ? $sx4_lgs : $sx4_yks, '#E8F6F8');
     $sx4_kart[] = array('zumre', 'Zümre tutanakları', 'Şube, zümre ve öğretmenler kurulu tutanakları; düzenlenebilir Word.', home_url('/category/zumre-toplanti-tutanaklari/'), '#F3ECFB');
-    $sx4_kart[] = array('hesap', 'Puan hesaplama', 'LGS, YKS, AGS, KPSS ve daha fazlası için puan hesaplama araçları.', home_url('/lgs-puan-hesaplama/'), '#EEF6E8');
+    $sx4_kart[] = array('hesap', 'Puan hesaplama', 'LGS, YKS, AGS, KPSS ve daha fazlası için puan hesaplama araçları.', function_exists('si_hub_url') ? si_hub_url() : home_url('/hesaplamalar/'), '#EEF6E8');
     if (count($sx4_kart) % 2) array_pop($sx4_kart);
-    $sx4_yan = $popular ? array_slice($popular, 0, 5) : array();
+    $sx4_yan = $popular ? array_slice($popular, 0, 4) : array();
     ?>
     <style>
     .sx4-hero{position:relative;margin:22px 0 0;padding:40px 24px 34px;border-radius:28px;background:linear-gradient(180deg,#EAF4FC 0%,#F4F9FE 100%);border:1px solid #DCEAF7;overflow:hidden;text-align:center}
@@ -504,17 +504,25 @@ $grades = array(
     .sx4-kart .re{flex:0 0 104px;height:88px;border-radius:16px;display:flex;align-items:center;justify-content:center}
     .sx4-kart .re svg{width:92px;height:76px}
     .sx4-yan{display:flex;flex-direction:column;gap:14px}.sx4-yan .sx4-kutu:last-child{flex:1}
-    .sx4-kutu{background:#fff;border:1px solid #E3EBF3;border-radius:20px;padding:16px 16px 10px}
-    .sx4-kutu h3{margin:0 0 8px !important;font-size:16px;color:#13304F;display:flex;align-items:center;gap:8px}
-    .sx4-kutu h3:before{content:"";width:8px;height:8px;border-radius:50%;background:#2F80ED}
-    .sx4-kutu.pop h3:before{background:#F59E0B}
-    .sx4-kutu ul{list-style:none;margin:0;padding:0}
-    .sx4-kutu li{border-top:1px solid #EEF3F8}.sx4-kutu li:first-child{border-top:0}
-    .sph2 .sx4-kutu li a{display:flex;gap:8px;padding:9px 2px;font-size:14px;line-height:1.4;color:#24405E;font-weight:600}
-    .sph2 .sx4-kutu li a:hover{color:#2F80ED}
-    .sx4-kutu li a em{flex:0 0 auto;font-style:normal;color:#8AA2BA;font-weight:700;font-size:12px;min-width:16px;padding-top:2px}
-    .sx4-kutu li a span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .sx4-kutu .alt{display:block;font-size:12px;color:#8AA2BA;font-weight:500;margin-top:2px}
+    .sx4-kutu{background:#fff;border:1px solid #E3EBF3;border-radius:22px;padding:14px 12px 12px;box-shadow:0 14px 32px -28px rgba(19,48,79,.45)}
+    .sx4-kutu h3{margin:0 0 8px !important;padding:0 4px;font-size:16px;color:#13304F;display:flex;align-items:center;gap:10px}
+    .sx4-kutu h3 .ik{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-style:normal}
+    .sx4-kutu h3 .ik svg{width:17px;height:17px}.sx4-kutu h3 .ik.mavi{background:#EAF2FD;color:#2F80ED}.sx4-kutu h3 .ik.turuncu{background:#FFF3E0;color:#E8890B}
+    .sx4-kl{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+    .sph2 .sx4-kl a{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:14px;border:1px solid transparent;background:#F7FAFD;transition:background .15s,border-color .15s,transform .15s}
+    .sph2 .sx4-kl a:hover{background:#fff;border-color:#C9DCF0;transform:translateX(2px)}
+    .sx4-kl .ik2{flex:0 0 36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+    .sx4-kl .ik2 svg{width:18px;height:18px}.sx4-kl .ik2.test{background:#E9F7EF;color:#22A06B}.sx4-kl .ik2.dosya{background:#EAF2FD;color:#2F80ED}
+    .sx4-kl .gv{flex:1;min-width:0}
+    .sx4-kl .bs{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;line-height:1.38;font-weight:600;color:#1C3653}
+    .sx4-kl .mt{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:#8AA2BA}
+    .sx4-kl .mt em{font-style:normal;font-weight:700;font-size:10.5px;padding:2px 7px;border-radius:99px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sx4-kl .mt .yeni{background:#FEE2E2;color:#DC2626}.sx4-kl .mt .tt{background:#E9F7EF;color:#15803D}.sx4-kl .mt .td{background:#EEF2F7;color:#46607A}.sx4-kl .mt .ind{background:#FFF3E0;color:#B45309}
+    .sx4-kl .sira{flex:0 0 32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;background:#EEF2F7;color:#5B7189}
+    .sx4-kl .sira.s1{background:linear-gradient(135deg,#FDBA3B,#F59E0B);color:#fff}.sx4-kl .sira.s2{background:linear-gradient(135deg,#CBD5E1,#94A3B8);color:#fff}.sx4-kl .sira.s3{background:linear-gradient(135deg,#E0A779,#C27C4A);color:#fff}
+    .sx4-bant-bas{display:inline-flex;align-items:center;gap:8px;margin:0 0 10px;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.16);font-weight:700;font-size:14px;letter-spacing:.01em}
+    .sx4-sayac{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:74px;padding:6px 10px;border-radius:12px;background:#fff;color:#1E4E79;font-size:10.5px;font-weight:600;line-height:1.2;text-align:center}
+    .sx4-sayac b{font-size:18px;font-weight:800;color:#13304F;line-height:1.1}
     @media (max-width:1100px){.sx4-ill{width:150px;opacity:.55}}
     @media (max-width:960px){.sx4-ill{display:none}.sx4-govde{grid-template-columns:1fr}.sx4-yan{display:grid;grid-template-columns:1fr 1fr}}
     @media (max-width:640px){.sx4-hero{padding:28px 14px 24px;border-radius:22px}.sx4-kartlar{grid-template-columns:1fr}.sx4-yan{grid-template-columns:1fr}.sph2 .sx4-btn{min-width:0;flex:1 1 100%}.sx4-btns{display:flex}.sx4-search{padding-left:42px}.sx4-search svg{left:15px}.sph2 .sx4-search button{padding:11px 16px}.sx4-kart .re{flex-basis:84px;height:76px}.sx4-kart .re svg{width:74px;height:62px}}
@@ -554,17 +562,13 @@ $grades = array(
             <?php endforeach; ?>
         </div>
         <aside class="sx4-yan" aria-label="Öne çıkanlar">
-            <div class="sx4-kutu"><h3>Son eklenenler</h3><ul>
-                <?php foreach (array_slice($latest, 0, 5) as $p): ?><li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span><?php echo esc_html(get_the_title($p)); ?><small class="alt"><?php echo $sph_istest($p) ? 'Online test · ' : ''; ?><?php echo esc_html($sph_ago($p)); ?></small></span></a></li><?php endforeach; ?>
-                <?php if (!$latest): ?><li><a href="#">Henüz içerik yok</a></li><?php endif; ?>
+            <div class="sx4-kutu"><h3><i class="ik mavi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i>Son eklenenler</h3><ul class="sx4-kl">
+                <?php foreach (array_slice($latest, 0, 4) as $p): $sx_t = $sph_istest($p); $sx_c = get_the_category($p->ID); ?><li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span class="ik2 <?php echo $sx_t ? 'test' : 'dosya'; ?>" aria-hidden="true"><?php echo $sx_t ? $ico_test : $ico_doc; ?></span><span class="gv"><span class="bs"><?php echo esc_html(get_the_title($p)); ?></span><span class="mt"><?php if ($sph_isnew($p)): ?><em class="yeni">Yeni</em><?php endif; ?><em class="<?php echo $sx_t ? 'tt' : 'td'; ?>"><?php echo $sx_t ? 'Online test' : (!empty($sx_c) ? esc_html($sx_c[0]->name) : 'Dosya'); ?></em><?php echo esc_html($sph_ago($p)); ?></span></span></a></li><?php endforeach; ?>
+                <?php if (!$latest): ?><li><span class="gv">Henüz içerik yok</span></li><?php endif; ?>
             </ul></div>
             <?php if ($sx4_yan): ?>
-            <div class="sx4-kutu pop"><h3>Bu hafta en çok indirilenler</h3><ul>
-                <?php foreach ($sx4_yan as $i => $row): ?><li><a href="<?php echo esc_url(get_permalink($row[0])); ?>"><em><?php echo $i + 1; ?></em><span><?php echo esc_html(get_the_title($row[0])); ?></span></a></li><?php endforeach; ?>
-            </ul></div>
-            <?php elseif ($top_tests): ?>
-            <div class="sx4-kutu pop"><h3>Bu hafta en çok çözülen testler</h3><ul>
-                <?php foreach ($top_tests as $i => $row): ?><li><a href="<?php echo esc_url(get_permalink($row[0])); ?>"><em><?php echo $i + 1; ?></em><span><?php echo esc_html(get_the_title($row[0])); ?></span></a></li><?php endforeach; ?>
+            <div class="sx4-kutu pop"><h3><i class="ik turuncu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></i>Bu hafta en çok indirilenler</h3><ul class="sx4-kl">
+                <?php foreach ($sx4_yan as $i => $row): ?><li><a href="<?php echo esc_url(get_permalink($row[0])); ?>"><span class="sira s<?php echo $i + 1; ?>"><?php echo $i + 1; ?></span><span class="gv"><span class="bs"><?php echo esc_html(get_the_title($row[0])); ?></span><span class="mt"><em class="ind">⬇ <?php echo number_format_i18n($row[1]); ?> indirme</em></span></span></a></li><?php endforeach; ?>
             </ul></div>
             <?php endif; ?>
         </aside>
@@ -780,9 +784,10 @@ $grades = array(
         </div>
         <?php if ($top_tests): ?>
         <div>
+            <div class="sx4-bant-bas"><span>🔥</span> Bu hafta en çok çözülen testler</div>
             <ol>
                 <?php foreach ($top_tests as $i => $row): list($p, $n) = $row; ?>
-                <li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span class="sph2-bubn"><?php echo $i + 1; ?></span><span class="t"><?php echo esc_html(get_the_title($p)); ?><small>Bu hafta <?php echo number_format_i18n($n); ?> kez çözüldü</small></span></a></li>
+                <li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span class="sph2-bubn"><?php echo $i + 1; ?></span><span class="t"><?php echo esc_html(get_the_title($p)); ?><small><?php echo $i === 0 ? 'Haftanın en çok çözülen testi' : 'Bu hafta ' . ($i + 1) . '. sırada'; ?></small></span><span class="sx4-sayac"><b><?php echo number_format_i18n($n); ?></b>kez çözüldü</span></a></li>
                 <?php endforeach; ?>
             </ol>
         </div>

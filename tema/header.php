@@ -36,6 +36,7 @@ if ($sx_robot === false) {
 }
 if (class_exists('YKS_Tercih_Robotu') && ($sx_yks = YKS_Tercih_Robotu::robot_url())) array_unshift($sx_calc, array('YKS Tercih Robotu', $sx_yks));
 if ($sx_robot) array_unshift($sx_calc, array('LGS Tercih Robotu', $sx_robot));
+if (function_exists('si_hub_url')) array_unshift($sx_calc, array('Tüm hesaplamalar →', si_hub_url()));
 $sx_corp = array(
     array('Hakkımızda', 'https://soruindir.net/hakkimizda/'),
     array('İletişim', 'https://soruindir.net/iletisim/'),
