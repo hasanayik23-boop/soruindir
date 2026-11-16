@@ -436,6 +436,7 @@
         $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         if ($url && strpos($url, home_url()) !== 0) $url = '';
         $wpdb->insert($this->t_cz(), array('user_id' => $uid, 'quiz_id' => $qid, 'tarih' => time(), 'd' => (float) $_POST['d'], 'y' => (float) $_POST['y'], 'b' => (int) $_POST['b'], 'net' => round((float) $_POST['net'], 2), 'puan' => max(0, min(100, (int) $_POST['puan'])), 'soru' => (int) $_POST['soru'], 'url' => substr($url, 0, 250), 'konu' => wp_json_encode($temiz), 'yanlis' => preg_replace('/[^0-9,]/', '', isset($_POST['yanlis']) ? $_POST['yanlis'] : '')));
+        do_action('osc_cozum_kaydedildi', $uid, $qid, max(0, min(100, (int) (isset($_POST['puan']) ? $_POST['puan'] : 0))));
         wp_send_json_success();
     }
     public function ajax_ogr_ozet() {

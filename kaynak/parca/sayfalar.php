@@ -6,7 +6,7 @@
  * ===================================================================== */
 if (!class_exists('OSC_Sayfalar')) {
 class OSC_Sayfalar {
-    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar');
+    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar', 'liderlik' => 'liderlik');
     public function __construct() {
         add_action('template_redirect', array($this, 'yonlendir'), 5);
         add_filter('pre_get_document_title', array($this, 'baslik'), 60);
@@ -16,15 +16,16 @@ class OSC_Sayfalar {
     public function baslik($t) {
         $y = self::yol();
         if ($y === 'kategoriler') return 'Tüm Kategoriler – Yazılı, Test, Plan ve Evraklar | Soruindir';
+        if ($y === 'liderlik') return 'Haftanın Liderleri – Öğrenci Liderlik Tablosu | Soruindir';
         if ($y === 'tercih-robotlari') return 'LGS ve YKS Tercih Robotu – Puanına Uygun Okul ve Bölümler | Soruindir';
         return $t;
     }
     public function yonlendir() {
         $y = self::yol(); if (!isset(self::$yollar[$y]) || !is_404()) return;
         global $wp_query; $wp_query->is_404 = false; status_header(200);
-        $acik = array('kategoriler' => 'Yazılı soruları, testler, yıllık planlar, zümre tutanakları ve tüm evraklar; sınıf ve derse göre kategoriler.', 'tercih-robotlari' => 'LGS ve YKS tercih robotları: puanına ve başarı sırana göre girebileceğin lise, üniversite ve bölümleri gör.');
+        $acik = array('kategoriler' => 'Yazılı soruları, testler, yıllık planlar, zümre tutanakları ve tüm evraklar; sınıf ve derse göre kategoriler.', 'liderlik' => 'Online test çözen öğrencilerin haftalık XP liderlik tablosu: Türkiye geneli ve sınıf seviyelerine göre sıralama.', 'tercih-robotlari' => 'LGS ve YKS tercih robotları: puanına ve başarı sırana göre girebileceğin lise, üniversite ve bölümleri gör.');
         add_action('wp_head', function () use ($y, $acik) { echo '<meta name="description" content="' . esc_attr($acik[$y]) . '">' . "\n" . '<link rel="canonical" href="' . esc_url(self::url($y)) . '">' . "\n"; }, 1);
-        $f = self::$yollar[$y];
+        $f = self::$yollar[$y]; if ($f === 'liderlik' && !class_exists('OSC_Oyun')) return;
         get_header(); echo self::stil(); echo $this->$f(); get_footer(); exit;
     }
     public static function stil() {
@@ -135,6 +136,25 @@ class OSC_Sayfalar {
     document.getElementById('osp-yok').style.display = n ? 'none' : 'block'; });
 })();
 </script>
+<?php return ob_get_clean();
+    }
+    public function liderlik() {
+        $op = class_exists('OSC_Sinav') ? (int) get_option('osc_sp_ogrenci_sayfa') : 0; $ou = $op ? get_permalink($op) : home_url('/ogrenci-paneli/');
+        ob_start(); ?>
+<div class="osp">
+  <section class="osp-hero">
+    <span class="osp-ust">🏆 Her pazartesi yeniden başlar</span>
+    <h1>Haftanın <span>liderleri</span></h1>
+    <p>Test çöz, ödevini teslim et, rozet kazan. Topladığın XP ile sınıfında, okulunda ve Türkiye genelinde sıralamaya gir.</p>
+  </section>
+  <div class="osp-rb" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start">
+    <div class="osp-k" style="padding:20px"><?php echo do_shortcode('[osc_liderlik]'); ?></div>
+    <div style="display:grid;gap:12px">
+      <div class="osp-bilgi" style="margin:0"><b>Nasıl XP kazanılır?</b><br>✅ Her test: 10 XP + puanının onda biri<br>📝 Ödev / sınav teslimi: 20 XP<br>🔥 Günlük seri: her gün +1 XP (en fazla 10)<br>🏅 Her rozet: 25 XP</div>
+      <div class="osp-ek" style="grid-template-columns:1fr;margin:0"><a href="<?php echo esc_url($ou); ?>"><span>🎒</span>Rozetlerim ve sınıf ligim</a><a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Test çöz, XP kazan</a><?php if (class_exists('OSC_Forum')): ?><a href="<?php echo esc_url(OSC_Forum::url()); ?>"><span>💬</span>Soru-Cevap’ta yardım et</a><?php endif; ?></div>
+    </div>
+  </div>
+</div>
 <?php return ob_get_clean();
     }
     public static function robot_lgs() { return class_exists('LGS_Tercih_Robotu') && method_exists('LGS_Tercih_Robotu', 'robot_url') ? LGS_Tercih_Robotu::robot_url() : ''; }

@@ -323,6 +323,18 @@ class OSC_Havuz_Arka {
     }
 
     /* ---------------- Word (.docx) → metin + görseller ---------------- */
+    /** Word "Symbol" yazı tipi kodlarını Unicode'a çevirir (∈ ∉ ⊂ ∪ ∩ ∅ ≤ ≥ × ÷ π …) */
+    public static function sembol($c) {
+        static $t = array(0x22 => '∀', 0x24 => '∃', 0x27 => '∋', 0x2D => '−', 0x40 => '≅', 0x5C => '∴', 0x5E => '⊥', 0x7E => '∼', 0xA2 => '′', 0xA3 => '≤', 0xA4 => '⁄', 0xA5 => '∞', 0xAB => '↔', 0xAC => '←', 0xAD => '↑', 0xAE => '→', 0xAF => '↓', 0xB0 => '°', 0xB1 => '±', 0xB2 => '″', 0xB3 => '≥', 0xB4 => '×', 0xB5 => '∝', 0xB6 => '∂', 0xB7 => '•', 0xB8 => '÷', 0xB9 => '≠', 0xBA => '≡', 0xBB => '≈', 0xBC => '…', 0xC4 => '⊗', 0xC5 => '⊕', 0xC6 => '∅', 0xC7 => '∩', 0xC8 => '∪', 0xC9 => '⊃', 0xCA => '⊇', 0xCB => '⊄', 0xCC => '⊂', 0xCD => '⊆', 0xCE => '∈', 0xCF => '∉', 0xD0 => '∠', 0xD1 => '∇', 0xD5 => '∏', 0xD6 => '√', 0xD7 => '⋅', 0xD8 => '¬', 0xD9 => '∧', 0xDA => '∨', 0xDB => '⇔', 0xDC => '⇐', 0xDE => '⇒', 0xE0 => '◊', 0xE5 => '∑', 0xF2 => '∫');
+        if ($c >= 0xF000) $c -= 0xF000;
+        if (isset($t[$c])) return $t[$c];
+        if ($c >= 0x41 && $c <= 0x5A) return mb_substr('ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ', $c - 0x41, 1, 'UTF-8');
+        if ($c >= 0x61 && $c <= 0x7A) return mb_substr('αβχδεφγηιϕκλμνοπθρστυϖωξψζ', $c - 0x61, 1, 'UTF-8');
+        return $c >= 0x20 && $c < 0x7F ? chr($c) : '';
+    }
+    public static function sembol_metin($s, $symbol_font = false) {
+        return preg_replace_callback($symbol_font ? '/./u' : '/[\x{F020}-\x{F0FF}]/u', function ($m) { $c = mb_ord($m[0], 'UTF-8'); return OSC_Havuz_Arka::sembol($c); }, $s);
+    }
     private function docx_metin($veri) {
         $t = self::gecici('osc.docx'); file_put_contents($t, $veri);
         $z = new ZipArchive(); if ($z->open($t) !== true) { @unlink($t); throw new Exception('Word dosyası açılamadı'); }
@@ -422,12 +434,14 @@ class OSC_Havuz_Arka {
                     switch ($n->localName) {
                         case 'oMath': $lt = trim(preg_replace('/\s+/', ' ', $omml($n))); if ($lt !== '') $s .= ' $' . $lt . '$ '; break;
                         case 'object': $s .= ' §EKSIK§ '; break;
-                        case 't': $s .= $n->textContent; break;
+                        case 't': { $rp = $n->parentNode ? $xp->query('./w:rPr/w:rFonts', $n->parentNode)->item(0) : null; $sf = $rp && preg_match('/^Symbol$/i', $rp->getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'ascii') ?: $rp->getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'hAnsi'));
+                            $s .= self::sembol_metin($n->textContent, $sf); break; }
                         case 'tab': $s .= ' '; break;
                         case 'br': case 'cr': $s .= "\n"; break;
                         case 'blip': $s .= ' ' . $resim($n->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')) . ' '; break;
                         case 'imagedata': $s .= ' ' . $resim($n->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')) . ' '; break;
-                        case 'sym': $s .= '•'; break;
+                        case 'sym': { $W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'; $f = $n->getAttributeNS($W, 'font'); $c = hexdec($n->getAttributeNS($W, 'char')); if ($c >= 0xF000) $c -= 0xF000;
+                            $s .= preg_match('/wingdings/i', $f) ? (isset(array(0xFC => '✓', 0xFB => '✗', 0x6F => '□', 0xA8 => '□', 0xFE => '☑', 0x78 => '☒')[$c]) ? array(0xFC => '✓', 0xFB => '✗', 0x6F => '□', 0xA8 => '□', 0xFE => '☑', 0x78 => '☒')[$c] : '•') : self::sembol($c); break; }
                     }
                 }
                 return $s;

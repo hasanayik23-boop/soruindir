@@ -272,6 +272,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
         .sx-header .sx-nav-link.is-active::after { left:14px; right:14px; bottom:3px; background:#2F80ED; }
         .sx-nav .sx-yz-link { color:#4F46E5; }
         .sx-mega-menu { width:640px; grid-template-columns:1.05fr 1fr; gap:14px; padding:16px; border-radius:22px; border-color:#E3EBF3; box-shadow:0 30px 60px -30px rgba(19,48,79,.45); }
+        .sx-mega-t { width:600px; grid-template-columns:1fr 1fr; }
         .sx-mega-h { width:640px; left:auto; right:-120px; grid-template-columns:.9fr 1.3fr; }
         .sx-mega-h .sx-hl { grid-template-columns:1fr 1fr 1fr; }
         .sx-mega-bas { display:block; padding:2px 8px 8px; font-size:11.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#8AA2BA; }
@@ -294,6 +295,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
         .sx-ara-hap kbd { font:600 11px/1 inherit; font-family:inherit; padding:4px 7px; border-radius:6px; background:#fff; border:1px solid #E3EBF3; color:#8AA2BA; }
         .sx-header .sx-cta { border-radius:99px; background:linear-gradient(135deg,#2F80ED,#1E5AA8); box-shadow:0 10px 20px -12px rgba(47,128,237,.8); }
         .sx-header .sx-uye-btn { border-radius:99px; }
+        @media (max-width:1340px) { .sx-header .sx-cta { display:none; } .sx-header .sx-nav-link { padding:10px 11px; } }
         @media (max-width:1240px) { .sx-ara-hap span, .sx-ara-hap kbd { display:none; } .sx-header .sx-ara-hap { width:42px; padding:0; justify-content:center; } }
         @media (prefers-reduced-motion: reduce) { .sx-header *, .sx-page * { transition:none !important; } }
     </style>
@@ -331,6 +333,21 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                 </div>
                 <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/test-coz/'); ?>" href="https://soruindir.net/test-coz/">Online testler</a>
                 <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası<?php if ($sx_om_yeni): ?> <span class="sx-yeni">YENİ</span><?php endif; ?></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
+                <div class="sx-dd sx-mega" data-sx-dd>
+                    <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Topluluk <?php echo $sx_chev; ?></button>
+                    <div class="sx-dd-menu sx-mega-menu sx-mega-t">
+                        <div class="sx-mega-sol">
+                            <span class="sx-mega-bas">Birlikte öğren</span>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>"><i style="--r:#2F80ED">💬</i><span><b>Soru-Cevap</b><small>Takıldığın soruyu sor, cevapla</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/liderlik/')); ?>"><i style="--r:#F59E0B">🏆</i><span><b>Haftanın liderleri</b><small>XP, rozetler ve sınıf ligi</small></span></a>
+                        </div>
+                        <div class="sx-mega-sol">
+                            <span class="sx-mega-bas">Öğretmenler için</span>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/ogretmen-evraklari/')); ?>"><i style="--r:#7C3AED">🗂️</i><span><b>Öğretmen evrakları</b><small>Tutanak, BEP, plan, dilekçe</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url(home_url('/belirli-gun-ve-haftalar/')); ?>"><i style="--r:#DC2626">🎗️</i><span><b>Belirli gün ve haftalar</b><small>Anlam ve önemi, hazır program</small></span></a>
+                        </div>
+                    </div>
+                </div>
                 <div class="sx-dd sx-mega" data-sx-dd>
                     <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Hesaplamalar <?php echo $sx_chev; ?></button>
                     <div class="sx-dd-menu sx-mega-menu sx-mega-h">
@@ -415,6 +432,10 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             <?php endforeach; ?>
             <a class="sx-drawer-link" href="<?php echo esc_url($sx_kat); ?>">Tüm kategoriler</a>
             <a class="sx-drawer-link" href="<?php echo esc_url($sx_rb); ?>">Tercih robotları</a>
+            <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>">💬 Soru-Cevap</a>
+            <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/liderlik/')); ?>">🏆 Haftanın liderleri</a>
+            <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/ogretmen-evraklari/')); ?>">Öğretmen evrakları</a>
+            <a class="sx-drawer-link" href="<?php echo esc_url(home_url('/belirli-gun-ve-haftalar/')); ?>">Belirli gün ve haftalar</a>
             <details>
                 <summary>Hesaplama araçları <?php echo $sx_chev; ?></summary>
                 <div class="sx-drawer-sub"><?php foreach ($sx_calc as $m): ?><a href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a><?php endforeach; ?></div>

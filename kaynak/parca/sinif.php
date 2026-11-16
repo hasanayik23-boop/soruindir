@@ -303,6 +303,7 @@ class OSC_Sinav {
         $r = self::puanla($veri, $cev, $this->kural($ot));
         $wpdb->update($this->t_kt(), array('cevaplar' => wp_json_encode($cev), 'durum' => 'bitti', 'bitis' => time(), 'son' => time(), 'dogru' => $r['d'], 'yanlis' => $r['y'], 'bos' => $r['b'], 'net' => $r['net'], 'puan' => $r['puan'], 'ilerleme' => count(array_filter($cev, function ($x) { return $x !== null && $x !== ''; })), 'sonuc' => wp_json_encode($r)), array('id' => $kt->id));
         $kt->durum = 'bitti'; $kt->sonuc = wp_json_encode($r); $kt->cevaplar = wp_json_encode($cev);
+        do_action('osc_teslim_edildi', (int) $kt->user_id, $ot, $r);
         return $r;
     }
     private function yeni_kod() {
@@ -540,6 +541,7 @@ endif; ?>
         $ayar = array('sonuc_goster' => (isset($_POST['sonuc_goster']) && $_POST['sonuc_goster'] === 'hemen') ? 'hemen' : 'bitince', 'kural' => $b['kural'], 'tur_ad' => $b['ad']);
         $kod = $this->yeni_kod();
         $ok = $wpdb->insert($this->t_ot(), array('kod' => $kod, 'quiz_id' => $qid, 'ogretmen_id' => get_current_user_id(), 'tur' => $tur, 'baslik' => function_exists('mb_substr') ? mb_substr($baslik, 0, 190) : substr($baslik, 0, 190), 'durum' => $tur === 'odev' ? 'basladi' : 'bekliyor', 'sure' => $sure, 'baslangic' => $tur === 'odev' ? time() : 0, 'son_tarih' => $son, 'ayar' => wp_json_encode($ayar), 'veri' => wp_json_encode(array_values($data)), 'olusturma' => time()));
+        if ($ok) do_action('osc_oturum_olustu', $tur, get_current_user_id());
         if (!$ok) wp_send_json_error('Oturum oluşturulamadı: ' . $wpdb->last_error);
         wp_send_json_success(array('id' => (int) $wpdb->insert_id, 'kod' => $kod));
     }

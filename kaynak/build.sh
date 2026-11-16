@@ -29,7 +29,7 @@ k=k+'\n'+open(d+'parca/yzapi.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_arka.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_uret.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/admin_test.php',encoding='utf-8').read()
-for _f in ('sayfalar.php','oyun.php','forum.php','istatistik.php'):
+for _f in ('sayfalar.php','topluluk.php'):
     import os
     if os.path.exists(d+'parca/'+_f): k=k+'\n'+open(d+'parca/'+_f,encoding='utf-8').read()
 y=open(d+'parca/yazili.php',encoding='utf-8').read()
@@ -43,6 +43,14 @@ for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').rea
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
 om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read().replace('/*__YP_MEB__*/',open(d+'veri/yp_meb.b64').read().strip()).replace('/*__YPXLSX__*/',open(d+'parca/ypxlsx.js',encoding='utf-8').read())
+import re as _re, subprocess as _sp
+_ev=open(d+'parca/evrak.js',encoding='utf-8').read(); _a=_ev.index('var TURLER = ['); _b=_ev.index('\n  ];',_a)
+_tl=[{'id':m.group(1),'ad':m.group(2),'ik':m.group(3),'ac':m.group(4)} for m in _re.finditer(r"\{ id: '([a-z_]+)'(?:, grup: '[a-z]+')?, ad: '([^']+)', ik: '([^']+)'(?:, yatay: true)?, ac: '([^']+)'", _ev[_a:_b])]
+assert len(_tl)>=15, len(_tl)
+_bg=_sp.check_output(['node','-e',"global.window={};require('"+d+"parca/bgh.js');process.stdout.write(JSON.stringify(window.OSC_BGH))"]).decode()
+_seo=open(d+'parca/seo.php',encoding='utf-8').read().replace("'/*__SEO_EVRAK__*/'", q(_j.dumps(_tl,ensure_ascii=False))).replace("'/*__SEO_BGH__*/'", q(_bg))
+assert '__SEO_' not in _seo
+om=om+'\n'+_seo
 bas=open(d+'parca/masa_bas.php',encoding='utf-8').read()
 assert bas.count('/*__GOVDE__*/')==1
 open(d+'ogretmen-masasi.php','w',encoding='utf-8').write(bas.replace('/*__GOVDE__*/',om))

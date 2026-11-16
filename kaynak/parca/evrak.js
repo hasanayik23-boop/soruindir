@@ -759,6 +759,9 @@
   /* ---------------- durum ---------------- */
   var S = ls('osc_ev_taslak') || { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 };
   /* Yazılı Hazırla'dan aktarılan evrak (ör. OYS puan çizelgesi) */
+  /* tanıtım sayfalarından gelen bağlantı: ?evrak=zumre  /  ?evrak=belirli_gun&gun=Gün adı */
+  try { var QS = new URLSearchParams(location.search), QT = QS.get('evrak'); if (QT && TURLER.some(function (t) { return t.id === QT; })) { S = { ekran: 'form', tur: QT, veri: {}, ic: null, id: 0 }; if (QT === 'belirli_gun' && QS.get('gun')) { S.veri.program = 'kutlama'; S.veri.gun = QS.get('gun'); } history.replaceState(null, '', location.pathname + location.hash); } } catch (e) {}
+  function istat(k) { try { var f = new FormData(); f.append('action', 'osc_istat'); f.append('k', k); navigator.sendBeacon ? navigator.sendBeacon(C.ajax, f) : fetch(C.ajax, { method: 'POST', body: f, keepalive: true }); } catch (e) {} }
   var AKT = ls('osc_ev_aktar'); if (AKT && AKT.tur) { ls('osc_ev_aktar', null); S = { ekran: 'form', tur: AKT.tur, veri: AKT.veri || {}, ic: null, id: 0 }; }
   /* ortak bilgiler (okul, müdür, öğretmen…): yalnızca üyelerde hesaba kaydedilir ve tüm evraklara işlenir */
   var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe', okulturu: 'okulturu' };
@@ -875,7 +878,7 @@
   function wordIndir() {
     var t = tur(S.tur);
     jszip().then(function () { return window.OSC_DOCX_EVRAK({ baslik: dosyaAdi(), site: C.site, yatay: yatayMi(t), bloklar: bloklar(S.tur, S.veri, S.ic) }); }).then(function (blob) {
-      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = dosyaAdi().replace(/[\\\/:*?"<>|]+/g, '-') + '.docx'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = dosyaAdi().replace(/[\\\/:*?"<>|]+/g, '-') + '.docx'; istat('evrak_' + S.tur); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     }).catch(function (e) { bildir(e.message, 'hata'); });
   }
   function yazdir() {
