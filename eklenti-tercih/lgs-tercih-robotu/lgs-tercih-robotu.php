@@ -35,6 +35,17 @@ class LGS_Tercih_Robotu {
 
     /* ================= Sayfa düzeni ================= */
 
+    /** [lgs_tercih_robotu] kısa kodunun olduğu yayımlanmış sayfa */
+    public static function robot_url() {
+        $u = get_transient('sx_lgs_robot_url');
+        if ($u === false) {
+            $u = '';
+            $q = get_posts(array('post_type' => 'page', 'post_status' => 'publish', 's' => 'lgs_tercih_robotu', 'posts_per_page' => 5, 'fields' => 'ids', 'no_found_rows' => true));
+            foreach ($q as $id) { if (has_shortcode(get_post_field('post_content', $id), 'lgs_tercih_robotu')) { $u = get_permalink($id); break; } }
+            set_transient('sx_lgs_robot_url', $u, $u ? 6 * HOUR_IN_SECONDS : 10 * MINUTE_IN_SECONDS);
+        }
+        return $u;
+    }
     private function is_tool_page() {
         if (!is_singular()) return false;
         $p = get_post();

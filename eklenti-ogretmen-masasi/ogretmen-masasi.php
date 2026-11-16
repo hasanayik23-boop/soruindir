@@ -1417,15 +1417,17 @@ class OSC_Yazili {
         if (isset($_GET['osc_embed']) || isset($_GET['osc_k'])) return true;
         global $post;
         if (is_singular() && $post && (has_shortcode($post->post_content, 'osc_yazili_hazirla') || has_shortcode($post->post_content, 'osc_ogretmen_paneli') || has_shortcode($post->post_content, 'osc_quiz'))) return true;
-        foreach (array('osc_sp_panel_sayfa', 'osc_sp_katil_sayfa', 'osc_sp_ogrenci_sayfa', 'osc_yz_sayfa') as $o) { $id = (int) get_option($o); if ($id && is_page($id)) return true; }
+        foreach (array('osc_sp_panel_sayfa', 'osc_sp_katil_sayfa', 'osc_sp_ogrenci_sayfa', 'osc_yz_sayfa', 'osc_ev_sayfa', 'osc_om_sayfa') as $o) { $id = (int) get_option($o); if ($id && is_page($id)) return true; }
         return false;
     }
     public function tanitim() {
         if (!self::yayinda() || $this->tanitim_gizli()) return;
         $ogr = is_user_logged_in() && OSC_Sinav::rol() === 'ogrenci';
         if ($ogr) return;
-        $u = esc_url(self::url());
-        $bar = $this->acik('osc_yz_bar'); $btn = $this->acik('osc_yz_buton'); $alt = $this->acik('osc_yz_alt');
+        // Öğretmen Masası varsa tanıtım oraya yönlenir (yazılı + evrak)
+        $om = class_exists('OSC_Masa') && OSC_Masa::yayinda(); $yeni = !$om || !method_exists('OSC_Masa', 'yeni_mi') || OSC_Masa::yeni_mi();
+        $u = esc_url($om ? OSC_Masa::url() : self::url());
+        $bar = $this->acik('osc_yz_bar'); $btn = $this->acik('osc_yz_buton'); $alt = $this->acik('osc_yz_alt') && !is_front_page();
         if (!$bar && !$btn && !$alt) return; ?>
 <style>
 .osc-yzt-bar{position:relative;z-index:99990;display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 44px 9px 16px;background:linear-gradient(90deg,#1e1b4b,#4c1d95 50%,#1e1b4b);color:#fff;font:600 14px/1.35 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
@@ -1450,9 +1452,9 @@ class OSC_Yazili {
 @media (max-width:640px){.osc-yzt-bar{font-size:13px}.osc-yzt-bar .uz{display:none}.osc-yzt-fab{right:12px;bottom:12px;padding:11px 15px 11px 11px;font-size:13.5px}}
 @media print{.osc-yzt-bar,.osc-yzt-fab,.osc-yzt-alt{display:none!important}}
 </style>
-<?php if ($bar): ?><div class="osc-yzt-bar" id="osc-yzt-bar" hidden><a href="<?php echo $u; ?>"><span class="y">YENİ</span><span><b>Yazılı Hazırla</b><span class="uz"> · MEB 2026-2027 senaryolarına uygun yazılıyı bir dakikada hazırlayın</span></span><span class="g">Hemen dene →</span></a><button type="button" aria-label="Kapat">×</button></div><?php endif; ?>
-<?php if ($btn): ?><a class="osc-yzt-fab" href="<?php echo $u; ?>"><i>📄</i>Yazılı Hazırla<em>YENİ</em></a><?php endif; ?>
-<?php if ($alt): ?><div class="osc-yzt-alt" id="osc-yzt-alt" hidden><a href="<?php echo $u; ?>"><span class="ik">📄</span><span class="yz"><b>Yazılınızı bir dakikada hazırlayın</b><small>MEB 2026-2027 senaryolarına uygun · 5–12. sınıf, tüm dersler · cevap anahtarlı Word ve PDF</small></span><span class="g">Yazılı Hazırla →</span></a></div><?php endif; ?>
+<?php if ($bar): ?><div class="osc-yzt-bar" id="osc-yzt-bar" hidden><a href="<?php echo $u; ?>"><?php if ($yeni) echo '<span class="y">YENİ</span>'; ?><span><b><?php echo $om ? 'Öğretmen Masası' : 'Yazılı Hazırla'; ?></b><span class="uz"> · <?php echo $om ? 'Senaryoya uygun yazılı, tutanak, BEP ve kulüp evraklarını dakikalar içinde hazırlayın' : 'MEB 2026-2027 senaryolarına uygun yazılıyı bir dakikada hazırlayın'; ?></span></span><span class="g">Hemen dene →</span></a><button type="button" aria-label="Kapat">×</button></div><?php endif; ?>
+<?php if ($btn): ?><a class="osc-yzt-fab" href="<?php echo $u; ?>"><i><?php echo $om ? '🧑‍🏫' : '📄'; ?></i><?php echo $om ? 'Öğretmen Masası' : 'Yazılı Hazırla'; ?><?php if ($yeni) echo '<em>YENİ</em>'; ?></a><?php endif; ?>
+<?php if ($alt): ?><div class="osc-yzt-alt" id="osc-yzt-alt" hidden><a href="<?php echo $u; ?>"><span class="ik"><?php echo $om ? '🧑‍🏫' : '📄'; ?></span><span class="yz"><b><?php echo $om ? 'Yazılınızı ve evraklarınızı dakikalar içinde hazırlayın' : 'Yazılınızı bir dakikada hazırlayın'; ?></b><small><?php echo $om ? 'Senaryoya uygun yazılı · zümre, ŞÖK, veli tutanakları · BEP · kulüp evrakları · OYS çizelgesi' : 'MEB 2026-2027 senaryolarına uygun · 5–12. sınıf, tüm dersler · cevap anahtarlı Word ve PDF'; ?></small></span><span class="g"><?php echo $om ? 'Öğretmen Masası →' : 'Yazılı Hazırla →'; ?></span></a></div><?php endif; ?>
 <script>(function(){try{var b=document.getElementById('osc-yzt-bar');if(b){var k=0;try{k=localStorage.getItem('osc_yzt_kapali')==='1';}catch(e){}if(!k){document.body.insertBefore(b,document.body.firstChild);b.hidden=false;}b.querySelector('button').onclick=function(){b.remove();try{localStorage.setItem('osc_yzt_kapali','1');}catch(e){}};}
 var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector('footer.site-footer,#colophon,footer#footer,.site-footer,body>footer,.main-wrap>footer,footer');if(f&&f.parentNode){f.parentNode.insertBefore(a,f);}a.hidden=false;}}catch(e){}})();</script>
 <?php }
@@ -2125,6 +2127,9 @@ class OSC_Evrak {
 #osc-ev .ev-x:hover{color:#b91c1c}
 
 .ev-uye{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:13px;line-height:1.5}.ev-uye a{font-weight:800;color:#4338ca}.ev-uye.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+
+.ev-yp-u{width:100%;box-sizing:border-box;font:13px/1.5 ui-monospace,Menlo,monospace;border:1px solid #cfd8e3;border-radius:12px;padding:10px 12px}
+.ev-yp-kay{margin:0 0 8px;padding:9px 12px;border-radius:10px;background:#f1f5f9;font-size:13px}
 <?php }
     public static function js_cikti() { ?>/* =====================================================================
  * OSC_DOCX — yazılı kâğıdını gerçek Word (.docx) dosyası olarak üretir.
@@ -2626,6 +2631,8 @@ window.OSC_BGH = [
       { k: 'dtur', ad: 'Dilekçe türü', tip: 'secim', l: { izin: 'İzin talebi', rapor: 'Sağlık raporu teslimi', nobet: 'Nöbet değişikliği', belge: 'Hizmet belgesi / belge talebi', ders: 'Ders/sınav görevlendirme talebi', genel: 'Diğer (serbest)' }, v: 'izin' },
       { k: 'makam', ad: 'Hitap edilecek makam', ph: 'Atatürk Ortaokulu Müdürlüğüne' }, { k: 'il', ad: 'İl / ilçe', ph: 'ÇANKAYA' }, { k: 'adsoyad', ad: 'Adınız soyadınız', ph: 'Ad Soyad' }, { k: 'gorev', ad: 'Unvan / branş', ph: 'Matematik Öğretmeni' },
       { k: 'tarih', ad: 'Dilekçe tarihi', v: bugun }, { k: 'aciklama', ad: 'Açıklama (tarihler, gerekçe vb.)', tip: 'uzun', ph: 'Ör. 14.11.2026 Cuma günü ailevi bir mazeretim nedeniyle…' }, { k: 'adres', ad: 'Adres', ph: '…' }, { k: 'tel', ad: 'Telefon', ph: '05…' }, { k: 'ekler', ad: 'Ekler (her satıra bir ek, isteğe bağlı)', tip: 'uzun', ph: 'Sağlık raporu (1 sayfa)' }] },
+    { id: 'yillik', ad: 'Ünitelendirilmiş yıllık plan', ik: '🗓️', yzYok: true, yatay: true, ozel: 'yp', ac: '1–12. sınıf tüm dersler; çalışma takvimine göre hafta hafta, öğrenme çıktılarıyla', alan: ORTAK.concat([
+      { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' }, { k: 'zumre', ad: 'Diğer zümre öğretmenleri (her satıra bir kişi, isteğe bağlı)', tip: 'uzun' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
     { id: 'oys', ad: 'OYS puan çizelgesi', ik: '🧮', yzYok: true, yatay: true, ozel: 'oys', ac: 'MEB senaryosuna göre ortak yazılı soru bazlı puan çizelgesi; e-Okul’a not girişi için', alan: ORTAK.concat([
       { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'tarih', ad: 'Sınav tarihi', ph: '…/…/20…' }, { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) }
   ];
@@ -2806,6 +2813,89 @@ window.OSC_BGH = [
       o.push({ no: say.length > 1 ? say[1] : (say[0] || ''), ad: ad.join(' ').replace(/\s+/g, ' '), p: [] });
     });
     return o;
+  }
+  /* ---------- YILLIK PLAN ---------- */
+  var TK = C.takvim || {}, KAT = C.katalog || {};
+  function ypDurum(v) { var P = v.yp || (v.yp = {}); P.uniteler = P.uniteler || []; return P; }
+  function gun(s) { var p = String(s || '').split('-'); return p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]) : null; }
+  var AYLAR_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  function aralik(a, b) { return a.getDate() + (a.getMonth() !== b.getMonth() ? ' ' + AYLAR_TR[a.getMonth()] : '') + ' – ' + b.getDate() + ' ' + AYLAR_TR[b.getMonth()]; }
+  function icinde(d, l) { return (l || []).filter(function (x) { var a = gun(x.bas), b = gun(x.bit || x.bas); return a && d >= a && d <= b; })[0]; }
+  function bghTarih(ad, yil) { var m = /^(\d{1,2})(?:-\d{1,2})? (Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)/.exec(ad); return m ? new Date(yil, AYLAR_TR.indexOf(m[2]), +m[1]) : null; }
+  /** takvimden haftalar: {bas, bit, donem, tatil, notlar[], bgh[]} */
+  function haftalar() {
+    var b = gun(TK.baslangic), e = gun(TK.bitis), d2 = gun(TK.donem2), o = []; if (!b || !e) return o;
+    var p = new Date(b); p.setDate(p.getDate() - ((p.getDay() + 6) % 7));
+    while (p <= e) {
+      var cuma = new Date(p); cuma.setDate(cuma.getDate() + 4); var is = 0, tt = null, not = [];
+      for (var i = 0; i < 5; i++) { var g = new Date(p); g.setDate(g.getDate() + i); if (g < b || g > e) continue; var t = icinde(g, TK.tatiller); if (t) { tt = t; continue; } is++; var r = icinde(g, TK.resmi); if (r && not.indexOf(r.ad) < 0) not.push(r.ad + ' (' + g.getDate() + ' ' + AYLAR_TR[g.getMonth()] + ', resmî tatil)'); }
+      var bg = BGH.filter(function (x) { var t = bghTarih(x[1], p.getFullYear()) || null, t2 = bghTarih(x[1], cuma.getFullYear()); return (t && t >= p && t <= cuma) || (t2 && t2 >= p && t2 <= cuma); }).map(function (x) { return x[1]; });
+      o.push({ bas: new Date(p), bit: cuma, donem: d2 && p >= d2 ? 2 : 1, tatil: is ? null : (tt ? tt.ad : 'Tatil'), notlar: not, bgh: bg, is: is });
+      p.setDate(p.getDate() + 7);
+    }
+    return o;
+  }
+  function ypYazi(u) { return (u || []).map(function (x) { return '## ' + x.ad + (x.saat ? ' | ' + x.saat : '') + '\n' + (x.ciktilar || []).map(function (c) { return (c.kod ? c.kod + ' | ' : '') + c.ad; }).join('\n'); }).join('\n\n'); }
+  function ypCoz(t) { var u = [], s = null; String(t || '').split('\n').forEach(function (l) { l = l.trim(); if (!l) return; if (/^##/.test(l)) { var p = l.replace(/^#+\s*/, '').split('|'); s = { ad: p[0].trim(), saat: parseInt(p[1], 10) || 0, ciktilar: [] }; u.push(s); return; } if (!s) { s = { ad: 'Ünite', saat: 0, ciktilar: [] }; u.push(s); } var q = l.split('|'); if (q.length > 1 && /^[A-ZÇĞİÖŞÜa-z0-9.\-]{2,25}$/.test(q[0].trim())) s.ciktilar.push({ kod: q[0].trim(), ad: q.slice(1).join('|').trim() }); else s.ciktilar.push({ kod: '', ad: l }); }); return u; }
+  /** haftalara ünite ve çıktı dağıtımı */
+  function ypPlan(P) {
+    var H = haftalar(), h = Math.max(1, +P.saat || 2), otp = Math.max(0, +P.otp || 0), dersH = H.filter(function (w) { return !w.tatil; });
+    var otpH = Math.min(dersH.length, Math.ceil(otp / h)), kap = (dersH.length - otpH) * h, U = (P.uniteler || []).filter(function (u) { return u.ad; });
+    var verilen = U.reduce(function (a, u) { return a + (+u.saat || 0); }, 0), eksik = U.filter(function (u) { return !(+u.saat); }), agir = eksik.reduce(function (a, u) { return a + Math.max(1, (u.ciktilar || []).length); }, 0);
+    var sure = U.map(function (u) { return +u.saat || 0; });
+    if (eksik.length) { var kalan = Math.max(eksik.length, kap - verilen); U.forEach(function (u, i) { if (!(+u.saat)) sure[i] = kalan * Math.max(1, (u.ciktilar || []).length) / agir; }); }
+    var top = sure.reduce(function (a, c) { return a + c; }, 0); if (top > kap && top > 0) sure = sure.map(function (x) { return x * kap / top; });
+    var bas = [], c = 0; sure.forEach(function (x) { bas.push(c); c += x; }); var bitis = c;
+    var sat = [], k = 0;
+    H.forEach(function (w, wi) {
+      var tarih = aralik(w.bas, w.bit), ay = AYLAR_TR[w.bas.getMonth()];
+      var bgh = w.bgh.join('\n'), aciklama = w.notlar.join('\n');
+      if (w.tatil) { sat.push({ ay: ay, hafta: tarih, saat: '', unite: trUp(w.tatil), cikti: '', olcme: '', bgh: bgh, aciklama: '', tatil: 1 }); return; }
+      var hi = k++, a = hi * h, b = a + h;
+      if (hi >= dersH.length - otpH) { sat.push({ ay: ay, hafta: (hi + 1) + '. hafta\n' + tarih, saat: String(h), unite: 'OKUL TEMELLİ PLANLAMA', cikti: 'Okulun ve öğrencilerin ihtiyaçlarına göre planlanan çalışmalar (proje, gezi, sosyal etkinlik, pekiştirme)', olcme: '', bgh: bgh, aciklama: aciklama }); return; }
+      var un = [], ci = [], ol = [];
+      U.forEach(function (u, i) { var s = bas[i], e = s + sure[i]; if (e <= a || s >= b || sure[i] <= 0) return; un.push(u.ad); var n = (u.ciktilar || []).length; (u.ciktilar || []).forEach(function (x, j) { var cs = s + j * sure[i] / n, ce = s + (j + 1) * sure[i] / n; if (ce > a && cs < b) ci.push((x.kod ? x.kod + ' ' : '') + x.ad); }); if (e > a && e <= b + 1e-9) ol.push('Ünite/tema sonu değerlendirme'); });
+      if (!un.length && a >= bitis) { un.push('GENEL TEKRAR VE PEKİŞTİRME'); }
+      sat.push({ ay: ay, hafta: (hi + 1) + '. hafta\n' + tarih, saat: String(h), unite: un.join('\n'), cikti: ci.join('\n'), olcme: ol.join('\n'), bgh: bgh, aciklama: (w.donem === 2 && H[wi - 1] && H[wi - 1].donem === 1 ? '2. dönem başlangıcı\n' : '') + aciklama });
+    });
+    return { satir: sat, hafta: dersH.length, saat: h };
+  }
+  function ypFormHtml() {
+    var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []);
+    var kay = { program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
+    var h = '<div class="ev-oys"><h3>1. Ders ve süre</h3><div class="ev-form">' +
+      '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
+      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dl.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.map(function (x) { return '<option' + (P.ders === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</optgroup>'; }).join('') + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
+      (P.dersElle || P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
+      '<label><span>Haftalık ders saati</span><input type="number" min="1" max="20" data-yp="saat" value="' + esc(P.saat || '') + '" placeholder="ör. 5"></label>' +
+      '<label><span>Okul temelli planlama (toplam saat)</span><input type="number" min="0" max="100" data-yp="otp" value="' + esc(P.otp || '') + '" placeholder="0"></label></div>' +
+      '<p class="ev-not">📅 Takvim: ' + esc(TK.yil || '') + ' — ' + esc(String(TK.baslangic || '').split('-').reverse().join('.')) + ' / ' + esc(String(TK.bitis || '').split('-').reverse().join('.')) + '. Tatil haftaları ve resmî tatiller plana otomatik işlenir.</p>';
+    if (P.sinif && (P.ders || P.dersAd)) {
+      h += '<h3>2. Ünite / tema ve öğrenme çıktıları</h3>' + (P.yukleniyor ? '<p class="ev-not">Program yükleniyor…</p>' : '<p class="ev-yp-kay">' + kay + (P.kaynak === 'senaryo' && P.donemler && P.donemler.length < 2 ? ' — <b>yalnızca ' + P.donemler.join(', ') + '. dönem çıktıları var</b>; diğer dönemin ünitelerini ekleyebilirsiniz.' : '') + '</p>') +
+        '<textarea id="yp-u" rows="12" class="ev-yp-u" placeholder="## Ünite / tema adı | ders saati&#10;KOD | öğrenme çıktısı&#10;öğrenme çıktısı">' + esc(P.metin != null ? P.metin : ypYazi(P.uniteler)) + '</textarea>' +
+        '<p class="ev-not"><code>## Ünite adı | saat</code> yeni ünite başlatır (saat yazmazsanız süre çıktı sayısına göre dağıtılır); altındaki her satır bir öğrenme çıktısıdır.</p>' +
+        '<div class="ev-oy-alt"><button type="button" class="ev-btn hafif" id="yp-yenile">↺ Programı yeniden yükle</button>' + (C.yz && (P.kaynak === 'yok') ? '<button type="button" class="ev-btn" id="yp-yz">🤖 Yapay zekâ ile taslak oluştur</button>' : (!C.uye && C.yzUye && P.kaynak === 'yok' ? '<span class="ev-not" style="margin:0">Üye olursanız yapay zekâya taslak yazdırabilirsiniz.</span>' : '')) + '</div>';
+    }
+    return h + '</div>';
+  }
+  function ypYukle(P) {
+    var ders = P.ders === '__' ? P.dersAd : P.ders; if (!P.sinif || !ders) return;
+    P.yukleniyor = 1; P.metin = null;
+    var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders);
+    fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
+  }
+  function ypBagla() {
+    var P = ypDurum(S.veri);
+    kok.querySelectorAll('[data-yp]').forEach(function (e) {
+      e.onchange = function () { var k = e.dataset.yp; P[k] = /sinif|saat|otp/.test(k) ? (+e.value || '') : e.value; if (k === 'sinif') { P.ders = ''; P.uniteler = []; P.kaynak = ''; } sakla(); if (k === 'sinif' || (k === 'ders' && P.ders !== '__') || k === 'dersAd') { ypYukle(P); } vForm(); };
+    });
+    var t = document.getElementById('yp-u'); if (t) t.oninput = function () { P.metin = t.value; P.uniteler = ypCoz(t.value); if (P.kaynak !== 'elle') { P.kaynak0 = P.kaynak0 || P.kaynak; } sakla(); };
+    var y = document.getElementById('yp-yenile'); if (y) y.onclick = function () { ypYukle(P); vForm(); };
+    var z = document.getElementById('yp-yz'); if (z) z.onclick = function () {
+      z.disabled = true; z.innerHTML = '<span class="ev-don"></span> Yazılıyor…';
+      var fd = new FormData(); fd.append('action', 'osc_yp_yz'); fd.append('nonce', C.nonce); fd.append('sinif', P.sinif); fd.append('ders', P.ders === '__' ? P.dersAd : P.ders);
+      fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { if (!j.success) throw new Error(j.data || 'Hata'); P.kaynak = j.data.kaynak; P.uniteler = j.data.uniteler; P.metin = null; sakla(); vForm(); }).catch(function (e) { bildir(e.message, 'hata'); vForm(); });
+    };
   }
   function oyFormHtml() {
     var Q = oyDurum(S.veri), sinif = SNR.map(function (t) { return +t.sinif; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).sort(function (a, b) { return a - b; });
@@ -2996,6 +3086,14 @@ window.OSC_BGH = [
       b.push({ t: 'sag', s: (v.tarih || '…/…/20…') + '\n\n' + (v.adsoyad || '………………………') + '\n' + (v.gorev || '') + '\nİmza' }); b.push({ t: 'bosluk', n: 600 });
       b.push({ t: 'p', s: 'Adres: ' + (v.adres || '………………………………………') + '\nTelefon: ' + (v.tel || '………………') });
       var ek = satirlar(v.ekler); if (ek.length) { b.push({ t: 'p', s: 'Ekler:' }); b.push({ t: 'liste', l: ek }); }
+    } else if (id === 'yillik') {
+      var P = ypDurum(v), dad = P.ders === '__' ? P.dersAd : P.ders, PL = ypPlan(P);
+      TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((P.sinif || '') + '. SINIF ' + (dad || '') + ' DERSİ ÜNİTELENDİRİLMİŞ YILLIK PLANI'));
+      b.push({ t: 'bilgi', satirlar: [['Haftalık ders saati', String(PL.saat)], ['Ders yapılan hafta', String(PL.hafta) + ' hafta (' + String(TK.baslangic || '').split('-').reverse().join('.') + ' – ' + String(TK.bitis || '').split('-').reverse().join('.') + ')'], ['Dayanak', 'Türkiye Yüzyılı Maarif Modeli ' + (dad || '') + ' dersi öğretim programı; ' + (TK.yil || '') + ' eğitim-öğretim yılı çalışma takvimi'], ['Ders öğretmeni', v.ogretmen || '']] });
+      b.push({ t: 'tablo', bas: ['Ay', 'Hafta', 'Saat', 'Ünite / tema', 'Öğrenme çıktıları', 'Ölçme ve değerlendirme', 'Belirli gün ve haftalar', 'Açıklama'], gen: [6, 11, 4, 14, 35, 10, 11, 9], sat: PL.satir.map(function (r) { return [r.ay, r.hafta, r.saat, r.unite, r.cikti, r.olcme, r.bgh, r.aciklama]; }) });
+      b.push({ t: 'p', s: 'Bu plan Türkiye Yüzyılı Maarif Modeli öğretim programı ve çalışma takvimi esas alınarak hazırlanmıştır. Belirli gün ve haftalar, ilgili derslerde öğrenme çıktılarıyla ilişkilendirilerek işlenir.' });
+      b.push({ t: 'imza', baslik: 'ZÜMRE ÖĞRETMENLERİ', kisiler: [{ ad: v.ogretmen, gorev: (dad || '') + ' Öğretmeni' }].concat(satirlar(v.zumre).map(function (a) { return { ad: a, gorev: (dad || '') + ' Öğretmeni' }; })), sutun: 3 });
+      b.push({ t: 'onay', ad: v.mudur, gorev: 'Okul Müdürü', tarih: TK.baslangic ? TK.baslangic.split('-').reverse().join('.') : '' });
     } else if (id === 'oys') {
       var Q = oyDurum(v), n = Q.sorular.length, H = oyHesap(Q), bas = ['No', 'Adı soyadı'];
       TB(Y + ' EĞİTİM-ÖĞRETİM YILI ' + O); TB(trUp((Q.ders || '') + ' DERSİ ' + (v.sube || (Q.sinif ? Q.sinif + '. SINIF' : '')) + ' ' + Q.donem + '. DÖNEM ' + Q.yazili + '. ORTAK YAZILI SINAV PUAN ÇİZELGESİ'));
@@ -3067,14 +3165,14 @@ window.OSC_BGH = [
   }
   function vForm() {
     var t = tur(S.tur), YZ = C.yz && !t.yzYok && !(S.tur === 'belirli_gun' && S.veri.program === 'yillik');
-    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : '') +
+    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'oys' ? oyFormHtml() : t.ozel === 'yp' ? ypFormHtml() : '') +
       '<div class="ev-cubuk"><span>' + (YZ ? '🤖 Yapay zekâ, bilgilerinize göre gündemi, görüşmeleri ve kararları özgün olarak yazar.' : 'Taslak içerik bilgilerinize göre otomatik oluşturulur; dilediğiniz gibi düzenleyebilirsiniz.') + '</span><div>' + (YZ ? '<button class="ev-btn" id="ev-hizli">Hazır taslakla oluştur</button><button class="ev-btn ana" id="ev-yz">🤖 Yapay zekâ ile oluştur</button>' : '<button class="ev-btn ana" id="ev-hizli">Evrakı oluştur →</button>') + '</div></div></section>');
-    if (t.ozel === 'oys') oyBagla();
+    if (t.ozel === 'oys') oyBagla(); if (t.ozel === 'yp') ypBagla();
     kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } ortakKaydet(e.dataset.a, e.value); sakla(); }; });
     document.getElementById('ev-geri').onclick = function () { S.ekran = t.grup === 'kulup' ? 'kulup' : 'sec'; sakla(); ciz(); };
     kok.querySelectorAll('[data-coklu]').forEach(function (d) { var k = d.dataset.coklu, guncel = function () { S.veri[k] = [].map.call(d.querySelectorAll('input:checked'), function (i) { return i.value; }); sakla(); }; d.querySelectorAll('input').forEach(function (i) { i.onchange = guncel; }); d.querySelectorAll('[data-hep]').forEach(function (b) { b.onclick = function () { d.querySelectorAll('input').forEach(function (i) { i.checked = b.dataset.hep === '1'; }); guncel(); }; }); });
     rkKoy('form', kok);
-    var eksik = function () { var z = { zumre: ['okul', 'ders'], sok: ['okul', 'sube'], veli: ['okul', 'sube'], bep: ['okul', 'ders'], kulup_plan: ['okul', 'kulup'], kulup_tutanak: ['okul', 'kulup'], kulup_rapor: ['okul', 'kulup'], kulup_aylik: ['okul', 'kulup'], ogr_kurul: ['okul'], egzersiz: ['okul', 'egz'], belirli_gun: ['okul'], gezi: ['okul', 'gezi'], dilekce: ['makam', 'adsoyad'], oys: ['okul'] }[S.tur] || []; if (S.tur === 'oys' && !oyDurum(S.veri).sorular.length) { bildir('Önce sınıf, ders ve senaryo seçin (ya da “Soru ekle” ile soruları kendiniz girin).', 'hata'); return true; } var e = z.filter(function (k) { return !String(S.veri[k] || '').trim(); }); if (e.length) { bildir('Lütfen doldurun: ' + e.map(function (k) { return (t.alan.filter(function (a) { return a.k === k; })[0] || { ad: k }).ad; }).join(', '), 'hata'); return true; } return false; };
+    var eksik = function () { var z = { zumre: ['okul', 'ders'], sok: ['okul', 'sube'], veli: ['okul', 'sube'], bep: ['okul', 'ders'], kulup_plan: ['okul', 'kulup'], kulup_tutanak: ['okul', 'kulup'], kulup_rapor: ['okul', 'kulup'], kulup_aylik: ['okul', 'kulup'], ogr_kurul: ['okul'], egzersiz: ['okul', 'egz'], belirli_gun: ['okul'], gezi: ['okul', 'gezi'], dilekce: ['makam', 'adsoyad'], oys: ['okul'], yillik: ['okul'] }[S.tur] || []; if (S.tur === 'yillik') { var YP = ypDurum(S.veri); if (!YP.sinif || !(YP.ders && YP.ders !== '__' || YP.dersAd) || !YP.uniteler.length || !(+YP.saat)) { bildir('Sınıf, ders, haftalık ders saati ve en az bir ünite gerekli.', 'hata'); return true; } } if (S.tur === 'oys' && !oyDurum(S.veri).sorular.length) { bildir('Önce sınıf, ders ve senaryo seçin (ya da “Soru ekle” ile soruları kendiniz girin).', 'hata'); return true; } var e = z.filter(function (k) { return !String(S.veri[k] || '').trim(); }); if (e.length) { bildir('Lütfen doldurun: ' + e.map(function (k) { return (t.alan.filter(function (a) { return a.k === k; })[0] || { ad: k }).ad; }).join(', '), 'hata'); return true; } return false; };
     document.getElementById('ev-hizli').onclick = function () { if (eksik()) return; S.ic = varsayilan(S.tur, S.veri); S.ekran = 'onizle'; sakla(); ciz(); };
     var yb = document.getElementById('ev-yz'); if (yb) yb.onclick = function () {
       if (eksik()) return; yb.disabled = true; yb.innerHTML = '<span class="ev-don"></span> Yazılıyor…';
@@ -3122,7 +3220,7 @@ window.OSC_BGH = [
     document.getElementById('ev-duzen').onclick = function () { S.ekran = 'form'; sakla(); ciz(); };
     document.getElementById('ev-yeni').onclick = function () { S = { ekran: 'sec', tur: '', veri: {}, ic: null, id: 0 }; sakla(); ciz(); };
   }
-  function dosyaAdi() { var t = tur(S.tur), v = S.veri; return (t.ad.replace(/\s*\(.*?\)/g, '') + ' ' + (v.gun && v.program !== 'yillik' ? v.gun + ' ' : '') + (v.ders || (v.oys && v.oys.ders) || v.sube || v.kulup || v.sinif || '') + ' ' + (v.yil || '')).replace(/\s+/g, ' ').trim(); }
+  function dosyaAdi() { var t = tur(S.tur), v = S.veri; return (t.ad.replace(/\s*\(.*?\)/g, '') + ' ' + (v.gun && v.program !== 'yillik' ? v.gun + ' ' : '') + (v.ders || (v.oys && v.oys.ders) || (v.yp && ((v.yp.sinif ? v.yp.sinif + '. sınıf ' : '') + (v.yp.ders === '__' ? v.yp.dersAd : v.yp.ders || ''))) || v.sube || v.kulup || v.sinif || '') + ' ' + (v.yil || '')).replace(/\s+/g, ' ').trim(); }
   function jszip() { return window.JSZip ? Promise.resolve() : new Promise(function (ok, no) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = ok; s.onerror = function () { no(new Error('Word oluşturucu yüklenemedi.')); }; document.head.appendChild(s); }); }
   function wordIndir() {
     var t = tur(S.tur);
@@ -3157,13 +3255,18 @@ window.OSC_BGH = [
         register_setting('osc_evrak', 'osc_ev_yayinda', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));
         register_setting('osc_evrak', 'osc_ev_yz', array('sanitize_callback' => function ($v) { return $v ? '1' : '0'; }));
         register_setting('osc_evrak', 'osc_ev_gunluk', array('sanitize_callback' => function ($v) { return max(0, min(500, (int) $v)); }));
-        register_setting('osc_evrak', 'osc_ev_turler', array('sanitize_callback' => function ($v) { return array_values(array_intersect(is_array($v) ? array_map('strval', $v) : array(), array_keys(OSC_Evrak::$turler))); }));
+        register_setting('osc_evrak', 'osc_ev_turler', array('sanitize_callback' => function ($v) { update_option('osc_ev_turler_bilinen', array_keys(OSC_Evrak::$turler)); return array_values(array_intersect(is_array($v) ? array_map('strval', $v) : array(), array_keys(OSC_Evrak::$turler))); }));
         foreach (array_keys(self::reklam_alanlari()) as $ra) register_setting('osc_evrak', 'osc_reklam_' . $ra, array('sanitize_callback' => function ($v) { $v = trim((string) $v); return current_user_can('unfiltered_html') ? $v : wp_kses_post($v); }));
     }
     public static $turler = array('zumre' => 'Zümre öğretmenler kurulu tutanağı', 'ogr_kurul' => 'Öğretmenler kurulu toplantı tutanağı', 'sok' => 'Şube öğretmenler kurulu (ŞÖK) tutanağı', 'veli' => 'Veli toplantısı tutanağı', 'bep' => 'BEP planı',
         'kulup_plan' => 'Sosyal kulüp: yıllık çalışma planı', 'kulup_tutanak' => 'Sosyal kulüp: ilk toplantı ve seçim tutanağı', 'kulup_aylik' => 'Sosyal kulüp: aylık çalışma raporu', 'kulup_rapor' => 'Sosyal kulüp: dönem sonu çalışma raporu',
-        'egzersiz' => 'Ders dışı egzersiz planı', 'belirli_gun' => 'Belirli gün ve haftalar programı', 'gezi' => 'Gezi planı (Ek-9)', 'dilekce' => 'Dilekçe', 'oys' => 'OYS puan çizelgesi');
-    public static function acik_turler() { $v = get_option('osc_ev_turler', false); return is_array($v) ? array_values(array_intersect($v, array_keys(self::$turler))) : array_keys(self::$turler); }
+        'yillik' => 'Ünitelendirilmiş yıllık plan', 'egzersiz' => 'Ders dışı egzersiz planı', 'belirli_gun' => 'Belirli gün ve haftalar programı', 'gezi' => 'Gezi planı (Ek-9)', 'dilekce' => 'Dilekçe', 'oys' => 'OYS puan çizelgesi');
+    public static function acik_turler() {
+        $v = get_option('osc_ev_turler', false); $hep = array_keys(self::$turler); if (!is_array($v)) return $hep;
+        // ayar kaydedildikten sonra eklenen yeni evrak türleri varsayılan olarak açık gelsin
+        $bil = get_option('osc_ev_turler_bilinen', array('zumre', 'ogr_kurul', 'sok', 'veli', 'bep', 'kulup_plan', 'kulup_tutanak', 'kulup_aylik', 'kulup_rapor', 'egzersiz', 'belirli_gun', 'gezi', 'dilekce', 'oys'));
+        return array_values(array_filter($hep, function ($k) use ($v, $bil) { return in_array($k, $v, true) || !in_array($k, (array) $bil, true); }));
+    }
     public static function reklam_alanlari() { return array('ev_ust' => 'Üst (aracın üstü)', 'ev_form' => 'Evrak seçimi ve form altı', 'ev_yan' => 'Önizlemede indirme düğmelerinin altı', 'ev_alt' => 'Alt (sayfa sonu)'); }
     private static function reklam($a) { return class_exists('OSC_Yazili') ? OSC_Yazili::reklam($a) : ''; }
     public function ayar_sayfa() {
@@ -3260,7 +3363,7 @@ window.OSC_BGH = [
     public function kisa_kod() {
         if (!self::gorebilir()) return '';
         $u = wp_get_current_user();
-        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler());
+        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler(), 'takvim' => class_exists('OSC_YPlan') ? OSC_YPlan::takvim() : null, 'katalog' => class_exists('OSC_YPlan') ? OSC_YPlan::katalog() : null);
         $rk = array(self::reklam('ev_ust'), self::reklam('ev_alt')); $rf = self::reklam('ev_form'); $ry = self::reklam('ev_yan');
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -3371,11 +3474,11 @@ class OSC_Masa {
     }
     private static function evrak_listesi() {
         if (!class_exists('OSC_Evrak')) return array();
-        $ik = array('zumre' => '👥', 'ogr_kurul' => '🏛️', 'sok' => '🏫', 'veli' => '👨‍👩‍👧', 'bep' => '🧩', 'kulup_plan' => '🎭', 'kulup_tutanak' => '🎭', 'kulup_aylik' => '🎭', 'kulup_rapor' => '🎭', 'egzersiz' => '🏐', 'belirli_gun' => '🎗️', 'gezi' => '🚌', 'dilekce' => '✉️', 'oys' => '🧮');
+        $ik = array('zumre' => '👥', 'ogr_kurul' => '🏛️', 'sok' => '🏫', 'veli' => '👨‍👩‍👧', 'bep' => '🧩', 'kulup_plan' => '🎭', 'kulup_tutanak' => '🎭', 'kulup_aylik' => '🎭', 'kulup_rapor' => '🎭', 'egzersiz' => '🏐', 'yillik' => '🗓️', 'belirli_gun' => '🎗️', 'gezi' => '🚌', 'dilekce' => '✉️', 'oys' => '🧮');
         $o = array(); $kulup = false;
         foreach (OSC_Evrak::acik_turler() as $k) {
             if (strpos($k, 'kulup_') === 0) { if (!$kulup) { $o[] = array('🎭', 'Sosyal kulüp evrakları', 'Yıllık plan, ilk toplantı tutanağı, aylık ve dönem sonu raporu'); $kulup = true; } continue; }
-            $ad = OSC_Evrak::$turler[$k]; $ac = array('zumre' => 'Yıl başı, 2. dönem ve yıl sonu gündemleriyle', 'ogr_kurul' => 'Müdür başkanlığında, katılım listesiyle', 'sok' => 'Şubenin akademik ve rehberlik durumu', 'veli' => 'Katılım ve imza listesiyle', 'bep' => 'Uzun ve kısa dönemli amaçlar, uyarlamalar', 'egzersiz' => 'Aylara göre ders dışı çalışma planı', 'belirli_gun' => 'Kutlama/anma programı ve konuşma metni', 'gezi' => 'Veli izin belgesi ve öğrenci listesiyle', 'dilekce' => 'İzin, rapor, nöbet, belge talebi', 'oys' => 'MEB senaryosuna göre soru bazlı puanlar');
+            $ad = OSC_Evrak::$turler[$k]; $ac = array('zumre' => 'Yıl başı, 2. dönem ve yıl sonu gündemleriyle', 'ogr_kurul' => 'Müdür başkanlığında, katılım listesiyle', 'sok' => 'Şubenin akademik ve rehberlik durumu', 'veli' => 'Katılım ve imza listesiyle', 'bep' => 'Uzun ve kısa dönemli amaçlar, uyarlamalar', 'egzersiz' => 'Aylara göre ders dışı çalışma planı', 'yillik' => '1–12. sınıf tüm dersler, takvime göre hafta hafta', 'belirli_gun' => 'Kutlama/anma programı ve konuşma metni', 'gezi' => 'Veli izin belgesi ve öğrenci listesiyle', 'dilekce' => 'İzin, rapor, nöbet, belge talebi', 'oys' => 'MEB senaryosuna göre soru bazlı puanlar');
             $o[] = array(isset($ik[$k]) ? $ik[$k] : '📄', $ad, isset($ac[$k]) ? $ac[$k] : '');
         }
         return $o;
@@ -3535,6 +3638,220 @@ class OSC_Masa {
     }
 }
 $GLOBALS['osc_masa'] = new OSC_Masa();
+}
+
+
+/* =====================================================================
+ * Yıllık plan: çalışma takvimi + öğretim programı kütüphanesi
+ * Her yıl: yönetici takvimi günceller; öğretim programı değişen dersin
+ * programını (MEB PDF'inden yapay zekâ ile ya da elle) yeniden yükler.
+ * ===================================================================== */
+if (!class_exists('OSC_YPlan')) {
+class OSC_YPlan {
+    public function __construct() {
+        add_action('admin_menu', array($this, 'menu'), 32);
+        foreach (array('program') as $a) { add_action('wp_ajax_osc_yp_' . $a, array($this, 'ajax_' . $a)); add_action('wp_ajax_nopriv_osc_yp_' . $a, array($this, 'ajax_' . $a)); }
+        foreach (array('yz', 'ayikla', 'kaydet', 'sil', 'takvim') as $a) add_action('wp_ajax_osc_yp_' . $a, array($this, 'ajax_' . $a));
+    }
+    /* ---------- çalışma takvimi ---------- */
+    public static function varsayilan_takvim() {
+        return array('yil' => '2026-2027', 'baslangic' => '2026-09-14', 'bitis' => '2027-06-25',
+            'tatiller' => array(
+                array('ad' => '1. dönem ara tatili', 'bas' => '2026-11-16', 'bit' => '2026-11-20'),
+                array('ad' => 'Yarıyıl tatili', 'bas' => '2027-01-25', 'bit' => '2027-02-05'),
+                array('ad' => '2. dönem ara tatili', 'bas' => '2027-03-08', 'bit' => '2027-03-12')),
+            'resmi' => array(
+                array('ad' => 'Cumhuriyet Bayramı', 'bas' => '2026-10-29', 'bit' => '2026-10-29'),
+                array('ad' => 'Yılbaşı', 'bas' => '2027-01-01', 'bit' => '2027-01-01'),
+                array('ad' => 'Ulusal Egemenlik ve Çocuk Bayramı', 'bas' => '2027-04-23', 'bit' => '2027-04-23'),
+                array('ad' => 'Emek ve Dayanışma Günü', 'bas' => '2027-05-01', 'bit' => '2027-05-01'),
+                array('ad' => 'Kurban Bayramı', 'bas' => '2027-05-15', 'bit' => '2027-05-19'),
+                array('ad' => 'Atatürk’ü Anma, Gençlik ve Spor Bayramı', 'bas' => '2027-05-19', 'bit' => '2027-05-19')),
+            'donem2' => '2027-02-08');
+    }
+    public static function takvim() { $t = get_option('osc_yp_takvim'); return is_array($t) && !empty($t['baslangic']) ? $t : self::varsayilan_takvim(); }
+
+    /* ---------- ders kataloğu (tüm sınıflar) ---------- */
+    /** sınıf => [ ['g' => grup adı, 'd' => [ders, ...]], ... ] */
+    public static function katalog() {
+        $c = array();
+        $ekle = function ($grup, $ad, $siniflar) use (&$c) { foreach ($siniflar as $s) { $s = (int) $s; if ($s < 1 || $s > 12) continue; if (!isset($c[$s][$grup])) $c[$s][$grup] = array(); if (!in_array($ad, $c[$s][$grup], true)) $c[$s][$grup][] = $ad; } };
+        $o = 'Ortak dersler';
+        $ekle($o, 'Türkçe', range(1, 8)); $ekle($o, 'Matematik', range(1, 12)); $ekle($o, 'Hayat Bilgisi', array(1, 2, 3)); $ekle($o, 'Fen Bilimleri', range(3, 8)); $ekle($o, 'Sosyal Bilgiler', array(4, 5, 6, 7));
+        $ekle($o, 'İngilizce', range(2, 12)); $ekle($o, 'Din Kültürü ve Ahlak Bilgisi', range(4, 12)); $ekle($o, 'Trafik Güvenliği', array(4)); $ekle($o, 'İnsan Hakları, Yurttaşlık ve Demokrasi', array(4));
+        $ekle($o, 'Görsel Sanatlar', range(1, 12)); $ekle($o, 'Müzik', range(1, 12)); $ekle($o, 'Beden Eğitimi ve Oyun', range(1, 4)); $ekle($o, 'Beden Eğitimi ve Spor', range(5, 12));
+        $ekle($o, 'T.C. İnkılap Tarihi ve Atatürkçülük', array(8, 12)); $ekle($o, 'Teknoloji ve Tasarım', array(7, 8)); $ekle($o, 'Bilişim Teknolojileri ve Yazılım', array(5, 6));
+        $ekle($o, 'Türk Dili ve Edebiyatı', range(9, 12)); $ekle($o, 'Fizik', range(9, 12)); $ekle($o, 'Kimya', range(9, 12)); $ekle($o, 'Biyoloji', range(9, 12)); $ekle($o, 'Tarih', array(9, 10, 11)); $ekle($o, 'Coğrafya', array(9, 10, 11, 12)); $ekle($o, 'Felsefe', array(10, 11));
+        $ekle($o, 'Sağlık Bilgisi ve Trafik Kültürü', array(9)); $ekle($o, 'İkinci Yabancı Dil', range(9, 12));
+        if (class_exists('OSC_Yazili')) {
+            $d = json_decode(OSC_Yazili::diger_json(), true);
+            if (is_array($d) && !empty($d['gruplar'])) foreach ($d['gruplar'] as $g) {
+                $ga = isset($g['ad']) ? $g['ad'] : 'Diğer dersler';
+                if (!empty($g['dersler'])) foreach ($g['dersler'] as $x) if (!empty($x['ad']) && !empty($x['s'])) $ekle($ga, $x['ad'], (array) $x['s']);
+                if (!empty($g['alanlar'])) foreach ($g['alanlar'] as $al) if (!empty($al['dersler'])) foreach ($al['dersler'] as $x) if (!empty($x['ad']) && !empty($x['s'])) $ekle('Meslek: ' . (isset($al['ad']) ? $al['ad'] : ''), $x['ad'], (array) $x['s']);
+            }
+        }
+        foreach (self::kutuphane() as $k => $v) { list($s, $ad) = explode('|', $k, 2); $var = false; if (isset($c[(int) $s])) foreach ($c[(int) $s] as $l) if (in_array($ad, $l, true)) $var = true; if (!$var) $ekle('Diğer', $ad, array((int) $s)); }
+        $out = array(); ksort($c);
+        foreach ($c as $s => $gr) { $o2 = array(); foreach ($gr as $g => $l) { usort($l, function ($a, $b) { return strcmp(OSC_YPlan::tr_sira($a), OSC_YPlan::tr_sira($b)); }); $o2[] = array('g' => $g, 'd' => $l); } $out[$s] = $o2; }
+        return $out;
+    }
+    public static function tr_sira($s) { return strtr(mb_strtolower($s), array('ç' => 'c~', 'ğ' => 'g~', 'ı' => 'h~', 'i' => 'i', 'ö' => 'o~', 'ş' => 's~', 'ü' => 'u~')); }
+
+    /* ---------- öğretim programı kütüphanesi ---------- */
+    public static function kutuphane() { $k = get_option('osc_yp_kutuphane'); return is_array($k) ? $k : array(); }
+    private static function kutuphane_yaz($k) { if (get_option('osc_yp_kutuphane') === false) add_option('osc_yp_kutuphane', $k, '', 'no'); else update_option('osc_yp_kutuphane', $k, false); }
+    /** MEB senaryo tablolarındaki çıktılardan (tüm dönemler) ünite listesi */
+    private static function senaryodan($sinif, $ders) {
+        if (!class_exists('OSC_Havuz')) return null;
+        $s = OSC_Havuz::senaryolar(); $u = array(); $don = array();
+        foreach ($s['tablolar'] as $t) {
+            if ((int) $t['sinif'] !== (int) $sinif || $t['ders'] !== $ders) continue;
+            $don[] = (int) (isset($t['donem']) ? $t['donem'] : 1);
+            foreach ((array) $t['satirlar'] as $r) {
+                $ad = trim((string) (!empty($r['unite']) ? $r['unite'] : (isset($r['konu']) ? $r['konu'] : 'Ünite')));
+                $c = trim(preg_replace('/([a-zçğıöşü])a\)\s+[A-ZÇĞİÖŞÜ][\s\S]*$/u', '$1', (string) $r['cikti']));
+                $son = count($u) - 1;
+                if ($son < 0 || $u[$son]['ad'] !== $ad) { $u[] = array('ad' => $ad, 'saat' => 0, 'ciktilar' => array()); $son++; }
+                $var = false; foreach ($u[$son]['ciktilar'] as $x) if ($x['kod'] === $r['kod']) $var = true;
+                if (!$var) $u[$son]['ciktilar'][] = array('kod' => (string) $r['kod'], 'ad' => $c);
+            }
+        }
+        if (!$u) return null;
+        $don = array_values(array_unique($don)); sort($don);
+        return array('kaynak' => 'senaryo', 'donemler' => $don, 'uniteler' => $u);
+    }
+    public function ajax_program() {
+        $sinif = (int) (isset($_POST['sinif']) ? $_POST['sinif'] : 0); $ders = sanitize_text_field(wp_unslash(isset($_POST['ders']) ? $_POST['ders'] : ''));
+        $k = self::kutuphane(); $anah = $sinif . '|' . $ders;
+        if (isset($k[$anah]) && (empty($k[$anah]['durum']) || $k[$anah]['durum'] === 'onayli' || current_user_can('manage_options'))) wp_send_json_success(array_merge(array('kaynak' => 'program'), $k[$anah]));
+        $s = self::senaryodan($sinif, $ders); if ($s) wp_send_json_success($s);
+        if (isset($k[$anah])) wp_send_json_success(array_merge(array('kaynak' => 'taslak'), $k[$anah]));
+        wp_send_json_success(array('kaynak' => 'yok', 'uniteler' => array()));
+    }
+    /** yapay zekânın döndürdüğü ünite listesini temizle */
+    private static function temizle($r) {
+        $l = isset($r['uniteler']) ? $r['uniteler'] : (isset($r[0]) ? $r : array()); $o = array();
+        foreach ((array) $l as $u) {
+            if (!is_array($u) || empty($u['ad'])) continue;
+            $c = array(); foreach ((array) (isset($u['ciktilar']) ? $u['ciktilar'] : array()) as $x) { if (is_string($x)) $x = array('kod' => '', 'ad' => $x); if (!is_array($x) || empty($x['ad'])) continue; $c[] = array('kod' => mb_substr(sanitize_text_field((string) (isset($x['kod']) ? $x['kod'] : '')), 0, 30), 'ad' => mb_substr(sanitize_text_field((string) $x['ad']), 0, 600)); }
+            $o[] = array('ad' => mb_substr(sanitize_text_field((string) $u['ad']), 0, 200), 'saat' => max(0, min(400, (int) (isset($u['saat']) ? $u['saat'] : 0))), 'ciktilar' => array_slice($c, 0, 60));
+        }
+        return array_slice($o, 0, 30);
+    }
+    /** öğretmen: programı olmayan ders için yapay zekâ taslağı (üyeler, yapay zekâ açıkken). Sonuç yöneticinin incelemesi için kütüphaneye “taslak” olarak düşer. */
+    public function ajax_yz() {
+        if (!is_user_logged_in() || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_ev')) wp_send_json_error('Yapay zekâ için ücretsiz üye girişi yapın.', 403);
+        if (!class_exists('OSC_Evrak') || !OSC_Evrak::yz_acik()) wp_send_json_error('Yapay zekâ şu an kapalı.');
+        $sinif = (int) (isset($_POST['sinif']) ? $_POST['sinif'] : 0); $ders = sanitize_text_field(wp_unslash(isset($_POST['ders']) ? $_POST['ders'] : ''));
+        if ($sinif < 1 || $sinif > 12 || $ders === '') wp_send_json_error('Sınıf ve ders seçin.');
+        $k = self::kutuphane(); $anah = $sinif . '|' . $ders;
+        if (isset($k[$anah])) wp_send_json_success(array_merge(array('kaynak' => !empty($k[$anah]['durum']) && $k[$anah]['durum'] === 'taslak' ? 'taslak' : 'program'), $k[$anah]));
+        $kk = 'osc_yp_yz_' . get_current_user_id() . '_' . gmdate('Ymd'); $n = (int) get_transient($kk);
+        if ($n >= 5 && !current_user_can('manage_options')) wp_send_json_error('Bugünkü yapay zekâ hakkınız doldu.'); set_transient($kk, $n + 1, DAY_IN_SECONDS);
+        $p = "Türkiye’de MEB Türkiye Yüzyılı Maarif Modeli kapsamında okutulan {$sinif}. sınıf “{$ders}” dersinin öğretim programındaki ünite/temaları ve her birinin öğrenme çıktılarını, yaklaşık ders saatleriyle birlikte yaz. Bilmediğin kodları uydurma; kod alanını boş bırak. Ünite sırası öğretim programındaki sıra olsun.\nYalnızca şu biçimde geçerli JSON döndür:\n{\"uniteler\":[{\"ad\":\"ünite/tema adı\",\"saat\":24,\"ciktilar\":[{\"kod\":\"\",\"ad\":\"öğrenme çıktısı\"}]}]}";
+        $r = OSC_YZ_API::json($p, 6000, 80);
+        if (!is_array($r)) wp_send_json_error(is_string($r) ? $r : 'Yapay zekâ yanıt vermedi.');
+        $u = self::temizle($r); if (!$u) wp_send_json_error('Yapay zekâ yanıtı çözümlenemedi.');
+        $k[$anah] = array('yil' => self::takvim()['yil'], 'durum' => 'taslak', 'kaynak_ad' => 'Yapay zekâ taslağı (yönetici onayı bekliyor)', 'tarih' => current_time('Y-m-d'), 'uniteler' => $u);
+        self::kutuphane_yaz($k);
+        wp_send_json_success(array_merge(array('kaynak' => 'taslak'), $k[$anah]));
+    }
+    /* ---------- yönetim ---------- */
+    private function yonetici() { if (!current_user_can('manage_options') || !wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'osc_yp_yon')) wp_send_json_error('Yetkisiz.', 403); }
+    public function ajax_ayikla() {
+        $this->yonetici();
+        $sinif = (int) $_POST['sinif']; $ders = sanitize_text_field(wp_unslash($_POST['ders'])); $metin = mb_substr(wp_unslash(isset($_POST['metin']) ? $_POST['metin'] : ''), 0, 60000);
+        if (mb_strlen($metin) < 200) wp_send_json_error('Metin çok kısa. PDF’te doğru sayfaları seçtiğinizden emin olun.');
+        $p = "Aşağıda MEB öğretim programı belgesinden çıkarılmış metin var. Bu metinden yalnızca {$sinif}. SINIF “{$ders}” dersine ait ünite/temaları, her ünitenin/temanın ders saatini (süresini) ve öğrenme çıktılarını (kodlarıyla birlikte, ör. MAT.5.1.1) sırasıyla çıkar. Öğrenme çıktısının alt maddelerini (a, b, c… süreç bileşenleri) yazma; yalnızca ana çıktı cümlesini yaz. Metinde olmayan bilgi uydurma.\nYalnızca şu biçimde geçerli JSON döndür:\n{\"uniteler\":[{\"ad\":\"\",\"saat\":0,\"ciktilar\":[{\"kod\":\"\",\"ad\":\"\"}]}]}\n\nMETİN:\n" . $metin;
+        $r = OSC_YZ_API::json($p, 8000, 110);
+        if (!is_array($r)) wp_send_json_error(is_string($r) ? $r : 'Yapay zekâ yanıt vermedi.');
+        $u = self::temizle($r); if (!$u) wp_send_json_error('Bu metinde ünite/çıktı bulunamadı.');
+        wp_send_json_success(array('uniteler' => $u));
+    }
+    public function ajax_kaydet() {
+        $this->yonetici();
+        $sinif = (int) $_POST['sinif']; $ders = trim(sanitize_text_field(wp_unslash($_POST['ders'])));
+        if ($sinif < 1 || $sinif > 12 || $ders === '') wp_send_json_error('Sınıf ve ders gerekli.');
+        $u = self::temizle(array('uniteler' => json_decode(wp_unslash(isset($_POST['uniteler']) ? $_POST['uniteler'] : '[]'), true)));
+        if (!$u) wp_send_json_error('En az bir ünite girin.');
+        $k = self::kutuphane(); $k[$sinif . '|' . $ders] = array('yil' => self::takvim()['yil'], 'durum' => 'onayli', 'kaynak_ad' => sanitize_text_field(wp_unslash(isset($_POST['kaynak_ad']) ? $_POST['kaynak_ad'] : 'MEB öğretim programı')), 'tarih' => current_time('Y-m-d'), 'uniteler' => $u);
+        ksort($k); self::kutuphane_yaz($k); wp_send_json_success();
+    }
+    public function ajax_sil() { $this->yonetici(); $k = self::kutuphane(); unset($k[sanitize_text_field(wp_unslash($_POST['anahtar']))]); self::kutuphane_yaz($k); wp_send_json_success(); }
+    public function ajax_takvim() {
+        $this->yonetici();
+        $d = json_decode(wp_unslash(isset($_POST['takvim']) ? $_POST['takvim'] : '{}'), true); if (!is_array($d)) wp_send_json_error('Geçersiz.');
+        $tar = function ($x) { return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $x) ? (string) $x : ''; };
+        $l = function ($a) use ($tar) { $o = array(); foreach ((array) $a as $x) if (is_array($x) && $tar(isset($x['bas']) ? $x['bas'] : '')) $o[] = array('ad' => sanitize_text_field((string) (isset($x['ad']) ? $x['ad'] : '')), 'bas' => $tar($x['bas']), 'bit' => $tar(isset($x['bit']) && $x['bit'] ? $x['bit'] : $x['bas'])); return $o; };
+        $t = array('yil' => sanitize_text_field((string) $d['yil']), 'baslangic' => $tar($d['baslangic']), 'bitis' => $tar($d['bitis']), 'donem2' => $tar(isset($d['donem2']) ? $d['donem2'] : ''), 'tatiller' => $l(isset($d['tatiller']) ? $d['tatiller'] : array()), 'resmi' => $l(isset($d['resmi']) ? $d['resmi'] : array()));
+        if (!$t['baslangic'] || !$t['bitis']) wp_send_json_error('Başlangıç ve bitiş tarihi gerekli.');
+        update_option('osc_yp_takvim', $t); wp_send_json_success();
+    }
+    public function menu() { add_submenu_page('osc-ogretmen-masasi', 'Yıllık Plan ve Takvim', 'Yıllık Plan ve Takvim', 'manage_options', 'osc-yplan', array($this, 'sayfa')); }
+    public function sayfa() {
+        $t = self::takvim(); $k = self::kutuphane(); $kat = self::katalog();
+        $l = array(); foreach ($k as $a => $v) { list($s, $d) = explode('|', $a, 2); $n = 0; foreach ($v['uniteler'] as $u) $n += count($u['ciktilar']); $l[] = array('anahtar' => $a, 'sinif' => (int) $s, 'ders' => $d, 'yil' => isset($v['yil']) ? $v['yil'] : '', 'durum' => isset($v['durum']) ? $v['durum'] : 'onayli', 'kaynak_ad' => isset($v['kaynak_ad']) ? $v['kaynak_ad'] : '', 'unite' => count($v['uniteler']), 'cikti' => $n, 'uniteler' => $v['uniteler']); }
+        ?>
+<div class="wrap" id="yp-yon"><h1>Yıllık Plan ve Takvim</h1>
+<p>Öğretmenler Evrak Hazırla’da 1–12. sınıfların tüm dersleri için yıllık plan hazırlar. Plan; buradaki <b>çalışma takvimine</b> ve <b>öğretim programı kütüphanesine</b> göre hafta hafta otomatik oluşur.</p>
+<div class="yp-k"><h2>📅 Her yıl yapılacaklar</h2><ol><li>MEB yeni yılın çalışma takvimini yayımlayınca aşağıdaki takvimi güncelleyin (başlangıç, bitiş, ara tatiller, resmî tatiller).</li><li>Öğretim programı değişen dersler için programı yeniden yükleyin: MEB’in öğretim programı PDF’ini seçin, ilgili sınıfın sayfalarını yazın, “Yapay zekâ ile oku” deyin, kontrol edip kaydedin.</li><li>Kütüphanede programı olmayan derslerde, senaryo tablosu varsa o tablodaki çıktılar kullanılır; o da yoksa öğretmen üniteleri kendisi yazar (ya da üyeler yapay zekâya taslak yazdırır; bu taslaklar burada “inceleme bekliyor” olarak görünür).</li></ol></div>
+
+<div class="yp-k"><h2>Çalışma takvimi</h2>
+<p><label>Eğitim-öğretim yılı <input id="yp-yil" value="<?php echo esc_attr($t['yil']); ?>" class="small-text" style="width:100px"></label> &nbsp; <label>Ders yılı başlangıcı <input type="date" id="yp-bas" value="<?php echo esc_attr($t['baslangic']); ?>"></label> &nbsp; <label>2. dönem başlangıcı <input type="date" id="yp-d2" value="<?php echo esc_attr(isset($t['donem2']) ? $t['donem2'] : ''); ?>"></label> &nbsp; <label>Ders yılı sonu <input type="date" id="yp-bit" value="<?php echo esc_attr($t['bitis']); ?>"></label></p>
+<p><b>Tatil haftaları</b> (plana ders yazılmaz) — her satıra <code>Ad | başlangıç | bitiş</code> (YYYY-AA-GG):</p>
+<textarea id="yp-tatil" rows="4" class="large-text code"><?php echo esc_textarea(implode("\n", array_map(function ($x) { return $x['ad'] . ' | ' . $x['bas'] . ' | ' . $x['bit']; }, $t['tatiller']))); ?></textarea>
+<p><b>Resmî tatil günleri</b> (planda ilgili haftaya not düşülür):</p>
+<textarea id="yp-resmi" rows="5" class="large-text code"><?php echo esc_textarea(implode("\n", array_map(function ($x) { return $x['ad'] . ' | ' . $x['bas'] . ' | ' . $x['bit']; }, $t['resmi']))); ?></textarea>
+<p><button class="button button-primary" id="yp-tk">Takvimi kaydet</button> <span id="yp-tk-d"></span></p></div>
+
+<div class="yp-k"><h2>Öğretim programı ekle / güncelle</h2>
+<p><label>Sınıf <select id="yp-s"><?php for ($i = 1; $i <= 12; $i++) echo '<option value="' . $i . '">' . $i . '. sınıf</option>'; ?></select></label> &nbsp; <label>Ders <input id="yp-d" list="yp-dl" style="width:320px" placeholder="Ders adı"></label><datalist id="yp-dl"></datalist> &nbsp; <label>Kaynak <input id="yp-ka" value="MEB öğretim programı <?php echo esc_attr($t['yil']); ?>" style="width:240px"></label></p>
+<p><b>1) PDF’ten oku:</b> <input type="file" id="yp-pdf" accept="application/pdf"> sayfalar <input id="yp-sf" placeholder="ör. 40-75" style="width:110px"> <button class="button" id="yp-oku">🤖 Yapay zekâ ile oku</button> <span id="yp-oku-d"></span><br><small>MEB öğretim programı PDF’leri <a href="https://mufredat.meb.gov.tr" target="_blank" rel="noopener">mufredat.meb.gov.tr</a> ve <a href="https://tymm.meb.gov.tr" target="_blank" rel="noopener">tymm.meb.gov.tr</a> adreslerindedir. Birkaç sınıfın birlikte olduğu PDF’lerde yalnızca ilgili sınıfın sayfalarını yazın.</small></p>
+<p><b>2) Kontrol edin / elle yazın</b> — <code>## Ünite adı | ders saati</code> satırı yeni ünite başlatır; altındaki her satır bir öğrenme çıktısıdır (<code>KOD | çıktı</code> ya da yalnızca çıktı):</p>
+<textarea id="yp-u" rows="14" class="large-text code" placeholder="## SAYILAR VE NİCELİKLER (1) | 30&#10;MAT.5.1.1 | Doğal sayılarla ilgili ..."></textarea>
+<p><button class="button button-primary" id="yp-kay">Kütüphaneye kaydet</button> <button class="button" id="yp-tem">Temizle</button> <span id="yp-kay-d"></span></p></div>
+
+<div class="yp-k"><h2>Kütüphane (<?php echo count($l); ?> ders)</h2>
+<table class="widefat striped"><thead><tr><th>Sınıf</th><th>Ders</th><th>Ünite</th><th>Çıktı</th><th>Yıl</th><th>Kaynak</th><th>Durum</th><th></th></tr></thead><tbody>
+<?php if (!$l) echo '<tr><td colspan="8">Henüz program yüklenmedi. Senaryo tablosu olan derslerde (5–12. sınıf temel dersler) planlar şimdiden senaryodaki çıktılarla oluşur.</td></tr>'; foreach ($l as $i => $x) echo '<tr><td>' . $x['sinif'] . '</td><td>' . esc_html($x['ders']) . '</td><td>' . $x['unite'] . '</td><td>' . $x['cikti'] . '</td><td>' . esc_html($x['yil']) . '</td><td>' . esc_html($x['kaynak_ad']) . '</td><td>' . ($x['durum'] === 'taslak' ? '<b style="color:#b45309">İnceleme bekliyor</b>' : '✅ Onaylı') . '</td><td><a href="#" data-duz="' . $i . '">Düzenle</a> · <a href="#" data-sil="' . esc_attr($x['anahtar']) . '" style="color:#b91c1c">Sil</a></td></tr>'; ?>
+</tbody></table></div>
+<style>#yp-yon .yp-k{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:6px 18px 14px;margin:16px 0;max-width:1100px}</style>
+<script>
+(function () {
+  var N = <?php echo wp_json_encode(wp_create_nonce('osc_yp_yon')); ?>, A = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>, KAT = <?php echo wp_json_encode($kat, JSON_UNESCAPED_UNICODE); ?>, LIB = <?php echo wp_json_encode($l, JSON_UNESCAPED_UNICODE); ?>;
+  function $(i) { return document.getElementById(i); }
+  function post(a, d) { var f = new FormData(); f.append('action', 'osc_yp_' + a); f.append('nonce', N); for (var k in d) f.append(k, d[k]); return fetch(A, { method: 'POST', body: f, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { if (!j.success) throw new Error(j.data || 'Hata'); return j.data; }); }
+  function dl() { $('yp-dl').innerHTML = [].concat.apply([], (KAT[$('yp-s').value] || []).map(function (g) { return g.d; })).map(function (d) { return '<option value="' + d.replace(/"/g, '&quot;') + '">'; }).join(''); }
+  $('yp-s').onchange = dl; dl();
+  function satirlar(t) { return t.split('\n').map(function (l) { var p = l.split('|').map(function (x) { return x.trim(); }); return p[0] ? { ad: p[0], bas: p[1] || '', bit: p[2] || p[1] || '' } : null; }).filter(Boolean); }
+  $('yp-tk').onclick = function () { post('takvim', { takvim: JSON.stringify({ yil: $('yp-yil').value, baslangic: $('yp-bas').value, bitis: $('yp-bit').value, donem2: $('yp-d2').value, tatiller: satirlar($('yp-tatil').value), resmi: satirlar($('yp-resmi').value) }) }).then(function () { $('yp-tk-d').textContent = '✅ Kaydedildi'; }).catch(function (e) { $('yp-tk-d').textContent = '❌ ' + e.message; }); };
+  function yazi(u) { return u.map(function (x) { return '## ' + x.ad + (x.saat ? ' | ' + x.saat : '') + '\n' + x.ciktilar.map(function (c) { return (c.kod ? c.kod + ' | ' : '') + c.ad; }).join('\n'); }).join('\n\n'); }
+  function coz(t) { var u = [], s = null; t.split('\n').forEach(function (l) { l = l.trim(); if (!l) return; if (/^##/.test(l)) { var p = l.replace(/^#+\s*/, '').split('|'); s = { ad: p[0].trim(), saat: parseInt(p[1], 10) || 0, ciktilar: [] }; u.push(s); return; } if (!s) { s = { ad: 'Ünite', saat: 0, ciktilar: [] }; u.push(s); } var q = l.split('|'); if (q.length > 1 && /^[A-ZÇĞİÖŞÜa-z0-9.\-]{2,25}$/.test(q[0].trim())) s.ciktilar.push({ kod: q[0].trim(), ad: q.slice(1).join('|').trim() }); else s.ciktilar.push({ kod: '', ad: l }); }); return u; }
+  $('yp-kay').onclick = function () { var u = coz($('yp-u').value); if (!$('yp-d').value.trim()) return alert('Ders adını yazın.'); post('kaydet', { sinif: $('yp-s').value, ders: $('yp-d').value.trim(), kaynak_ad: $('yp-ka').value, uniteler: JSON.stringify(u) }).then(function () { $('yp-kay-d').textContent = '✅ Kaydedildi (' + u.length + ' ünite). Sayfa yenileniyor…'; setTimeout(function () { location.reload(); }, 900); }).catch(function (e) { $('yp-kay-d').textContent = '❌ ' + e.message; }); };
+  $('yp-tem').onclick = function () { $('yp-u').value = ''; };
+  document.querySelectorAll('[data-duz]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var x = LIB[+a.dataset.duz]; $('yp-s').value = x.sinif; dl(); $('yp-d').value = x.ders; $('yp-ka').value = x.durum === 'taslak' ? 'MEB öğretim programı (kontrol edildi)' : x.kaynak_ad; $('yp-u').value = yazi(x.uniteler); $('yp-u').scrollIntoView({ behavior: 'smooth', block: 'center' }); }; });
+  document.querySelectorAll('[data-sil]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); if (!confirm('Silinsin mi?')) return; post('sil', { anahtar: a.dataset.sil }).then(function () { location.reload(); }); }; });
+  var pdfLib = null;
+  function pdfYukle() { if (pdfLib) return Promise.resolve(pdfLib); return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js'; s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'; pdfLib = window.pdfjsLib; ok(pdfLib); }; s.onerror = no; document.head.appendChild(s); }); }
+  function araliklar(t, n) { var o = []; (t || '1-' + n).split(',').forEach(function (p) { var m = p.trim().split('-'); var a = +m[0], b = +(m[1] || m[0]); for (var i = Math.max(1, a); i <= Math.min(n, b); i++) o.push(i); }); return o; }
+  $('yp-oku').onclick = function () {
+    var f = $('yp-pdf').files[0], d = $('yp-oku-d'); if (!f) return alert('PDF seçin.'); if (!$('yp-d').value.trim()) return alert('Önce sınıf ve dersi seçin.');
+    d.textContent = 'PDF okunuyor…';
+    pdfYukle().then(function (L) { return f.arrayBuffer().then(function (b) { return L.getDocument({ data: b }).promise; }); }).then(function (pdf) {
+      var sf = araliklar($('yp-sf').value, pdf.numPages), metin = [];
+      return sf.reduce(function (p, i) { return p.then(function () { return pdf.getPage(i).then(function (pg) { return pg.getTextContent(); }).then(function (c) { metin.push(c.items.map(function (x) { return x.str + (x.hasEOL ? '\n' : ' '); }).join('')); }); }); }, Promise.resolve()).then(function () { return metin; });
+    }).then(function (sayfalar) {
+      var parca = [], cur = ''; sayfalar.forEach(function (s) { if ((cur + s).length > 45000 && cur) { parca.push(cur); cur = ''; } cur += '\n' + s; }); if (cur) parca.push(cur);
+      var tum = [], i = 0;
+      return parca.reduce(function (p, m) { return p.then(function () { i++; d.textContent = '🤖 Yapay zekâ okuyor… (' + i + '/' + parca.length + ')'; return post('ayikla', { sinif: $('yp-s').value, ders: $('yp-d').value.trim(), metin: m }).then(function (r) { r.uniteler.forEach(function (u) { var son = tum[tum.length - 1]; if (son && son.ad === u.ad) { son.ciktilar = son.ciktilar.concat(u.ciktilar); son.saat = son.saat || u.saat; } else tum.push(u); }); }).catch(function (e) { if (parca.length === 1) throw e; }); }); }, Promise.resolve()).then(function () { return tum; });
+    }).then(function (u) { if (!u.length) throw new Error('Ünite bulunamadı.'); $('yp-u').value = yazi(u); d.textContent = '✅ ' + u.length + ' ünite okundu. Kontrol edip kaydedin.'; }).catch(function (e) { d.textContent = '❌ ' + (e.message || e); });
+  };
+})();
+</script></div>
+<?php }
+}
+$GLOBALS['osc_yplan'] = new OSC_YPlan();
 }
 
 }

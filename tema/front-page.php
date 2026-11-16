@@ -383,6 +383,56 @@ $grades = array(
         .sph2-kod { flex-wrap:wrap; } .sph2-kod span { flex-basis:100%; padding-top:4px; } .sph2 .sph2-kod input { flex:1; }
     }
     @media (prefers-reduced-motion: reduce) { .sph2 * { transition:none !important; } }
+
+    /* ===== Sade ana sayfa (v3) ===== */
+    .sph2 { --brand:#2563EB; --brand-d:#1D4ED8; --ink:#0F172A; --ink2:#475569; --line:#E5E7EB; --soft:#F8FAFC; background:#fff; padding-top:0; }
+    .sx3-hero { position:relative; text-align:center; padding:56px 0 8px; }
+    .sx3-hero:before { content:""; position:absolute; left:50%; top:0; width:100vw; height:100%; transform:translateX(-50%); z-index:-1; background:radial-gradient(700px 280px at 50% -40px, #EEF4FF, transparent 70%), linear-gradient(#fff,#fff); }
+    .sx3-hero h1 { font-size:clamp(30px,4.6vw,50px); line-height:1.08; letter-spacing:-.03em; font-weight:800; max-width:820px; margin:0 auto !important; }
+    .sx3-hero h1 span { color:var(--brand); }
+    .sx3-lead { margin:14px auto 0 !important; color:var(--ink2); font-size:17px; max-width:620px; }
+    .sx3-search { position:relative; display:flex; align-items:center; gap:8px; max-width:640px; margin:26px auto 0; background:#fff; border:1.5px solid #D6DCE6; border-radius:16px; padding:6px 6px 6px 46px; box-shadow:0 18px 40px -28px rgba(15,23,42,.45); }
+    .sx3-search:focus-within { border-color:var(--brand); box-shadow:0 0 0 4px rgba(37,99,235,.12); }
+    .sx3-search svg { position:absolute; left:16px; width:20px; height:20px; color:#94A3B8; }
+    .sx3-search input { flex:1; min-width:0; border:0 !important; outline:0; background:transparent; font:inherit; font-size:16px; padding:10px 4px !important; box-shadow:none !important; color:var(--ink); }
+    .sph2 .sx3-search button { border:0; background:var(--brand); color:#fff; font:700 15px/1 inherit; font-family:inherit; padding:13px 22px; border-radius:12px; cursor:pointer; }
+    .sph2 .sx3-search button:hover { background:var(--brand-d); }
+    .sx3-siniflar { display:flex; flex-wrap:wrap; justify-content:center; gap:10px 22px; margin:22px auto 0; max-width:980px; }
+    .sx3-siniflar div { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; }
+    .sx3-siniflar span { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#94A3B8; margin-right:2px; }
+    .sph2 .sx3-siniflar a { padding:6px 11px; border-radius:99px; border:1px solid var(--line); background:#fff; font-size:13.5px; font-weight:600; color:var(--ink2); transition:all .15s; }
+    .sph2 .sx3-siniflar a:hover { border-color:var(--brand); color:var(--brand); background:#EEF4FF; }
+    .sx3-kartlar { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:38px 0 0; text-align:left; }
+    .sph2 .sx3-kart { position:relative; display:flex; flex-direction:column; gap:6px; padding:20px 18px 18px; border-radius:18px; border:1px solid var(--line); background:#fff; transition:transform .2s, box-shadow .2s, border-color .2s; }
+    .sph2 .sx3-kart:hover { transform:translateY(-3px); border-color:#C7D2FE; box-shadow:0 22px 40px -30px rgba(15,23,42,.55); }
+    .sx3-ik { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:6px; }
+    .sx3-a .sx3-ik { background:#EEF4FF; } .sx3-b .sx3-ik { background:#ECFDF5; } .sx3-c .sx3-ik { background:#F5F3FF; } .sx3-d .sx3-ik { background:#FFF7ED; }
+    .sx3-kart b { font-size:17px; color:var(--ink); }
+    .sx3-kart small { font-size:14px; line-height:1.5; color:var(--ink2); padding-right:14px; }
+    .sx3-kart i { position:absolute; top:22px; right:18px; width:18px; height:18px; color:#94A3B8; transition:transform .2s, color .2s; }
+    .sx3-kart:hover i { transform:translateX(3px); color:var(--brand); }
+    .sx3-kart i svg { width:18px; height:18px; }
+    /* bölümleri sadeleştir */
+    .sph2 .sph2-sec { margin-top:64px; }
+    .sph2 .sph2-band { background:var(--soft); color:var(--ink); border:1px solid var(--line); box-shadow:none; }
+    .sph2 .sph2-band:before, .sph2 .sph2-band:after { display:none; }
+    .sph2 .sph2-band h2 { color:var(--ink) !important; } .sph2 .sph2-band p { color:var(--ink2) !important; }
+    .sph2 .sph2-band .sph2-band-cta { background:var(--brand); color:#fff !important; }
+    .sph2 .sph2-band-steps div, .sph2 .sph2-band li a { background:#fff !important; color:var(--ink) !important; border:1px solid var(--line); }
+    .sph2 .sph2-band-steps i, .sph2 .sph2-bubn { background:#EEF4FF !important; color:var(--brand) !important; border-color:#C7D2FE !important; }
+    .sph2 .sph2-uye-k { background:#fff !important; color:var(--ink) !important; border:1px solid var(--line) !important; box-shadow:none !important; }
+    .sph2 .sph2-uye-k:before, .sph2 .sph2-uye-k:after { display:none !important; }
+    .sph2 .sph2-uye-k h2 { color:var(--ink) !important; } .sph2 .sph2-uye-k small, .sph2 .sph2-uye-k li { color:var(--ink2) !important; }
+    .sph2 .sph2-uye-k .ana { background:var(--brand) !important; color:#fff !important; } .sph2 .sph2-uye-k .ik2 { background:var(--soft) !important; color:var(--ink) !important; border:1px solid var(--line) !important; }
+    .sph2 .sph2-uye-k li:before { border-color:var(--brand) !important; }
+    .sph2 .om-ana-kap { background:linear-gradient(135deg,#F5F3FF,#EEF4FF 60%,#ECFEFF); color:var(--ink); box-shadow:none; border:1px solid #E0E7FF; }
+    .sph2 .om-ana h2 { color:var(--ink) !important; } .sph2 .om-ana h2 em { background:linear-gradient(90deg,#4F46E5,#0EA5E9); -webkit-background-clip:text; background-clip:text; }
+    .sph2 .om-ana-sol p { color:var(--ink2); } .sph2 .om-ana-et { color:#4338CA; background:#fff; border-color:#E0E7FF; }
+    .sph2 .om-ana-btn { background:#4F46E5; color:#fff !important; }
+    .sph2 .om-ana-kart { background:#fff; border-color:#E0E7FF; color:var(--ink) !important; } .sph2 .om-ana-kart:hover { background:#fff; box-shadow:0 14px 30px -24px rgba(30,27,75,.6); }
+    .sph2 .om-ana-kart small { color:var(--ink2); } .sph2 .om-ana-kart em { color:#4F46E5; }
+    @media (max-width: 900px) { .sx3-kartlar { grid-template-columns:repeat(2,1fr); } .sx3-hero { padding-top:36px; } }
+    @media (max-width: 520px) { .sx3-kartlar { grid-template-columns:1fr 1fr; gap:10px; } .sph2 .sx3-kart { padding:14px; } .sx3-kart small { display:none; } .sx3-kart b { font-size:15px; } .sx3-kart i { display:none; } .sx3-siniflar { gap:8px; } .sx3-siniflar span { width:100%; text-align:center; } .sx3-search { padding-left:40px; } .sph2 .sx3-search button { padding:12px 16px; } }
 </style>
 
 <div class="sph2"><div class="sph2-wrap">
@@ -391,142 +441,37 @@ $grades = array(
     <div class="sph2-ad"><div><?php echo stripslashes($ad_home_top); ?></div></div>
     <?php endif; ?>
 
-    <!-- GİRİŞ: arama + sınıf seçimi -->
-    <section class="sph2-hero" aria-labelledby="sph2-h">
-        <div>
-            <h1 id="sph2-h">Soruindir.net'te ne aramak istersin?</h1>
-            <p class="sph2-lead">Deneme sınavı, yazılı soruları, yaprak test, plan ve evrak. Ara, indir ya da ekranda çöz.</p>
-            <form role="search" method="get" class="sph2-search" action="<?php echo esc_url(home_url('/')); ?>">
-                <?php echo $ico_search; ?>
-                <label for="sph2-s" style="position:absolute;left:-9999px;">Sitede ara</label>
-                <input type="search" id="sph2-s" name="s" value="<?php echo esc_attr(get_search_query()); ?>" placeholder="Örn: 8. sınıf matematik deneme" autocomplete="off" required>
-                <button type="submit">Ara</button>
-            </form>
-            <div class="sph2-facts">
-                <?php if ($total_posts > 0): ?><span><strong><?php echo number_format_i18n($total_posts); ?></strong>içerik</span><?php endif; ?>
-                <span><strong>12</strong>sınıf düzeyi</span>
-                <span><strong>Ücretsiz</strong>indir ve yazdır</span>
-            </div>
-        </div>
-
-        <div class="sph2-sheet">
-            <h2>Sınıfını işaretle</h2>
-            <p>O sınıfa ait tüm dosya ve testler açılır.</p>
+    <!-- GİRİŞ: arama + sınıflar + ne yapmak istiyorsun -->
+    <section class="sx3-hero" aria-labelledby="sph2-h">
+        <h1 id="sph2-h">Yazılı, test, plan ve evrak <span>tek yerde</span></h1>
+        <p class="sx3-lead">Aradığın dosyayı bul, ücretsiz indir ya da testi ekranda çöz.</p>
+        <form role="search" method="get" class="sx3-search" action="<?php echo esc_url(home_url('/')); ?>">
+            <?php echo $ico_search; ?>
+            <label for="sph2-s" style="position:absolute;left:-9999px;">Sitede ara</label>
+            <input type="search" id="sph2-s" name="s" value="<?php echo esc_attr(get_search_query()); ?>" placeholder="Örn: 8. sınıf matematik 1. yazılı" autocomplete="off" required>
+            <button type="submit">Ara</button>
+        </form>
+        <nav class="sx3-siniflar" aria-label="Sınıflar">
             <?php foreach ($grades as $label => $nums): ?>
-            <div class="sph2-grade-row">
-                <span><?php echo esc_html($label); ?></span>
-                <?php foreach ($nums as $n): ?>
-                <a class="sph2-bub" href="<?php echo esc_url(home_url('/category/' . $n . '-sinif')); ?>" aria-label="<?php echo esc_attr($n . '. sınıf'); ?>"><b><?php echo $n; ?></b></a>
-                <?php endforeach; ?>
-            </div>
+            <div><span><?php echo esc_html($label); ?></span><?php foreach ($nums as $n): ?><a href="<?php echo esc_url(home_url('/category/' . $n . '-sinif')); ?>"><?php echo $n; ?>. sınıf</a><?php endforeach; ?></div>
             <?php endforeach; ?>
-            <a class="sph2-test-cta" href="<?php echo esc_url($test_page_url); ?>">
-                <span><strong>Online test çöz</strong><small>İndirmeden ekranda çöz, sonucunu hemen gör</small></span>
-                <?php echo $ico_go; ?>
-            </a>
+        </nav>
+        <?php
+        $sx3_om = class_exists('OSC_Masa') && OSC_Masa::yayinda();
+        $sx3_lgs = class_exists('LGS_Tercih_Robotu') && method_exists('LGS_Tercih_Robotu', 'robot_url') ? LGS_Tercih_Robotu::robot_url() : '';
+        $sx3_yks = class_exists('YKS_Tercih_Robotu') ? YKS_Tercih_Robotu::robot_url() : '';
+        $sx3_kart = array(
+            array('📄', 'Dosya indir', 'Yazılı soruları, deneme ve yaprak testler; cevap anahtarlı PDF ve Word.', home_url('/category/yazili-sorulari/'), 'a'),
+            array('✅', 'Online test çöz', 'Ekranda çöz, puanını ve yanlışlarını hemen gör.', $test_page_url, 'b'),
+        );
+        $sx3_kart[] = $sx3_om ? array('🧑‍🏫', 'Öğretmen Masası', 'Senaryoya uygun yazılı, tutanak, BEP, kulüp evrakları ve OYS çizelgesi hazırla.', OSC_Masa::url(), 'c') : array('🗓️', 'Yıllık planlar', 'Tüm sınıf ve dersler için güncel ünitelendirilmiş yıllık planlar.', home_url('/category/yillik-planlar/'), 'c');
+        $sx3_kart[] = ($sx3_lgs || $sx3_yks) ? array('🎓', 'Tercih robotları', 'LGS ve YKS taban puanları; puanınla yerleşebileceğin okulları gör.', $sx3_lgs ? $sx3_lgs : $sx3_yks, 'd') : array('🧮', 'Hesaplamalar', 'LGS, YKS ve karne puanı hesaplama araçları.', home_url('/'), 'd');
+        ?>
+        <div class="sx3-kartlar">
+            <?php foreach ($sx3_kart as $k): ?>
+            <a class="sx3-kart sx3-<?php echo $k[4]; ?>" href="<?php echo esc_url($k[3]); ?>"><span class="sx3-ik" aria-hidden="true"><?php echo $k[0]; ?></span><b><?php echo esc_html($k[1]); ?></b><small><?php echo esc_html($k[2]); ?></small><i aria-hidden="true"><?php echo $ico_go; ?></i></a>
+            <?php endforeach; ?>
         </div>
-    </section>
-
-    <!-- ÖĞRETMEN MASASI (Öğretmen Masası eklentisi): Yazılı Hazırla + Evrak Hazırla -->
-    <?php $sph2_om = class_exists('OSC_Masa') ? OSC_Masa::anasayfa_bolumu() : ''; if ($sph2_om): echo $sph2_om; else: ?>
-    <!-- YAZILI HAZIRLA: MEB senaryolarına uygun yazılı -->
-    <?php $sph2_yz = class_exists('OSC_Yazili') ? OSC_Yazili::url() : home_url('/yazili-hazirla/'); ?>
-    <?php if (class_exists('OSC_Yazili') && method_exists('OSC_Yazili', 'yayinda') && OSC_Yazili::yayinda()): // yayına alınana kadar gizli ?>
-    <section class="sph2-sec" aria-labelledby="sph2-yz">
-        <a class="sph2-yz" href="<?php echo esc_url($sph2_yz); ?>">
-            <div class="sph2-yz-sol">
-                <span class="sph2-yz-et"><i></i>YENİ · MEB 2026-2027 senaryolarına uygun</span>
-                <h2 id="sph2-yz">Yazılınızı <em>bir dakikada</em> hazırlayın</h2>
-                <p>Sınıfı, dersi ve senaryoyu seçin; sorular senaryodaki öğrenme çıktılarına göre otomatik gelsin. Beğenmediğinizi değiştirin, isterseniz kendiniz yazın; cevap anahtarlı Word veya PDF olarak indirin.</p>
-                <div class="sph2-yz-ok">
-                    <span>📚 5–12. sınıf, tüm dersler</span><span>🎯 Senaryoya birebir</span><span>✍️ Cevap boşluklu kâğıt</span><span>🔑 Cevap anahtarı</span>
-                </div>
-                <span class="sph2-yz-btn">Hemen yazılı hazırla <b>→</b></span>
-            </div>
-            <div class="sph2-yz-sag" aria-hidden="true">
-                <div class="sph2-yz-kagit">
-                    <div class="k1">T.C.<br><b>ATATÜRK ORTAOKULU</b><br><small>8. SINIF MATEMATİK 1. YAZILI</small></div>
-                    <div class="k2"><span>1.</span><i style="width:88%"></i><em>10 P</em></div><div class="k3"></div><div class="k3"></div>
-                    <div class="k2"><span>2.</span><i style="width:70%"></i><em>15 P</em></div><div class="k4"><s></s><s class="d"></s><s></s><s></s></div>
-                    <div class="k2"><span>3.</span><i style="width:80%"></i><em>10 P</em></div><div class="k3"></div><div class="k3"></div>
-                </div>
-                <div class="sph2-yz-rozet">⚡ Senaryo 2 · 8 soru</div>
-            </div>
-        </a>
-        <style>
-        .sph2-yz{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:center;overflow:hidden;border-radius:28px;padding:36px 40px;color:#fff!important;text-decoration:none!important;background:radial-gradient(700px 260px at 90% -20%,rgba(192,38,211,.55),transparent 60%),radial-gradient(600px 300px at 0% 130%,rgba(14,165,233,.35),transparent 60%),linear-gradient(135deg,#0b1024,#1e1b4b 55%,#312e81);box-shadow:0 30px 60px -36px rgba(30,27,75,.9);transition:transform .25s,box-shadow .25s}
-        .sph2-yz:hover{transform:translateY(-3px);box-shadow:0 40px 70px -36px rgba(30,27,75,.95)}
-        .sph2-yz::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:32px 32px;-webkit-mask-image:radial-gradient(ellipse at 80% 0,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at 80% 0,#000 10%,transparent 70%)}
-        .sph2-yz>div{position:relative}
-        .sph2-yz-et{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#e0e7ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:6px 12px;border-radius:99px}
-        .sph2-yz-et i{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.25)}
-        .sph2-yz h2{color:#fff!important;font-size:clamp(26px,3.4vw,40px)!important;line-height:1.1!important;margin:14px 0 10px!important;letter-spacing:-.02em}
-        .sph2-yz h2 em{font-style:normal;background:linear-gradient(90deg,#a5b4fc,#f0abfc,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent}
-        .sph2-yz p{color:#cbd5e1;font-size:15.5px;line-height:1.6;margin:0 0 16px}
-        .sph2-yz-ok{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
-        .sph2-yz-ok span{font-size:12.5px;font-weight:700;color:#e0e7ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:7px 11px}
-        .sph2-yz-btn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1e1b4b;font-weight:800;font-size:15.5px;padding:14px 22px;border-radius:15px;box-shadow:0 14px 28px -14px rgba(0,0,0,.6)}
-        .sph2-yz-btn b{transition:transform .2s}.sph2-yz:hover .sph2-yz-btn b{transform:translateX(4px)}
-        .sph2-yz-sag{display:flex;justify-content:center}
-        .sph2-yz-kagit{width:min(300px,100%);background:#fff;border-radius:10px;padding:18px 18px 22px;transform:rotate(3deg);box-shadow:0 30px 50px -20px rgba(0,0,0,.6)}
-        .sph2-yz-kagit .k1{border:1.5px solid #111;text-align:center;font-size:9px;line-height:1.4;color:#111;padding:5px;margin-bottom:12px}
-        .sph2-yz-kagit .k1 b{font-size:10px}.sph2-yz-kagit .k1 small{font-size:8px;font-weight:700}
-        .sph2-yz-kagit .k2{display:flex;align-items:center;gap:6px;margin:10px 0 6px}
-        .sph2-yz-kagit .k2 span{font-size:10px;font-weight:800;color:#111}
-        .sph2-yz-kagit .k2 i{height:7px;border-radius:4px;background:#cbd5e1}
-        .sph2-yz-kagit .k2 em{margin-left:auto;font-style:normal;font-size:8.5px;font-weight:800;color:#111}
-        .sph2-yz-kagit .k3{height:14px;border-bottom:1px dotted #94a3b8;margin-left:16px}
-        .sph2-yz-kagit .k4{display:flex;gap:6px;margin-left:16px}
-        .sph2-yz-kagit .k4 s{flex:1;height:14px;border:1px solid #cbd5e1;border-radius:4px}
-        .sph2-yz-kagit .k4 s.d{background:#d1fae5;border-color:#34d399}
-        .sph2-yz-rozet{position:absolute;bottom:-4px;left:6%;background:linear-gradient(135deg,#5b5bf6,#c026d3);color:#fff;font-size:12.5px;font-weight:800;padding:8px 13px;border-radius:12px;box-shadow:0 14px 26px -12px rgba(124,58,237,.9);transform:rotate(-4deg)}
-        @media (max-width:820px){.sph2-yz{grid-template-columns:1fr;padding:26px 22px}.sph2-yz-sag{display:none}}
-        </style>
-    </section>
-    <?php endif; ?>
-    <?php endif; // öğretmen masası ?>
-
-    <!-- ÜYELİK: öğretmen ve öğrenci girişleri -->
-    <section class="sph2-sec" aria-label="Üyelik">
-        <?php if ($sph_giris): $sph_u = wp_get_current_user(); $sph_ogr = ($sph_rol === 'ogrenci'); ?>
-        <div class="sph2-uye-hos">
-            <span class="sph2-uye-ik" aria-hidden="true"><?php echo $sph_ogr ? '🎒' : '👩‍🏫'; ?></span>
-            <div><h2>Tekrar hoş geldin, <?php echo esc_html($sph_u->display_name); ?></h2><p><?php echo $sph_ogr ? 'Testlerin, netlerin, ödevlerin ve konu karnen panelinde seni bekliyor.' : 'Canlı sınıf sınavı başlat, ödev linki gönder ya da yeni bir test hazırla.'; ?></p></div>
-            <a href="<?php echo esc_url($sph_ogr ? $ogr_panel : $ogt_panel); ?>"><?php echo $sph_ogr ? 'Öğrenci panelim' : 'Öğretmen panelim'; ?> <?php echo $ico_go; ?></a>
-            <a class="ik2" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">Çıkış</a>
-            <?php if ($sph_ogr): ?>
-            <form class="sph2-kod" method="get" action="<?php echo esc_url(home_url('/')); ?>"><span>Öğretmeninden kod mu aldın? Canlı sınava ya da ödeve hemen katıl.</span><input name="osc_k" maxlength="8" placeholder="KOD" autocomplete="off" required aria-label="Sınav kodu"><button type="submit">Katıl</button></form>
-            <?php endif; ?>
-        </div>
-        <?php else: ?>
-        <div class="sph2-uye">
-            <div class="sph2-uye-k ogt">
-                <div class="sph2-uye-bas"><span class="sph2-uye-ik" aria-hidden="true">👩‍🏫</span><div><h2>Öğretmenler için</h2><small>Ücretsiz öğretmen hesabı</small></div></div>
-                <ul>
-                    <li>Sınıfta canlı sınav yap; öğrenciler kodla katılsın, sen anlık izle.</li>
-                    <li>Son teslim tarihli ödev linki gönder, sonuçlar otomatik toplansın.</li>
-                    <li>Kendi testini hazırla ya da PDF/Word dosyasından tek tıkla oluştur.</li>
-                </ul>
-                <div class="sph2-uye-btn">
-                    <a class="ana" href="<?php echo esc_url(add_query_arg(array('kayit' => 1, 'rol' => 'ogretmen'), $uye_url)); ?>">Öğretmen olarak kaydol <?php echo $ico_go; ?></a>
-                    <a class="ik2" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogretmen', 'git' => $ogt_panel), $uye_url)); ?>">Giriş yap</a>
-                </div>
-            </div>
-            <div class="sph2-uye-k ogr">
-                <div class="sph2-uye-bas"><span class="sph2-uye-ik" aria-hidden="true">🎒</span><div><h2>Öğrenciler için</h2><small>Ücretsiz öğrenci hesabı</small></div></div>
-                <ul>
-                    <li>Çözdüğün testler, netlerin ve puanların tek yerde birikir.</li>
-                    <li>Konu karnenle hangi konuya çalışman gerektiğini gör.</li>
-                    <li>Öğretmeninin gönderdiği ödevleri ve canlı sınavları kaçırma.</li>
-                </ul>
-                <form class="sph2-kod" method="get" action="<?php echo esc_url(home_url('/')); ?>"><span>Öğretmeninden kod mu aldın?</span><input name="osc_k" maxlength="8" placeholder="KOD" autocomplete="off" required aria-label="Sınav kodu"><button type="submit">Katıl</button></form>
-                <div class="sph2-uye-btn">
-                    <a class="ana" href="<?php echo esc_url(add_query_arg(array('kayit' => 1, 'rol' => 'ogrenci'), $uye_url)); ?>">Öğrenci olarak kaydol <?php echo $ico_go; ?></a>
-                    <a class="ik2" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogrenci', 'git' => $ogr_panel), $uye_url)); ?>">Giriş yap</a>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
     </section>
 
     <!-- SON EKLENENLER -->
@@ -581,30 +526,6 @@ $grades = array(
         </ol>
     </section>
     <?php endif; ?>
-
-    <!-- ONLINE TEST BANDI -->
-    <section class="sph2-sec sph2-band" aria-labelledby="sph2-t">
-        <div>
-            <h2 id="sph2-t">İndirmeden ekranda çöz</h2>
-            <p>Online testlerde cevabını işaretle, sonucunu ve yanlışlarını hemen gör. İstersen testi tek tıkla yazdır.</p>
-            <a class="sph2-band-cta" href="<?php echo esc_url($test_page_url); ?>">Online testlere git <?php echo $ico_go; ?></a>
-        </div>
-        <?php if ($top_tests): ?>
-        <div>
-            <ol>
-                <?php foreach ($top_tests as $i => $row): list($p, $n) = $row; ?>
-                <li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span class="sph2-bubn"><?php echo $i + 1; ?></span><span class="t"><?php echo esc_html(get_the_title($p)); ?><small>Bu hafta <?php echo number_format_i18n($n); ?> kez çözüldü</small></span></a></li>
-                <?php endforeach; ?>
-            </ol>
-        </div>
-        <?php else: ?>
-        <div class="sph2-band-steps">
-            <div><i>1</i>Testi aç, soruları ekranda çöz.</div>
-            <div><i>2</i>Bitir'e bas, puanını hemen gör.</div>
-            <div><i>3</i>Yanlışlarını doğru cevaplarıyla incele.</div>
-        </div>
-        <?php endif; ?>
-    </section>
 
     <!-- KATEGORİLER -->
     <section class="sph2-sec" aria-label="Kategoriler">
@@ -693,6 +614,132 @@ $grades = array(
         }
         ?>
         </div>
+    </section>
+
+    <!-- ÖĞRETMEN MASASI (Öğretmen Masası eklentisi): Yazılı Hazırla + Evrak Hazırla -->
+    <?php $sph2_om = class_exists('OSC_Masa') ? OSC_Masa::anasayfa_bolumu() : ''; if ($sph2_om): echo $sph2_om; else: ?>
+    <!-- YAZILI HAZIRLA: MEB senaryolarına uygun yazılı -->
+    <?php $sph2_yz = class_exists('OSC_Yazili') ? OSC_Yazili::url() : home_url('/yazili-hazirla/'); ?>
+    <?php if (class_exists('OSC_Yazili') && method_exists('OSC_Yazili', 'yayinda') && OSC_Yazili::yayinda()): // yayına alınana kadar gizli ?>
+    <section class="sph2-sec" aria-labelledby="sph2-yz">
+        <a class="sph2-yz" href="<?php echo esc_url($sph2_yz); ?>">
+            <div class="sph2-yz-sol">
+                <span class="sph2-yz-et"><i></i>YENİ · MEB 2026-2027 senaryolarına uygun</span>
+                <h2 id="sph2-yz">Yazılınızı <em>bir dakikada</em> hazırlayın</h2>
+                <p>Sınıfı, dersi ve senaryoyu seçin; sorular senaryodaki öğrenme çıktılarına göre otomatik gelsin. Beğenmediğinizi değiştirin, isterseniz kendiniz yazın; cevap anahtarlı Word veya PDF olarak indirin.</p>
+                <div class="sph2-yz-ok">
+                    <span>📚 5–12. sınıf, tüm dersler</span><span>🎯 Senaryoya birebir</span><span>✍️ Cevap boşluklu kâğıt</span><span>🔑 Cevap anahtarı</span>
+                </div>
+                <span class="sph2-yz-btn">Hemen yazılı hazırla <b>→</b></span>
+            </div>
+            <div class="sph2-yz-sag" aria-hidden="true">
+                <div class="sph2-yz-kagit">
+                    <div class="k1">T.C.<br><b>ATATÜRK ORTAOKULU</b><br><small>8. SINIF MATEMATİK 1. YAZILI</small></div>
+                    <div class="k2"><span>1.</span><i style="width:88%"></i><em>10 P</em></div><div class="k3"></div><div class="k3"></div>
+                    <div class="k2"><span>2.</span><i style="width:70%"></i><em>15 P</em></div><div class="k4"><s></s><s class="d"></s><s></s><s></s></div>
+                    <div class="k2"><span>3.</span><i style="width:80%"></i><em>10 P</em></div><div class="k3"></div><div class="k3"></div>
+                </div>
+                <div class="sph2-yz-rozet">⚡ Senaryo 2 · 8 soru</div>
+            </div>
+        </a>
+        <style>
+        .sph2-yz{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:center;overflow:hidden;border-radius:28px;padding:36px 40px;color:#fff!important;text-decoration:none!important;background:radial-gradient(700px 260px at 90% -20%,rgba(192,38,211,.55),transparent 60%),radial-gradient(600px 300px at 0% 130%,rgba(14,165,233,.35),transparent 60%),linear-gradient(135deg,#0b1024,#1e1b4b 55%,#312e81);box-shadow:0 30px 60px -36px rgba(30,27,75,.9);transition:transform .25s,box-shadow .25s}
+        .sph2-yz:hover{transform:translateY(-3px);box-shadow:0 40px 70px -36px rgba(30,27,75,.95)}
+        .sph2-yz::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:32px 32px;-webkit-mask-image:radial-gradient(ellipse at 80% 0,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at 80% 0,#000 10%,transparent 70%)}
+        .sph2-yz>div{position:relative}
+        .sph2-yz-et{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#e0e7ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:6px 12px;border-radius:99px}
+        .sph2-yz-et i{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.25)}
+        .sph2-yz h2{color:#fff!important;font-size:clamp(26px,3.4vw,40px)!important;line-height:1.1!important;margin:14px 0 10px!important;letter-spacing:-.02em}
+        .sph2-yz h2 em{font-style:normal;background:linear-gradient(90deg,#a5b4fc,#f0abfc,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .sph2-yz p{color:#cbd5e1;font-size:15.5px;line-height:1.6;margin:0 0 16px}
+        .sph2-yz-ok{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+        .sph2-yz-ok span{font-size:12.5px;font-weight:700;color:#e0e7ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:7px 11px}
+        .sph2-yz-btn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1e1b4b;font-weight:800;font-size:15.5px;padding:14px 22px;border-radius:15px;box-shadow:0 14px 28px -14px rgba(0,0,0,.6)}
+        .sph2-yz-btn b{transition:transform .2s}.sph2-yz:hover .sph2-yz-btn b{transform:translateX(4px)}
+        .sph2-yz-sag{display:flex;justify-content:center}
+        .sph2-yz-kagit{width:min(300px,100%);background:#fff;border-radius:10px;padding:18px 18px 22px;transform:rotate(3deg);box-shadow:0 30px 50px -20px rgba(0,0,0,.6)}
+        .sph2-yz-kagit .k1{border:1.5px solid #111;text-align:center;font-size:9px;line-height:1.4;color:#111;padding:5px;margin-bottom:12px}
+        .sph2-yz-kagit .k1 b{font-size:10px}.sph2-yz-kagit .k1 small{font-size:8px;font-weight:700}
+        .sph2-yz-kagit .k2{display:flex;align-items:center;gap:6px;margin:10px 0 6px}
+        .sph2-yz-kagit .k2 span{font-size:10px;font-weight:800;color:#111}
+        .sph2-yz-kagit .k2 i{height:7px;border-radius:4px;background:#cbd5e1}
+        .sph2-yz-kagit .k2 em{margin-left:auto;font-style:normal;font-size:8.5px;font-weight:800;color:#111}
+        .sph2-yz-kagit .k3{height:14px;border-bottom:1px dotted #94a3b8;margin-left:16px}
+        .sph2-yz-kagit .k4{display:flex;gap:6px;margin-left:16px}
+        .sph2-yz-kagit .k4 s{flex:1;height:14px;border:1px solid #cbd5e1;border-radius:4px}
+        .sph2-yz-kagit .k4 s.d{background:#d1fae5;border-color:#34d399}
+        .sph2-yz-rozet{position:absolute;bottom:-4px;left:6%;background:linear-gradient(135deg,#5b5bf6,#c026d3);color:#fff;font-size:12.5px;font-weight:800;padding:8px 13px;border-radius:12px;box-shadow:0 14px 26px -12px rgba(124,58,237,.9);transform:rotate(-4deg)}
+        @media (max-width:820px){.sph2-yz{grid-template-columns:1fr;padding:26px 22px}.sph2-yz-sag{display:none}}
+        </style>
+    </section>
+    <?php endif; ?>
+    <?php endif; // öğretmen masası ?>
+
+    <!-- ONLINE TEST BANDI -->
+    <section class="sph2-sec sph2-band" aria-labelledby="sph2-t">
+        <div>
+            <h2 id="sph2-t">İndirmeden ekranda çöz</h2>
+            <p>Online testlerde cevabını işaretle, sonucunu ve yanlışlarını hemen gör. İstersen testi tek tıkla yazdır.</p>
+            <a class="sph2-band-cta" href="<?php echo esc_url($test_page_url); ?>">Online testlere git <?php echo $ico_go; ?></a>
+        </div>
+        <?php if ($top_tests): ?>
+        <div>
+            <ol>
+                <?php foreach ($top_tests as $i => $row): list($p, $n) = $row; ?>
+                <li><a href="<?php echo esc_url(get_permalink($p)); ?>"><span class="sph2-bubn"><?php echo $i + 1; ?></span><span class="t"><?php echo esc_html(get_the_title($p)); ?><small>Bu hafta <?php echo number_format_i18n($n); ?> kez çözüldü</small></span></a></li>
+                <?php endforeach; ?>
+            </ol>
+        </div>
+        <?php else: ?>
+        <div class="sph2-band-steps">
+            <div><i>1</i>Testi aç, soruları ekranda çöz.</div>
+            <div><i>2</i>Bitir'e bas, puanını hemen gör.</div>
+            <div><i>3</i>Yanlışlarını doğru cevaplarıyla incele.</div>
+        </div>
+        <?php endif; ?>
+    </section>
+
+    <!-- ÜYELİK: öğretmen ve öğrenci girişleri -->
+    <section class="sph2-sec" aria-label="Üyelik">
+        <?php if ($sph_giris): $sph_u = wp_get_current_user(); $sph_ogr = ($sph_rol === 'ogrenci'); ?>
+        <div class="sph2-uye-hos">
+            <span class="sph2-uye-ik" aria-hidden="true"><?php echo $sph_ogr ? '🎒' : '👩‍🏫'; ?></span>
+            <div><h2>Tekrar hoş geldin, <?php echo esc_html($sph_u->display_name); ?></h2><p><?php echo $sph_ogr ? 'Testlerin, netlerin, ödevlerin ve konu karnen panelinde seni bekliyor.' : 'Canlı sınıf sınavı başlat, ödev linki gönder ya da yeni bir test hazırla.'; ?></p></div>
+            <a href="<?php echo esc_url($sph_ogr ? $ogr_panel : $ogt_panel); ?>"><?php echo $sph_ogr ? 'Öğrenci panelim' : 'Öğretmen panelim'; ?> <?php echo $ico_go; ?></a>
+            <a class="ik2" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">Çıkış</a>
+            <?php if ($sph_ogr): ?>
+            <form class="sph2-kod" method="get" action="<?php echo esc_url(home_url('/')); ?>"><span>Öğretmeninden kod mu aldın? Canlı sınava ya da ödeve hemen katıl.</span><input name="osc_k" maxlength="8" placeholder="KOD" autocomplete="off" required aria-label="Sınav kodu"><button type="submit">Katıl</button></form>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <div class="sph2-uye">
+            <div class="sph2-uye-k ogt">
+                <div class="sph2-uye-bas"><span class="sph2-uye-ik" aria-hidden="true">👩‍🏫</span><div><h2>Öğretmenler için</h2><small>Ücretsiz öğretmen hesabı</small></div></div>
+                <ul>
+                    <li>Sınıfta canlı sınav yap; öğrenciler kodla katılsın, sen anlık izle.</li>
+                    <li>Son teslim tarihli ödev linki gönder, sonuçlar otomatik toplansın.</li>
+                    <li>Kendi testini hazırla ya da PDF/Word dosyasından tek tıkla oluştur.</li>
+                </ul>
+                <div class="sph2-uye-btn">
+                    <a class="ana" href="<?php echo esc_url(add_query_arg(array('kayit' => 1, 'rol' => 'ogretmen'), $uye_url)); ?>">Öğretmen olarak kaydol <?php echo $ico_go; ?></a>
+                    <a class="ik2" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogretmen', 'git' => $ogt_panel), $uye_url)); ?>">Giriş yap</a>
+                </div>
+            </div>
+            <div class="sph2-uye-k ogr">
+                <div class="sph2-uye-bas"><span class="sph2-uye-ik" aria-hidden="true">🎒</span><div><h2>Öğrenciler için</h2><small>Ücretsiz öğrenci hesabı</small></div></div>
+                <ul>
+                    <li>Çözdüğün testler, netlerin ve puanların tek yerde birikir.</li>
+                    <li>Konu karnenle hangi konuya çalışman gerektiğini gör.</li>
+                    <li>Öğretmeninin gönderdiği ödevleri ve canlı sınavları kaçırma.</li>
+                </ul>
+                <form class="sph2-kod" method="get" action="<?php echo esc_url(home_url('/')); ?>"><span>Öğretmeninden kod mu aldın?</span><input name="osc_k" maxlength="8" placeholder="KOD" autocomplete="off" required aria-label="Sınav kodu"><button type="submit">Katıl</button></form>
+                <div class="sph2-uye-btn">
+                    <a class="ana" href="<?php echo esc_url(add_query_arg(array('kayit' => 1, 'rol' => 'ogrenci'), $uye_url)); ?>">Öğrenci olarak kaydol <?php echo $ico_go; ?></a>
+                    <a class="ik2" href="<?php echo esc_url(add_query_arg(array('rol' => 'ogrenci', 'git' => $ogr_panel), $uye_url)); ?>">Giriş yap</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </section>
 
     <!-- HAKKINDA (SEO) -->

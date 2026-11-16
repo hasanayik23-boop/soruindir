@@ -123,15 +123,17 @@ class OSC_Yazili {
         if (isset($_GET['osc_embed']) || isset($_GET['osc_k'])) return true;
         global $post;
         if (is_singular() && $post && (has_shortcode($post->post_content, 'osc_yazili_hazirla') || has_shortcode($post->post_content, 'osc_ogretmen_paneli') || has_shortcode($post->post_content, 'osc_quiz'))) return true;
-        foreach (array('osc_sp_panel_sayfa', 'osc_sp_katil_sayfa', 'osc_sp_ogrenci_sayfa', 'osc_yz_sayfa') as $o) { $id = (int) get_option($o); if ($id && is_page($id)) return true; }
+        foreach (array('osc_sp_panel_sayfa', 'osc_sp_katil_sayfa', 'osc_sp_ogrenci_sayfa', 'osc_yz_sayfa', 'osc_ev_sayfa', 'osc_om_sayfa') as $o) { $id = (int) get_option($o); if ($id && is_page($id)) return true; }
         return false;
     }
     public function tanitim() {
         if (!self::yayinda() || $this->tanitim_gizli()) return;
         $ogr = is_user_logged_in() && OSC_Sinav::rol() === 'ogrenci';
         if ($ogr) return;
-        $u = esc_url(self::url());
-        $bar = $this->acik('osc_yz_bar'); $btn = $this->acik('osc_yz_buton'); $alt = $this->acik('osc_yz_alt');
+        // Öğretmen Masası varsa tanıtım oraya yönlenir (yazılı + evrak)
+        $om = class_exists('OSC_Masa') && OSC_Masa::yayinda(); $yeni = !$om || !method_exists('OSC_Masa', 'yeni_mi') || OSC_Masa::yeni_mi();
+        $u = esc_url($om ? OSC_Masa::url() : self::url());
+        $bar = $this->acik('osc_yz_bar'); $btn = $this->acik('osc_yz_buton'); $alt = $this->acik('osc_yz_alt') && !is_front_page();
         if (!$bar && !$btn && !$alt) return; ?>
 <style>
 .osc-yzt-bar{position:relative;z-index:99990;display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 44px 9px 16px;background:linear-gradient(90deg,#1e1b4b,#4c1d95 50%,#1e1b4b);color:#fff;font:600 14px/1.35 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
@@ -156,9 +158,9 @@ class OSC_Yazili {
 @media (max-width:640px){.osc-yzt-bar{font-size:13px}.osc-yzt-bar .uz{display:none}.osc-yzt-fab{right:12px;bottom:12px;padding:11px 15px 11px 11px;font-size:13.5px}}
 @media print{.osc-yzt-bar,.osc-yzt-fab,.osc-yzt-alt{display:none!important}}
 </style>
-<?php if ($bar): ?><div class="osc-yzt-bar" id="osc-yzt-bar" hidden><a href="<?php echo $u; ?>"><span class="y">YENİ</span><span><b>Yazılı Hazırla</b><span class="uz"> · MEB 2026-2027 senaryolarına uygun yazılıyı bir dakikada hazırlayın</span></span><span class="g">Hemen dene →</span></a><button type="button" aria-label="Kapat">×</button></div><?php endif; ?>
-<?php if ($btn): ?><a class="osc-yzt-fab" href="<?php echo $u; ?>"><i>📄</i>Yazılı Hazırla<em>YENİ</em></a><?php endif; ?>
-<?php if ($alt): ?><div class="osc-yzt-alt" id="osc-yzt-alt" hidden><a href="<?php echo $u; ?>"><span class="ik">📄</span><span class="yz"><b>Yazılınızı bir dakikada hazırlayın</b><small>MEB 2026-2027 senaryolarına uygun · 5–12. sınıf, tüm dersler · cevap anahtarlı Word ve PDF</small></span><span class="g">Yazılı Hazırla →</span></a></div><?php endif; ?>
+<?php if ($bar): ?><div class="osc-yzt-bar" id="osc-yzt-bar" hidden><a href="<?php echo $u; ?>"><?php if ($yeni) echo '<span class="y">YENİ</span>'; ?><span><b><?php echo $om ? 'Öğretmen Masası' : 'Yazılı Hazırla'; ?></b><span class="uz"> · <?php echo $om ? 'Senaryoya uygun yazılı, tutanak, BEP ve kulüp evraklarını dakikalar içinde hazırlayın' : 'MEB 2026-2027 senaryolarına uygun yazılıyı bir dakikada hazırlayın'; ?></span></span><span class="g">Hemen dene →</span></a><button type="button" aria-label="Kapat">×</button></div><?php endif; ?>
+<?php if ($btn): ?><a class="osc-yzt-fab" href="<?php echo $u; ?>"><i><?php echo $om ? '🧑‍🏫' : '📄'; ?></i><?php echo $om ? 'Öğretmen Masası' : 'Yazılı Hazırla'; ?><?php if ($yeni) echo '<em>YENİ</em>'; ?></a><?php endif; ?>
+<?php if ($alt): ?><div class="osc-yzt-alt" id="osc-yzt-alt" hidden><a href="<?php echo $u; ?>"><span class="ik"><?php echo $om ? '🧑‍🏫' : '📄'; ?></span><span class="yz"><b><?php echo $om ? 'Yazılınızı ve evraklarınızı dakikalar içinde hazırlayın' : 'Yazılınızı bir dakikada hazırlayın'; ?></b><small><?php echo $om ? 'Senaryoya uygun yazılı · zümre, ŞÖK, veli tutanakları · BEP · kulüp evrakları · OYS çizelgesi' : 'MEB 2026-2027 senaryolarına uygun · 5–12. sınıf, tüm dersler · cevap anahtarlı Word ve PDF'; ?></small></span><span class="g"><?php echo $om ? 'Öğretmen Masası →' : 'Yazılı Hazırla →'; ?></span></a></div><?php endif; ?>
 <script>(function(){try{var b=document.getElementById('osc-yzt-bar');if(b){var k=0;try{k=localStorage.getItem('osc_yzt_kapali')==='1';}catch(e){}if(!k){document.body.insertBefore(b,document.body.firstChild);b.hidden=false;}b.querySelector('button').onclick=function(){b.remove();try{localStorage.setItem('osc_yzt_kapali','1');}catch(e){}};}
 var a=document.getElementById('osc-yzt-alt');if(a){var f=document.querySelector('footer.site-footer,#colophon,footer#footer,.site-footer,body>footer,.main-wrap>footer,footer');if(f&&f.parentNode){f.parentNode.insertBefore(a,f);}a.hidden=false;}}catch(e){}})();</script>
 <?php }
