@@ -4599,9 +4599,9 @@ var OSCExtract = (function () {
         return doc;
     }
 
-    var DOCX_LATEX = false;
+    var DOCX_LATEX = false, DOCX_ALTI = false;
     async function docxToText(arrayBuffer, opts) {
-        DOCX_LATEX = !!(opts && opts.latex);
+        DOCX_LATEX = !!(opts && opts.latex); DOCX_ALTI = !!(opts && opts.alti);
         var zip = await JSZip.loadAsync(arrayBuffer);
         var docFile = zip.file('word/document.xml');
         if (!docFile) throw new Error('Geçerli bir .docx dosyası değil.');
@@ -4698,6 +4698,8 @@ var OSCExtract = (function () {
             });
             if (va === 'superscript' && t) { var m1 = mapChars(t, SUP); if (m1 !== null) return m1; }
             if (va === 'subscript' && t) { var m2 = mapChars(t, SUB); if (m2 !== null) return m2; }
+            // altı çizili sözcükler: görünmez imlerle işaretlenir, soru/şık metnine <u> olarak geçer
+            if (DOCX_ALTI && rp && t.trim() && !/§/.test(t)) { var ue = child(rp, 'u'), uv = ue ? (A(ue, 'val') || 'single') : ''; if (uv && !/^(none|0|false)$/i.test(uv)) { var mm = /^(\s*)([\s\S]*?)(\s*)$/.exec(t); return mm[1] + '\uE010' + mm[2] + '\uE011' + mm[3]; } }
             return t;
         }
 
@@ -4927,8 +4929,11 @@ var OSCExtract = (function () {
         return { text: lines.join('\n'), images: dataUris, tables: tables, skipped: skipped };
     }
 
+    function altiCizili(h) {
+        return String(h || '').replace(/\uE011(\s*)\uE010/g, '$1').replace(/\uE010(\s*)\uE011/g, '$1').replace(/\uE010/g, '<u>').replace(/\uE011/g, '</u>');
+    }
     function restoreImages(html, images, tables) {
-        html = html || '';
+        html = altiCizili(html || '');
         if (tables && tables.length) html = html.replace(/§[Tt][Bb][Ll](\d+)§/g, function (_, n) { return tables[parseInt(n, 10)] || ''; });
         return html.replace(/§[IİıiI][Mm][Gg](\d+)§/g, function (_, n) {
             var u = images && images[parseInt(n, 10)];
@@ -5235,7 +5240,7 @@ var OSCExtract = (function () {
                         } else if (/\.docx$/.test(fname) || ftype.indexOf('wordprocessingml') > -1) {
                             if (typeof JSZip === 'undefined') throw new Error('Word okuyucu (JSZip) yüklenemedi (internet bağlantısını kontrol edin).');
                             status.text('Word okunuyor...');
-                            const dr = await OSCExtract.docxToText(await file.arrayBuffer());
+                            const dr = await OSCExtract.docxToText(await file.arrayBuffer(), { alti: true });
                             rawText = dr.text; images = dr.images; tables = dr.tables || []; skippedImgs = dr.skipped || 0;
                         } else if (/\.doc$/.test(fname)) {
                             status.css('color','#b32d2e').text('Eski .doc biçimi okunamıyor. Lütfen Word\'de "Farklı Kaydet > .docx" yapıp yükleyin.'); input.value = ''; return;
@@ -7014,7 +7019,7 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
       btn.disabled = true; durumYaz('Dosya okunuyor…');
       kutuphane().then(function () {
         if (/\.pdf$/.test(ad) || tip.indexOf('pdf') > -1) return pdfKutuphane().then(function (lib) { return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: new Uint8Array(buf) }).promise; }).then(function (pdf) { if (window.OSC_PDF_YZ && OSCExtract.pdfYZ) return OSCExtract.pdfYZ(pdf, { OPS: lib.OPS, onProgress: function (m) { durumYaz('🤖 ' + m); } }).then(function (r) { if (!r.questions.length) throw new Error('soru bulunamadı'); yzSonuc = r; return ''; }).catch(function (e) { durumYaz('Yapay zekâ okuyamadı (' + e.message + '), standart okuma deneniyor…'); return null; }).then(function (x) { return x === '' ? { yz: 1 } : OSCExtract.pdfToText(pdf, durumYaz, function (page) { var vp = page.getViewport({ scale: 2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; return page.render({ canvasContext: cv.getContext('2d'), canvas: cv, viewport: vp }).promise.then(function () { return ocr(cv); }); }, { OPS: lib.OPS }); }); return OSCExtract.pdfToText(pdf, durumYaz, function (page) { var vp = page.getViewport({ scale: 2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; return page.render({ canvasContext: cv.getContext('2d'), canvas: cv, viewport: vp }).promise.then(function () { return ocr(cv); }); }, { OPS: lib.OPS }); }).then(function (pr) { if (pr && pr.yz) return ''; resimler = pr.images || []; return pr.ocr ? OSCImport.reflowPlain(pr.text) : pr.text; }); });
-        if (/\.docx$/.test(ad) || tip.indexOf('wordprocessingml') > -1) return scriptYukle('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js').then(function () { return file.arrayBuffer(); }).then(function (buf) { return OSCExtract.docxToText(buf); }).then(function (dr) { resimler = dr.images || []; tablolar = dr.tables || []; return dr.text; });
+        if (/\.docx$/.test(ad) || tip.indexOf('wordprocessingml') > -1) return scriptYukle('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js').then(function () { return file.arrayBuffer(); }).then(function (buf) { return OSCExtract.docxToText(buf, { alti: true }); }).then(function (dr) { resimler = dr.images || []; tablolar = dr.tables || []; return dr.text; });
         if (/\.doc$/.test(ad)) throw new Error('Eski .doc biçimi okunamıyor. Word\'de “Farklı Kaydet > .docx” yapıp yükleyin.');
         if (/\.txt$/.test(ad) || tip === 'text/plain') return file.text();
         if (tip.indexOf('image/') === 0 || /\.(png|jpe?g|webp|bmp|gif)$/.test(ad)) { var ocrYap = function () { durumYaz('Resimdeki yazılar okunuyor (OCR)… bu biraz sürebilir.'); return ocr(file).then(function (t) { return OSCImport.reflowPlain(t); }); }; if (window.OSC_PDF_YZ && OSCExtract.resimYZ) return OSCExtract.resimYZ(file, { onProgress: function () { durumYaz('🤖 Yapay zekâ resmi okuyor…'); } }).then(function (r) { if (!r.questions.length) throw new Error('soru yok'); yzSonuc = r; return ''; }).catch(ocrYap); return ocrYap(); }
@@ -9103,6 +9108,7 @@ class OSC_PDF_YZ {
             . "- Üst/alt bilgi, sayfa numarası, logo, yayıncı/kurum adı, ders başlığı, filigran, 'Diğer sayfaya geçiniz' gibi soruya ait olmayan hiçbir şeyi ALMA.\n"
             . "- 'oncul': soru kökünden önce gelen okuma metni, veri, eşitlikler, maddeler (I., II., III.) gibi bilgiler. Satırları <br> ile ayır. Yoksa boş.\n"
             . "- 'kok': yalnızca asıl soru cümlesi (ör. 'Buna göre … hangisidir?'). Kalın yazılmışsa <b> kullanma, düz yaz; altı çizili sözcükleri <u> ile yaz.\n"
+            . "- Kökte, öncülde ve şıklarda altı çizili sözcükleri mutlaka <u>…</u> ile işaretle (ör. 'Altı çizili sözcük <u>mecaz</u> anlamdadır').\n"
             . "- 'secenekler': A, B, C, D (varsa E) şıklarının metni, harf olmadan. Şıklar bir tablo gibi sütunlu verildiyse her şıkkı 'sütun başlığı: değer' biçiminde tek satırda yaz (ör. 'A: 2 · B: + · C: −4').\n"
             . "- Matematik: üsleri <sup>, altları <sub> ile yaz ((−2)<sup>3</sup>); eksi için −, çarpma için · ya da ×, bölme için : ya da ÷; kesirleri a/b biçiminde; köklü ifadeleri √ ile; kutu ve üçgen sembollerini □ △ ile yaz. LaTeX KULLANMA.\n"
             . "- 'sekiller': soruya ait her resim, çizim, grafik, sayı doğrusu, şema, geometrik şekil ya da tablo için bir eleman. 'kutu': [x0,y0,x1,y1] görüntünün sol üst köşesine göre 0-1000 arası ölçekli sınırlar; şeklin etiketleri ve yazıları da kutunun İÇİNDE kalsın, soru metni dışarıda kalsın. 'yer': 'oncul' (soru metninden önce/üstünde), 'kok' (soru cümlesiyle birlikte) ya da şık harfi ('A'…'E', şıklar resimse). Şekil yoksa boş dizi. Şeklin içindeki yazıları metne YAZMA.\n"
@@ -10044,4 +10050,89 @@ class OSC_Havuz_Uret {
     }
 }
 new OSC_Havuz_Uret();
+}
+
+
+/* =====================================================================
+ * Yönetim panelinde test ekleme ekranı: geniş, tek sütunlu düzen;
+ * alanlarda biçim araç çubuğu (altı çizili, kalın, italik, üs, alt simge)
+ * ===================================================================== */
+if (!class_exists('OSC_Admin_Test')) {
+class OSC_Admin_Test {
+    public function __construct() {
+        // blok düzenleyici test oluşturucuyu ekranın altına sıkıştırıyor: klasik düzenleyici
+        add_filter('use_block_editor_for_post_type', function ($k, $pt) { return $pt === 'osc_quiz' ? false : $k; }, 50, 2);
+        // tek sütun: test oluşturucu tam genişlikte, yan kutular altta
+        add_filter('get_user_option_screen_layout_osc_quiz', function () { return 1; });
+        add_action('admin_footer-post.php', array($this, 'arac'));
+        add_action('admin_footer-post-new.php', array($this, 'arac'));
+    }
+    public function arac() {
+        $ekran = get_current_screen(); if (!$ekran || $ekran->post_type !== 'osc_quiz') return; ?>
+<style>
+#poststuff #post-body.columns-1 #postbox-container-1{margin-top:10px}
+#osc_builder .inside{padding:0 14px 14px}
+.osc-q-item{border-radius:10px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.osc-q-item .osc-txt,.osc-q-item .osc-inp{font-size:14px}
+.osc-q-item .osc-row .osc-inp{flex:1}
+#osc-bicim{position:fixed;z-index:100000;display:none;gap:2px;background:#1e1b4b;padding:4px;border-radius:10px;box-shadow:0 10px 24px -10px rgba(15,23,42,.6)}
+#osc-bicim button{border:0;background:transparent;color:#fff;min-width:30px;height:28px;border-radius:7px;cursor:pointer;font:600 14px/1 system-ui,sans-serif;padding:0 7px}
+#osc-bicim button:hover{background:rgba(255,255,255,.16)}
+#osc-bicim .ip{font:500 11px system-ui,sans-serif;color:#c7d2fe;padding:0 6px;align-self:center}
+.osc-row+.osc-onz{margin-left:58px}.osc-onz{margin:4px 0 8px;padding:6px 10px;background:#f8fafc;border:1px dashed #94a3b8;border-radius:6px;font-size:14px;line-height:1.5}
+.osc-onz:before{content:"Önizleme: ";color:#64748b;font-size:12px}
+.osc-onz u{text-decoration-thickness:2px;text-underline-offset:2px}
+#osc-kaydet-bar{position:sticky;bottom:0;z-index:50;display:flex;align-items:center;gap:10px;justify-content:flex-end;background:#fff;border-top:1px solid #dcdcde;padding:10px 14px;margin:14px -14px -14px;box-shadow:0 -8px 16px -12px rgba(0,0,0,.25)}
+#osc-kaydet-bar span{margin-right:auto;color:#50575e;font-size:12.5px}
+</style>
+<div id="osc-bicim" role="toolbar" aria-label="Biçim"><button type="button" data-e="u" title="Altı çizili (Ctrl+U)"><u>A</u></button><button type="button" data-e="b" title="Kalın (Ctrl+B)"><b>K</b></button><button type="button" data-e="i" title="İtalik (Ctrl+I)"><i>İ</i></button><button type="button" data-e="sup" title="Üs">x²</button><button type="button" data-e="sub" title="Alt simge">x₂</button><button type="button" data-e="temizle" title="Seçimdeki biçimi kaldır">⌫</button><span class="ip">Sözcüğü seçip tıklayın</span></div>
+<script>
+(function () {
+  var bar = document.getElementById('osc-bicim'), alan = null;
+  function uygun(e) { return e && (e.matches('#osc-q-list textarea, #osc-q-list input[type=text]')); }
+  function konum(e) { var r = e.getBoundingClientRect(); bar.style.display = 'flex'; var h = bar.offsetHeight || 36; bar.style.top = Math.max(34, r.top - h - 6) + 'px'; bar.style.left = r.left + 'px'; }
+  function onizle(e) {
+    var hedef = e.closest('.osc-row') || e, o = hedef.nextElementSibling && hedef.nextElementSibling.classList && hedef.nextElementSibling.classList.contains('osc-onz') ? hedef.nextElementSibling : null;
+    if (!/<(u|b|i|strong|em|sup|sub)>/i.test(e.value)) { if (o) o.remove(); return; }
+    if (!o) { o = document.createElement('div'); o.className = 'osc-onz'; hedef.insertAdjacentElement('afterend', o); }
+    o.innerHTML = e.value.replace(/<(?!\/?(u|b|i|strong|em|sup|sub|br)\b)[^>]*>/gi, '');
+  }
+  function sar(e, etk) {
+    var a = e.selectionStart, b = e.selectionEnd, v = e.value;
+    if (a === b) { // seçim yoksa imlecin bulunduğu sözcük
+      var m1 = /[^\s.,;:!?()"'“”]*$/.exec(v.slice(0, a))[0].length, m2 = /^[^\s.,;:!?()"'“”]*/.exec(v.slice(a))[0].length; a -= m1; b += m2;
+      if (a === b) return;
+    }
+    var sec = v.slice(a, b), yeni;
+    if (etk === 'temizle') yeni = sec.replace(/<\/?(u|b|i|strong|em|sup|sub)>/gi, '');
+    else {
+      var ac = '<' + etk + '>', kp = '</' + etk + '>';
+      if (v.slice(a - ac.length, a) === ac && v.slice(b, b + kp.length) === kp) { e.value = v.slice(0, a - ac.length) + sec + v.slice(b + kp.length); e.setSelectionRange(a - ac.length, b - ac.length); e.dispatchEvent(new Event('input', { bubbles: true })); onizle(e); return; }
+      yeni = ac + sec + kp;
+    }
+    e.value = v.slice(0, a) + yeni + v.slice(b);
+    e.setSelectionRange(a, a + yeni.length);
+    e.dispatchEvent(new Event('input', { bubbles: true })); onizle(e);
+  }
+  document.addEventListener('focusin', function (ev) { if (uygun(ev.target)) { alan = ev.target; konum(alan); onizle(alan); } });
+  document.addEventListener('focusout', function (ev) { setTimeout(function () { if (!bar.contains(document.activeElement) && !uygun(document.activeElement)) bar.style.display = 'none'; }, 150); });
+  bar.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+  bar.addEventListener('click', function (ev) { var b = ev.target.closest('button'); if (b && alan) { sar(alan, b.dataset.e); alan.focus(); } });
+  document.addEventListener('keydown', function (ev) {
+    if (!(ev.ctrlKey || ev.metaKey) || !uygun(ev.target)) return;
+    var k = ev.key.toLowerCase(), m = { u: 'u', b: 'b', i: 'i' }[k]; if (!m) return;
+    ev.preventDefault(); sar(ev.target, m);
+  });
+  window.addEventListener('scroll', function () { if (alan && bar.style.display === 'flex') konum(alan); }, { passive: true });
+  // liste yeniden çizilince önizlemeleri tazele
+  var l = document.getElementById('osc-q-list');
+  if (l) new MutationObserver(function () { l.querySelectorAll('textarea, input[type=text]').forEach(function (e) { if (/<(u|b|i|strong|em|sup|sub)>/i.test(e.value)) onizle(e); }); }).observe(l, { childList: true });
+  // oluşturucunun altında yapışkan kaydet çubuğu
+  var kutu = document.querySelector('#osc_builder .inside'), yay = document.getElementById('publish');
+  if (kutu && yay) { var d = document.createElement('div'); d.id = 'osc-kaydet-bar'; d.innerHTML = '<span>İpucu: Bir sözcüğü seçip <b>Ctrl+U</b> ile altını çizin; <b>Ctrl+B</b> kalın, <b>Ctrl+I</b> italik.</span><button type="button" class="button button-primary button-large">' + (yay.value || 'Kaydet') + '</button>'; d.querySelector('button').onclick = function () { yay.click(); }; kutu.appendChild(d); }
+})();
+</script>
+<?php }
+}
+new OSC_Admin_Test();
 }

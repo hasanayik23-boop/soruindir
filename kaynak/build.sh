@@ -28,6 +28,7 @@ k=k+'\n'+h
 k=k+'\n'+open(d+'parca/yzapi.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_arka.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_uret.php',encoding='utf-8').read()
+k=k+'\n'+open(d+'parca/admin_test.php',encoding='utf-8').read()
 y=open(d+'parca/yazili.php',encoding='utf-8').read()
 y=y.replace('/*__YAZILI_CSS__*/',open(d+'parca/yazili.css',encoding='utf-8').read()).replace('/*__YAZILI_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/yazili.js',encoding='utf-8').read())
 y=y.replace("'/*__DIGER_JSON__*/'", q(open('/home/claude/work/dersler/diger.json',encoding='utf-8').read()))
@@ -38,7 +39,7 @@ ev=open(d+'parca/evrak.php',encoding='utf-8').read()
 for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/bgh.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
-om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()
+om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read()
 bas=open(d+'parca/masa_bas.php',encoding='utf-8').read()
 assert bas.count('/*__GOVDE__*/')==1
 open(d+'ogretmen-masasi.php','w',encoding='utf-8').write(bas.replace('/*__GOVDE__*/',om))

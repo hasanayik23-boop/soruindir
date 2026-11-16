@@ -4264,9 +4264,9 @@ var OSCExtract = (function () {
         return doc;
     }
 
-    var DOCX_LATEX = false;
+    var DOCX_LATEX = false, DOCX_ALTI = false;
     async function docxToText(arrayBuffer, opts) {
-        DOCX_LATEX = !!(opts && opts.latex);
+        DOCX_LATEX = !!(opts && opts.latex); DOCX_ALTI = !!(opts && opts.alti);
         var zip = await JSZip.loadAsync(arrayBuffer);
         var docFile = zip.file('word/document.xml');
         if (!docFile) throw new Error('Geçerli bir .docx dosyası değil.');
@@ -4363,6 +4363,8 @@ var OSCExtract = (function () {
             });
             if (va === 'superscript' && t) { var m1 = mapChars(t, SUP); if (m1 !== null) return m1; }
             if (va === 'subscript' && t) { var m2 = mapChars(t, SUB); if (m2 !== null) return m2; }
+            // altı çizili sözcükler: görünmez imlerle işaretlenir, soru/şık metnine <u> olarak geçer
+            if (DOCX_ALTI && rp && t.trim() && !/§/.test(t)) { var ue = child(rp, 'u'), uv = ue ? (A(ue, 'val') || 'single') : ''; if (uv && !/^(none|0|false)$/i.test(uv)) { var mm = /^(\s*)([\s\S]*?)(\s*)$/.exec(t); return mm[1] + '\uE010' + mm[2] + '\uE011' + mm[3]; } }
             return t;
         }
 
@@ -4592,8 +4594,11 @@ var OSCExtract = (function () {
         return { text: lines.join('\n'), images: dataUris, tables: tables, skipped: skipped };
     }
 
+    function altiCizili(h) {
+        return String(h || '').replace(/\uE011(\s*)\uE010/g, '$1').replace(/\uE010(\s*)\uE011/g, '$1').replace(/\uE010/g, '<u>').replace(/\uE011/g, '</u>');
+    }
     function restoreImages(html, images, tables) {
-        html = html || '';
+        html = altiCizili(html || '');
         if (tables && tables.length) html = html.replace(/§[Tt][Bb][Ll](\d+)§/g, function (_, n) { return tables[parseInt(n, 10)] || ''; });
         return html.replace(/§[IİıiI][Mm][Gg](\d+)§/g, function (_, n) {
             var u = images && images[parseInt(n, 10)];
@@ -4878,7 +4883,7 @@ var OSCExtract = (function () {
                         } else if (/\.docx$/.test(fname) || ftype.indexOf('wordprocessingml') > -1) {
                             if (typeof JSZip === 'undefined') throw new Error('Word okuyucu (JSZip) yüklenemedi (internet bağlantısını kontrol edin).');
                             status.text('Word okunuyor...');
-                            const dr = await OSCExtract.docxToText(await file.arrayBuffer());
+                            const dr = await OSCExtract.docxToText(await file.arrayBuffer(), { alti: true });
                             rawText = dr.text; images = dr.images; tables = dr.tables || []; skippedImgs = dr.skipped || 0;
                         } else if (/\.doc$/.test(fname)) {
                             status.css('color','#b32d2e').text('Eski .doc biçimi okunamıyor. Lütfen Word\'de "Farklı Kaydet > .docx" yapıp yükleyin.'); input.value = ''; return;
