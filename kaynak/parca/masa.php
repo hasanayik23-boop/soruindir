@@ -91,11 +91,11 @@ class OSC_Masa {
     }
     private static function evrak_listesi() {
         if (!class_exists('OSC_Evrak')) return array();
-        $ik = array('zumre' => '👥', 'ogr_kurul' => '🏛️', 'sok' => '🏫', 'veli' => '👨‍👩‍👧', 'bep' => '🧩', 'kulup_plan' => '🎭', 'kulup_tutanak' => '🎭', 'kulup_aylik' => '🎭', 'kulup_rapor' => '🎭', 'egzersiz' => '🏐', 'belirli_gun' => '🎗️', 'gezi' => '🚌', 'dilekce' => '✉️', 'oys' => '🧮');
+        $ik = array('zumre' => '👥', 'ogr_kurul' => '🏛️', 'sok' => '🏫', 'veli' => '👨‍👩‍👧', 'bep' => '🧩', 'kulup_plan' => '🎭', 'kulup_tutanak' => '🎭', 'kulup_aylik' => '🎭', 'kulup_rapor' => '🎭', 'egzersiz' => '🏐', 'yillik' => '🗓️', 'belirli_gun' => '🎗️', 'gezi' => '🚌', 'dilekce' => '✉️', 'oys' => '🧮');
         $o = array(); $kulup = false;
         foreach (OSC_Evrak::acik_turler() as $k) {
             if (strpos($k, 'kulup_') === 0) { if (!$kulup) { $o[] = array('🎭', 'Sosyal kulüp evrakları', 'Yıllık plan, ilk toplantı tutanağı, aylık ve dönem sonu raporu'); $kulup = true; } continue; }
-            $ad = OSC_Evrak::$turler[$k]; $ac = array('zumre' => 'Yıl başı, 2. dönem ve yıl sonu gündemleriyle', 'ogr_kurul' => 'Müdür başkanlığında, katılım listesiyle', 'sok' => 'Şubenin akademik ve rehberlik durumu', 'veli' => 'Katılım ve imza listesiyle', 'bep' => 'Uzun ve kısa dönemli amaçlar, uyarlamalar', 'egzersiz' => 'Aylara göre ders dışı çalışma planı', 'belirli_gun' => 'Kutlama/anma programı ve konuşma metni', 'gezi' => 'Veli izin belgesi ve öğrenci listesiyle', 'dilekce' => 'İzin, rapor, nöbet, belge talebi', 'oys' => 'MEB senaryosuna göre soru bazlı puanlar');
+            $ad = OSC_Evrak::$turler[$k]; $ac = array('zumre' => 'Yıl başı, 2. dönem ve yıl sonu gündemleriyle', 'ogr_kurul' => 'Müdür başkanlığında, katılım listesiyle', 'sok' => 'Şubenin akademik ve rehberlik durumu', 'veli' => 'Katılım ve imza listesiyle', 'bep' => 'Uzun ve kısa dönemli amaçlar, uyarlamalar', 'egzersiz' => 'Aylara göre ders dışı çalışma planı', 'yillik' => '1–12. sınıf tüm dersler, takvime göre hafta hafta', 'belirli_gun' => 'Kutlama/anma programı ve konuşma metni', 'gezi' => 'Veli izin belgesi ve öğrenci listesiyle', 'dilekce' => 'İzin, rapor, nöbet, belge talebi', 'oys' => 'MEB senaryosuna göre soru bazlı puanlar');
             $o[] = array(isset($ik[$k]) ? $ik[$k] : '📄', $ad, isset($ac[$k]) ? $ac[$k] : '');
         }
         return $o;

@@ -95,3 +95,11 @@
 #osc-ev .ev-x:hover{color:#b91c1c}
 
 .ev-uye{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:13px;line-height:1.5}.ev-uye a{font-weight:800;color:#4338ca}.ev-uye.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+
+.ev-yp-u{width:100%;box-sizing:border-box;font:13px/1.5 ui-monospace,Menlo,monospace;border:1px solid #cfd8e3;border-radius:12px;padding:10px 12px}
+.ev-yp-kay{margin:0 0 8px;padding:9px 12px;border-radius:10px;background:#f1f5f9;font-size:13px}
+.ev-gp-c{display:grid;gap:6px;margin:10px 0 0;padding:10px 12px;border:1px solid #cfd8e3;border-radius:12px;max-height:300px;overflow:auto;background:#fbfcfe}
+.osc-ev .ev-gp-c label{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;font-weight:500;line-height:1.45}
+.osc-ev .ev-gp-c input{width:auto;margin-top:3px}
+.ev-gp-el{display:flex;flex-direction:column;gap:5px;margin-top:10px;font-size:13px;font-weight:700}
+.ev-gp-el textarea{font:inherit;font-weight:500;border:1px solid #cfd8e3;border-radius:11px;padding:10px 12px}
