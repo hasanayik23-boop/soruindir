@@ -37,6 +37,9 @@ if ($sx_robot === false) {
 if (class_exists('YKS_Tercih_Robotu') && ($sx_yks = YKS_Tercih_Robotu::robot_url())) array_unshift($sx_calc, array('YKS Tercih Robotu', $sx_yks));
 if ($sx_robot) array_unshift($sx_calc, array('LGS Tercih Robotu', $sx_robot));
 if (function_exists('si_hub_url')) array_unshift($sx_calc, array('Tüm hesaplamalar →', si_hub_url()));
+$sx_hub = function_exists('si_hub_url') ? si_hub_url() : home_url('/hesaplamalar/');
+$sx_kat = class_exists('OSC_Sayfalar') ? OSC_Sayfalar::url('kategoriler') : home_url('/kategoriler/');
+$sx_rb = class_exists('OSC_Sayfalar') ? OSC_Sayfalar::url('tercih-robotlari') : ($sx_robot ? $sx_robot : home_url('/'));
 $sx_corp = array(
     array('Hakkımızda', 'https://soruindir.net/hakkimizda/'),
     array('İletişim', 'https://soruindir.net/iletisim/'),
@@ -258,6 +261,40 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             .sx-page .sx-row { padding:12px; gap:12px; }
             .sx-pagination .prev, .sx-pagination .next { padding:0 14px !important; }
         }
+
+        /* ---------- Yeni üst menü (2026) ---------- */
+        .sx-header { background:rgba(255,255,255,.92); border-bottom:1px solid #E8EEF5; box-shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 30px -28px rgba(19,48,79,.5); }
+        .sx-header:before { content:""; position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,#2F80ED,#22A06B 35%,#F59E0B 65%,#7C3AED); opacity:.9; }
+        .sx-header-in { height:70px; gap:18px; }
+        .sx-nav { gap:4px; margin:0 auto 0 8px; }
+        .sx-header .sx-nav-link { white-space:nowrap; padding:10px 14px; border-radius:12px; font-size:15px; color:#1C3653; }
+        .sx-header .sx-nav-link:hover, .sx-dd.is-open > .sx-nav-link, .sx-dd:hover > .sx-nav-link { background:#F0F6FD; color:#2F80ED; }
+        .sx-header .sx-nav-link.is-active::after { left:14px; right:14px; bottom:3px; background:#2F80ED; }
+        .sx-nav .sx-yz-link { color:#4F46E5; }
+        .sx-mega-menu { width:640px; grid-template-columns:1.05fr 1fr; gap:14px; padding:16px; border-radius:22px; border-color:#E3EBF3; box-shadow:0 30px 60px -30px rgba(19,48,79,.45); }
+        .sx-mega-h { width:640px; left:auto; right:-120px; grid-template-columns:.9fr 1.3fr; }
+        .sx-mega-h .sx-hl { grid-template-columns:1fr 1fr 1fr; }
+        .sx-mega-bas { display:block; padding:2px 8px 8px; font-size:11.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#8AA2BA; }
+        .sx-header .sx-mega-menu a.sx-mk { display:flex; align-items:center; gap:12px; padding:10px; border-radius:14px; }
+        .sx-header .sx-mega-menu a.sx-mk:hover { background:#F4F8FD; }
+        .sx-mk i { flex:0 0 40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:19px; background:color-mix(in srgb,var(--r) 13%,#fff); }
+        .sx-mk b { display:block; font-size:14.5px; color:#13304F; }
+        .sx-mk small { display:block; font-size:12.5px; font-weight:500; color:#7A8BA0; margin-top:1px; }
+        .sx-mega-sag { background:#F7FAFD; border-radius:16px; padding:12px; }
+        .sx-sinif { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+        .sx-header .sx-mega-menu .sx-sinif a { display:flex; flex-direction:column; align-items:center; padding:8px 4px; border-radius:12px; background:#fff; border:1px solid #E3EBF3; }
+        .sx-header .sx-mega-menu .sx-sinif a:hover { border-color:#2F80ED; background:#fff; }
+        .sx-sinif b { font-size:17px; font-weight:800; color:#13304F; line-height:1.1; }
+        .sx-sinif small { font-size:10.5px; color:#8AA2BA; font-weight:600; }
+        .sx-header .sx-mega-menu a.sx-mega-alt { margin-top:10px; font-size:13px; color:#2F80ED; padding:6px 8px; }
+        .sx-hl { display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+        .sx-header .sx-mega-menu .sx-hl a { padding:7px 10px; font-size:13.5px; border-radius:10px; }
+        .sx-header .sx-ara-hap { width:auto; height:42px; padding:0 10px 0 12px; gap:8px; display:flex; align-items:center; border-radius:99px; background:#F4F7FB; border-color:#E3EBF3; color:#7A8BA0; font:inherit; font-size:14px; }
+        .sx-ara-hap span { min-width:70px; text-align:left; }
+        .sx-ara-hap kbd { font:600 11px/1 inherit; font-family:inherit; padding:4px 7px; border-radius:6px; background:#fff; border:1px solid #E3EBF3; color:#8AA2BA; }
+        .sx-header .sx-cta { border-radius:99px; background:linear-gradient(135deg,#2F80ED,#1E5AA8); box-shadow:0 10px 20px -12px rgba(47,128,237,.8); }
+        .sx-header .sx-uye-btn { border-radius:99px; }
+        @media (max-width:1240px) { .sx-ara-hap span, .sx-ara-hap kbd { display:none; } .sx-header .sx-ara-hap { width:42px; padding:0; justify-content:center; } }
         @media (prefers-reduced-motion: reduce) { .sx-header *, .sx-page * { transition:none !important; } }
     </style>
 </head>
@@ -275,21 +312,43 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             </a>
 
             <nav class="sx-nav" aria-label="Ana menü">
-                <?php foreach ($sx_menu as $m): ?>
-                <a class="sx-nav-link<?php echo $sx_active($m[1]); ?>" href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a>
-                <?php endforeach; ?>
-                <div class="sx-dd" data-sx-dd>
-                    <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Hesaplamalar <?php echo $sx_chev; ?></button>
-                    <div class="sx-dd-menu">
-                        <?php foreach ($sx_calc as $m): ?><a href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a><?php endforeach; ?>
+                <div class="sx-dd sx-mega" data-sx-dd>
+                    <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Dosyalar <?php echo $sx_chev; ?></button>
+                    <div class="sx-dd-menu sx-mega-menu">
+                        <div class="sx-mega-sol">
+                            <span class="sx-mega-bas">İndir ve yazdır</span>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_menu[0][1]); ?>"><i style="--r:#2F80ED">📝</i><span><b>Yazılı soruları</b><small>Senaryoya uygun, cevap anahtarlı</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_menu[1][1]); ?>"><i style="--r:#EF6C57">🗓️</i><span><b>Yıllık planlar</b><small>Tüm sınıf ve dersler, güncel</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_menu[2][1]); ?>"><i style="--r:#7C3AED">👥</i><span><b>Zümre tutanakları</b><small>Şube, zümre, kurul tutanakları</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_kat); ?>"><i style="--r:#22A06B">📚</i><span><b>Tüm kategoriler</b><small>Test, etkinlik, evrak ve dahası</small></span></a>
+                        </div>
+                        <div class="sx-mega-sag">
+                            <span class="sx-mega-bas">Sınıfına göre</span>
+                            <div class="sx-sinif"><?php for ($sx_n = 1; $sx_n <= 12; $sx_n++): ?><a href="<?php echo esc_url(home_url('/category/' . $sx_n . '-sinif/')); ?>"><b><?php echo $sx_n; ?></b><small>sınıf</small></a><?php endfor; ?></div>
+                            <a class="sx-mega-alt" href="https://soruindir.net/icerik-gonder/">✍️ Sen de içerik gönder →</a>
+                        </div>
                     </div>
                 </div>
+                <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/test-coz/'); ?>" href="https://soruindir.net/test-coz/">Online testler</a>
                 <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası<?php if ($sx_om_yeni): ?> <span class="sx-yeni">YENİ</span><?php endif; ?></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
-                <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/icerik-gonder/'); ?>" href="https://soruindir.net/icerik-gonder/">İçerik gönder</a>
+                <div class="sx-dd sx-mega" data-sx-dd>
+                    <button type="button" class="sx-nav-link" aria-expanded="false" aria-haspopup="true">Hesaplamalar <?php echo $sx_chev; ?></button>
+                    <div class="sx-dd-menu sx-mega-menu sx-mega-h">
+                        <div class="sx-mega-sol">
+                            <span class="sx-mega-bas">Öne çıkanlar</span>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_hub); ?>"><i style="--r:#0D9488">🧮</i><span><b>Tüm hesaplamalar</b><small>LGS’den KPSS’ye <?php echo count($sx_calc); ?> araç</small></span></a>
+                            <a class="sx-mk" href="<?php echo esc_url($sx_rb); ?>"><i style="--r:#7C3AED">🎓</i><span><b>Tercih robotları</b><small>LGS ve YKS, puanına uygun seçenekler</small></span></a>
+                        </div>
+                        <div class="sx-mega-sag">
+                            <span class="sx-mega-bas">Puan hesaplama</span>
+                            <div class="sx-hl"><?php foreach ($sx_calc as $m): if (strpos($m[0], 'Tüm hesaplamalar') === 0 || strpos($m[0], 'Robotu') !== false) continue; ?><a href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html(str_replace(array(' Puan Hesaplama', ' Hesaplama'), '', $m[0])); ?></a><?php endforeach; ?></div>
+                        </div>
+                    </div>
+                </div>
             </nav>
 
             <div class="sx-actions">
-                <button type="button" class="sx-icon-btn" aria-label="Sitede ara" aria-expanded="false" aria-controls="sx-searchbar" data-sx-search><?php echo $sx_search_ico; ?></button>
+                <button type="button" class="sx-icon-btn sx-ara-hap" aria-label="Sitede ara" aria-expanded="false" aria-controls="sx-searchbar" data-sx-search><?php echo $sx_search_ico; ?><span>Ara…</span><kbd>/</kbd></button>
                 <a class="sx-cta" href="https://soruindir.net/test-coz/">Online test çöz</a>
                 <div class="sx-uye" data-sx-uye>
                     <?php if ($sx_giris): ?>
@@ -354,6 +413,8 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             <?php foreach ($sx_menu as $m): ?>
             <a class="sx-drawer-link<?php echo $sx_active($m[1]); ?>" href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a>
             <?php endforeach; ?>
+            <a class="sx-drawer-link" href="<?php echo esc_url($sx_kat); ?>">Tüm kategoriler</a>
+            <a class="sx-drawer-link" href="<?php echo esc_url($sx_rb); ?>">Tercih robotları</a>
             <details>
                 <summary>Hesaplama araçları <?php echo $sx_chev; ?></summary>
                 <div class="sx-drawer-sub"><?php foreach ($sx_calc as $m): ?><a href="<?php echo esc_url($m[1]); ?>"><?php echo esc_html($m[0]); ?></a><?php endforeach; ?></div>
@@ -390,6 +451,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
             b.addEventListener('click', function () { var o = !dd.classList.contains('is-open'); dd.classList.toggle('is-open', o); b.setAttribute('aria-expanded', o ? 'true' : 'false'); });
             document.addEventListener('click', function (e) { if (!dd.contains(e.target)) { dd.classList.remove('is-open'); b.setAttribute('aria-expanded', 'false'); } });
         });
+        document.addEventListener('keydown', function (e) { if (e.key === '/' && sBtn && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '') && !(document.activeElement || {}).isContentEditable) { e.preventDefault(); toggle(sBtn, sBar, true); var i = sBar.querySelector('input'); if (i) i.focus(); } });
         document.addEventListener('keydown', function (e) {
             if (e.key !== 'Escape') return;
             if (sBtn && sBar && !sBar.hidden) { toggle(sBtn, sBar, false); sBtn.focus(); }

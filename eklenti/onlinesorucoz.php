@@ -5835,6 +5835,7 @@ class OSC_Sinav {
         $r = self::puanla($veri, $cev, $this->kural($ot));
         $wpdb->update($this->t_kt(), array('cevaplar' => wp_json_encode($cev), 'durum' => 'bitti', 'bitis' => time(), 'son' => time(), 'dogru' => $r['d'], 'yanlis' => $r['y'], 'bos' => $r['b'], 'net' => $r['net'], 'puan' => $r['puan'], 'ilerleme' => count(array_filter($cev, function ($x) { return $x !== null && $x !== ''; })), 'sonuc' => wp_json_encode($r)), array('id' => $kt->id));
         $kt->durum = 'bitti'; $kt->sonuc = wp_json_encode($r); $kt->cevaplar = wp_json_encode($cev);
+        do_action('osc_teslim_edildi', (int) $kt->user_id, $ot, $r);
         return $r;
     }
     private function yeni_kod() {
@@ -6101,6 +6102,7 @@ endif; ?>
         $ayar = array('sonuc_goster' => (isset($_POST['sonuc_goster']) && $_POST['sonuc_goster'] === 'hemen') ? 'hemen' : 'bitince', 'kural' => $b['kural'], 'tur_ad' => $b['ad']);
         $kod = $this->yeni_kod();
         $ok = $wpdb->insert($this->t_ot(), array('kod' => $kod, 'quiz_id' => $qid, 'ogretmen_id' => get_current_user_id(), 'tur' => $tur, 'baslik' => function_exists('mb_substr') ? mb_substr($baslik, 0, 190) : substr($baslik, 0, 190), 'durum' => $tur === 'odev' ? 'basladi' : 'bekliyor', 'sure' => $sure, 'baslangic' => $tur === 'odev' ? time() : 0, 'son_tarih' => $son, 'ayar' => wp_json_encode($ayar), 'veri' => wp_json_encode(array_values($data)), 'olusturma' => time()));
+        if ($ok) do_action('osc_oturum_olustu', $tur, get_current_user_id());
         if (!$ok) wp_send_json_error('Oturum oluşturulamadı: ' . $wpdb->last_error);
         wp_send_json_success(array('id' => (int) $wpdb->insert_id, 'kod' => $kod));
     }
@@ -7604,6 +7606,7 @@ a.osc-pn-ok:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -16px rgba(79,70,2
         $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         if ($url && strpos($url, home_url()) !== 0) $url = '';
         $wpdb->insert($this->t_cz(), array('user_id' => $uid, 'quiz_id' => $qid, 'tarih' => time(), 'd' => (float) $_POST['d'], 'y' => (float) $_POST['y'], 'b' => (int) $_POST['b'], 'net' => round((float) $_POST['net'], 2), 'puan' => max(0, min(100, (int) $_POST['puan'])), 'soru' => (int) $_POST['soru'], 'url' => substr($url, 0, 250), 'konu' => wp_json_encode($temiz), 'yanlis' => preg_replace('/[^0-9,]/', '', isset($_POST['yanlis']) ? $_POST['yanlis'] : '')));
+        do_action('osc_cozum_kaydedildi', $uid, $qid, max(0, min(100, (int) (isset($_POST['puan']) ? $_POST['puan'] : 0))));
         wp_send_json_success();
     }
     public function ajax_ogr_ozet() {
@@ -9513,6 +9516,18 @@ class OSC_Havuz_Arka {
     }
 
     /* ---------------- Word (.docx) → metin + görseller ---------------- */
+    /** Word "Symbol" yazı tipi kodlarını Unicode'a çevirir (∈ ∉ ⊂ ∪ ∩ ∅ ≤ ≥ × ÷ π …) */
+    public static function sembol($c) {
+        static $t = array(0x22 => '∀', 0x24 => '∃', 0x27 => '∋', 0x2D => '−', 0x40 => '≅', 0x5C => '∴', 0x5E => '⊥', 0x7E => '∼', 0xA2 => '′', 0xA3 => '≤', 0xA4 => '⁄', 0xA5 => '∞', 0xAB => '↔', 0xAC => '←', 0xAD => '↑', 0xAE => '→', 0xAF => '↓', 0xB0 => '°', 0xB1 => '±', 0xB2 => '″', 0xB3 => '≥', 0xB4 => '×', 0xB5 => '∝', 0xB6 => '∂', 0xB7 => '•', 0xB8 => '÷', 0xB9 => '≠', 0xBA => '≡', 0xBB => '≈', 0xBC => '…', 0xC4 => '⊗', 0xC5 => '⊕', 0xC6 => '∅', 0xC7 => '∩', 0xC8 => '∪', 0xC9 => '⊃', 0xCA => '⊇', 0xCB => '⊄', 0xCC => '⊂', 0xCD => '⊆', 0xCE => '∈', 0xCF => '∉', 0xD0 => '∠', 0xD1 => '∇', 0xD5 => '∏', 0xD6 => '√', 0xD7 => '⋅', 0xD8 => '¬', 0xD9 => '∧', 0xDA => '∨', 0xDB => '⇔', 0xDC => '⇐', 0xDE => '⇒', 0xE0 => '◊', 0xE5 => '∑', 0xF2 => '∫');
+        if ($c >= 0xF000) $c -= 0xF000;
+        if (isset($t[$c])) return $t[$c];
+        if ($c >= 0x41 && $c <= 0x5A) return mb_substr('ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ', $c - 0x41, 1, 'UTF-8');
+        if ($c >= 0x61 && $c <= 0x7A) return mb_substr('αβχδεφγηιϕκλμνοπθρστυϖωξψζ', $c - 0x61, 1, 'UTF-8');
+        return $c >= 0x20 && $c < 0x7F ? chr($c) : '';
+    }
+    public static function sembol_metin($s, $symbol_font = false) {
+        return preg_replace_callback($symbol_font ? '/./u' : '/[\x{F020}-\x{F0FF}]/u', function ($m) { $c = mb_ord($m[0], 'UTF-8'); return OSC_Havuz_Arka::sembol($c); }, $s);
+    }
     private function docx_metin($veri) {
         $t = self::gecici('osc.docx'); file_put_contents($t, $veri);
         $z = new ZipArchive(); if ($z->open($t) !== true) { @unlink($t); throw new Exception('Word dosyası açılamadı'); }
@@ -9612,12 +9627,14 @@ class OSC_Havuz_Arka {
                     switch ($n->localName) {
                         case 'oMath': $lt = trim(preg_replace('/\s+/', ' ', $omml($n))); if ($lt !== '') $s .= ' $' . $lt . '$ '; break;
                         case 'object': $s .= ' §EKSIK§ '; break;
-                        case 't': $s .= $n->textContent; break;
+                        case 't': { $rp = $n->parentNode ? $xp->query('./w:rPr/w:rFonts', $n->parentNode)->item(0) : null; $sf = $rp && preg_match('/^Symbol$/i', $rp->getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'ascii') ?: $rp->getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 'hAnsi'));
+                            $s .= self::sembol_metin($n->textContent, $sf); break; }
                         case 'tab': $s .= ' '; break;
                         case 'br': case 'cr': $s .= "\n"; break;
                         case 'blip': $s .= ' ' . $resim($n->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')) . ' '; break;
                         case 'imagedata': $s .= ' ' . $resim($n->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')) . ' '; break;
-                        case 'sym': $s .= '•'; break;
+                        case 'sym': { $W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'; $f = $n->getAttributeNS($W, 'font'); $c = hexdec($n->getAttributeNS($W, 'char')); if ($c >= 0xF000) $c -= 0xF000;
+                            $s .= preg_match('/wingdings/i', $f) ? (isset(array(0xFC => '✓', 0xFB => '✗', 0x6F => '□', 0xA8 => '□', 0xFE => '☑', 0x78 => '☒')[$c]) ? array(0xFC => '✓', 0xFB => '✗', 0x6F => '□', 0xA8 => '□', 0xFE => '☑', 0x78 => '☒')[$c] : '•') : self::sembol($c); break; }
                     }
                 }
                 return $s;
@@ -10335,4 +10352,172 @@ class OSC_Admin_Test {
 <?php }
 }
 new OSC_Admin_Test();
+}
+
+
+/* =====================================================================
+ * Sanal sayfalar (sayfa oluşturmaya gerek yok):
+ *   /kategoriler/       tüm kategoriler, arama ve sınıf filtresiyle
+ *   /tercih-robotlari/  LGS ve YKS tercih robotları bir arada
+ * ===================================================================== */
+if (!class_exists('OSC_Sayfalar')) {
+class OSC_Sayfalar {
+    public static $yollar = array('kategoriler' => 'kategoriler', 'tercih-robotlari' => 'robotlar');
+    public function __construct() {
+        add_action('template_redirect', array($this, 'yonlendir'), 5);
+        add_filter('pre_get_document_title', array($this, 'baslik'), 60);
+    }
+    public static function yol() { return isset($_SERVER['REQUEST_URI']) ? trim(strtok(wp_unslash($_SERVER['REQUEST_URI']), '?'), '/') : ''; }
+    public static function url($k) { return home_url('/' . $k . '/'); }
+    public function baslik($t) {
+        $y = self::yol();
+        if ($y === 'kategoriler') return 'Tüm Kategoriler – Yazılı, Test, Plan ve Evraklar | Soruindir';
+        if ($y === 'tercih-robotlari') return 'LGS ve YKS Tercih Robotu – Puanına Uygun Okul ve Bölümler | Soruindir';
+        return $t;
+    }
+    public function yonlendir() {
+        $y = self::yol(); if (!isset(self::$yollar[$y]) || !is_404()) return;
+        global $wp_query; $wp_query->is_404 = false; status_header(200);
+        $acik = array('kategoriler' => 'Yazılı soruları, testler, yıllık planlar, zümre tutanakları ve tüm evraklar; sınıf ve derse göre kategoriler.', 'tercih-robotlari' => 'LGS ve YKS tercih robotları: puanına ve başarı sırana göre girebileceğin lise, üniversite ve bölümleri gör.');
+        add_action('wp_head', function () use ($y, $acik) { echo '<meta name="description" content="' . esc_attr($acik[$y]) . '">' . "\n" . '<link rel="canonical" href="' . esc_url(self::url($y)) . '">' . "\n"; }, 1);
+        $f = self::$yollar[$y];
+        get_header(); echo self::stil(); echo $this->$f(); get_footer(); exit;
+    }
+    public static function stil() {
+        return '<style>
+.osp{--i:#13304F;--i2:#5B7189;--c:#E3EBF3;--m:#2F80ED;font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;max-width:1180px;margin:0 auto;padding:22px 16px 56px;color:var(--i)}
+.osp *{box-sizing:border-box}
+.osp-hero{position:relative;overflow:hidden;border-radius:28px;padding:40px 24px 30px;text-align:center;background:linear-gradient(180deg,#EAF4FC,#F5F9FE);border:1px solid #DCEAF7}
+.osp-hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(47,128,237,.14),transparent 70%)}
+.osp-ust{display:inline-flex;gap:6px;align-items:center;padding:5px 12px;border-radius:99px;background:#fff;border:1px solid #DCEAF7;font-size:12.5px;font-weight:700;color:var(--m)}
+.osp h1{margin:14px 0 0 !important;font-size:clamp(27px,3.8vw,42px);line-height:1.12;letter-spacing:-.025em;font-weight:800;color:var(--i)}
+.osp h1 span{color:var(--m)}
+.osp-hero p{margin:10px auto 0 !important;max-width:620px;color:#46607A;font-size:16.5px;position:relative}
+.osp-ara{position:relative;max-width:560px;margin:22px auto 0;z-index:1}
+.osp-ara svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:#8AA2BA}
+.osp .osp-ara input{width:100%;border:1.5px solid #D3E2F1 !important;border-radius:99px !important;padding:15px 18px 15px 48px !important;font:inherit;font-size:16px;background:#fff;outline:0;box-shadow:0 16px 34px -26px rgba(19,48,79,.55)}
+.osp .osp-ara input:focus{border-color:var(--m) !important;box-shadow:0 0 0 4px rgba(47,128,237,.14)}
+.osp-filtre{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:16px;position:relative;z-index:1}
+.osp-filtre button{border:1px solid #DCEAF7;background:#fff;color:#46607A;font:600 13.5px/1 inherit;font-family:inherit;padding:9px 14px;border-radius:99px;cursor:pointer}
+.osp-filtre button.on{background:#13304F;border-color:#13304F;color:#fff}
+.osp-gr{margin-top:30px}
+.osp-gr h2{margin:0 0 12px !important;font-size:19px;font-weight:800;display:flex;align-items:center;gap:10px;color:var(--i)}
+.osp-gr h2:after{content:"";flex:1;height:1px;background:var(--c)}
+.osp-iz{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.osp-k{display:flex;flex-direction:column;border-radius:20px;background:#fff;border:1px solid var(--c);overflow:hidden;transition:transform .16s,box-shadow .16s,border-color .16s}
+.osp-k:hover{transform:translateY(-2px);border-color:#C9DCF0;box-shadow:0 18px 34px -28px rgba(19,48,79,.6)}
+.osp .osp-k>a{display:flex;gap:14px;align-items:center;padding:16px;color:var(--i);text-decoration:none}
+.osp-r{flex:0 0 48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--r);background:color-mix(in srgb,var(--r) 12%,#fff)}
+.osp-r svg{width:24px;height:24px}
+.osp-k .y{flex:1;min-width:0}.osp-k b{display:block;font-size:15.5px;line-height:1.3}.osp-k small{display:block;margin-top:3px;font-size:12.5px;color:var(--i2)}
+.osp-k .ok{flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F1F5F9;color:#8AA2BA;transition:all .16s}
+.osp-k:hover .ok{background:var(--r);color:#fff}
+.osp-alt{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 14px}
+.osp .osp-alt a{font-size:12.5px;font-weight:600;color:#46607A;background:#F4F7FB;border:1px solid #E8EEF5;border-radius:99px;padding:4px 10px;text-decoration:none}
+.osp .osp-alt a:hover{color:var(--r);border-color:var(--r)}
+.osp-sinif{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.osp .osp-sinif a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 6px;border-radius:16px;background:#fff;border:1px solid var(--c);text-decoration:none;color:var(--i);transition:all .15s}
+.osp .osp-sinif a:hover{border-color:var(--m);transform:translateY(-2px)}
+.osp-sinif b{font-size:22px;font-weight:800;color:var(--r)}.osp-sinif span{font-size:12.5px;font-weight:600;color:var(--i2)}
+.osp-yok{display:none;text-align:center;color:var(--i2);margin-top:28px}
+.osp-rb{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+.osp .osp-rk{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:28px;border-radius:26px;color:#fff;text-decoration:none;background:var(--r);min-height:260px;box-shadow:0 26px 46px -34px var(--r);transition:transform .18s}
+.osp .osp-rk:hover{transform:translateY(-3px);color:#fff}
+.osp-rk:after{content:attr(data-k);position:absolute;right:-8px;bottom:-34px;font-size:130px;font-weight:900;opacity:.13;letter-spacing:-.05em}
+.osp-rk small{align-self:flex-start;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.2);font-size:12px;font-weight:700}
+.osp-rk b{font-size:28px;letter-spacing:-.02em;line-height:1.1}
+.osp-rk ul{margin:2px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:14.5px;opacity:.95}
+.osp-rk li:before{content:"✓  ";font-weight:800}
+.osp-rk i{margin-top:auto;align-self:flex-start;font-style:normal;font-weight:700;font-size:15px;background:#fff;color:var(--r);padding:11px 18px;border-radius:12px}
+.osp-ek{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.osp .osp-ek a{display:flex;gap:12px;align-items:center;padding:16px;border-radius:18px;background:#fff;border:1px solid var(--c);text-decoration:none;color:var(--i);font-weight:700;font-size:15px}
+.osp .osp-ek a:hover{border-color:var(--m)}
+.osp-ek span{font-size:22px}
+.osp-bilgi{margin-top:26px;padding:20px 22px;border-radius:20px;background:#F7FAFD;border:1px solid var(--c);color:#46607A;font-size:14.5px;line-height:1.6}
+.osp-bilgi b{color:var(--i)}
+@media(max-width:900px){.osp-iz,.osp-ek{grid-template-columns:1fr 1fr}.osp-sinif{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:640px){.osp-iz,.osp-ek,.osp-rb{grid-template-columns:1fr}.osp-sinif{grid-template-columns:repeat(3,1fr)}.osp-hero{padding:30px 16px 24px;border-radius:22px}}
+</style>';
+    }
+    private static function ikon($ad) {
+        $t = mb_strtolower($ad, 'UTF-8');
+        $o = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
+        if (preg_match('/plan/u', $t)) return $o . '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+        if (preg_match('/hesap|puan/u', $t)) return $o . '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg>';
+        if (preg_match('/test|deneme|soru|sınav|yazılı/u', $t)) return $o . '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>';
+        if (preg_match('/zümre|tutanak|toplantı|idare|müdür|öğretmen|evrak|dilekçe/u', $t)) return $o . '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+        if (preg_match('/oyun|etkinlik|boyama/u', $t)) return $o . '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>';
+        if (preg_match('/rehber|bep|karne|veli/u', $t)) return $o . '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>';
+        return $o . '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
+    }
+    private static function kucuk($s) { return mb_strtolower(strtr($s, array('İ' => 'i', 'I' => 'ı')), 'UTF-8'); }
+    public function kategoriler() {
+        $renk = array('#2F80ED', '#22A06B', '#7C3AED', '#E8890B', '#DB2777', '#0D9488', '#DC2626', '#4F46E5', '#0369A1', '#4D7C0F', '#C2410C', '#475569');
+        $tum = get_categories(array('hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC'));
+        $cocuk = array(); foreach ($tum as $c) $cocuk[$c->parent][] = $c;
+        $sinif = array(); $ana = array(); $toplam = 0;
+        foreach ($tum as $c) { $toplam += (int) $c->count; if ($c->slug === 'uncategorized' || $c->slug === 'genel') continue; if (preg_match('/^(\d{1,2})-sinif$/', $c->slug, $m)) { $sinif[(int) $m[1]] = $c; continue; } if (!$c->parent) $ana[] = $c; }
+        ksort($sinif);
+        ob_start(); ?>
+<div class="osp">
+  <section class="osp-hero">
+    <span class="osp-ust">📚 <?php echo count($tum); ?> kategori</span>
+    <h1>Tüm <span>kategoriler</span></h1>
+    <p>Yazılı soruları, testler, yıllık planlar, zümre tutanakları ve evraklar. Aradığın kategoriyi bul, tek tıkla indir.</p>
+    <div class="osp-ara"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg><input type="search" id="osp-q" placeholder="Kategori ara: yazılı, plan, zümre…" aria-label="Kategori ara" autocomplete="off"></div>
+  </section>
+  <?php if ($sinif): ?>
+  <section class="osp-gr" data-tip="sinif"><h2>Sınıflara göre</h2><div class="osp-sinif">
+    <?php foreach ($sinif as $n => $c) echo '<a href="' . esc_url(get_category_link($c)) . '" style="--r:' . $renk[$n % count($renk)] . '" data-s="' . esc_attr(self::kucuk($c->name)) . '"><b>' . $n . '</b><span>' . ($n <= 4 ? 'İlkokul' : ($n <= 8 ? 'Ortaokul' : 'Lise')) . ' · ' . (int) $c->count . '</span></a>'; ?>
+  </div></section>
+  <?php endif; ?>
+  <section class="osp-gr"><h2>Tüm kategoriler</h2><div class="osp-iz">
+    <?php foreach ($ana as $i => $c):
+        $r = $renk[$i % count($renk)]; $alt = isset($cocuk[$c->term_id]) ? $cocuk[$c->term_id] : array();
+        $ara = self::kucuk($c->name . ' ' . implode(' ', wp_list_pluck($alt, 'name'))); ?>
+    <div class="osp-k" style="--r:<?php echo $r; ?>" data-s="<?php echo esc_attr($ara); ?>">
+      <a href="<?php echo esc_url(get_category_link($c)); ?>"><span class="osp-r" aria-hidden="true"><?php echo self::ikon($c->name); ?></span><span class="y"><b><?php echo esc_html($c->name); ?></b><small><?php echo number_format_i18n($c->count); ?> içerik<?php echo $alt ? ' · ' . count($alt) . ' alt kategori' : ''; ?></small></span><span class="ok" aria-hidden="true">→</span></a>
+      <?php if ($alt): ?><div class="osp-alt"><?php foreach (array_slice($alt, 0, 8) as $a) echo '<a href="' . esc_url(get_category_link($a)) . '">' . esc_html($a->name) . '</a>'; if (count($alt) > 8) echo '<a href="' . esc_url(get_category_link($c)) . '">+' . (count($alt) - 8) . ' daha</a>'; ?></div><?php endif; ?>
+    </div>
+    <?php endforeach; ?>
+  </div></section>
+  <p class="osp-yok" id="osp-yok">Bu aramaya uygun kategori bulunamadı.</p>
+</div>
+<script>
+(function () { var q = document.getElementById('osp-q'); if (!q) return;
+  q.addEventListener('input', function () { var t = q.value.trim().toLocaleLowerCase('tr-TR'), n = 0;
+    document.querySelectorAll('.osp [data-s]').forEach(function (k) { var v = !t || k.dataset.s.indexOf(t) > -1; k.style.display = v ? '' : 'none'; if (v) n++; });
+    document.querySelectorAll('.osp-gr').forEach(function (g) { g.style.display = g.querySelector('[data-s]:not([style*="none"])') ? '' : 'none'; });
+    document.getElementById('osp-yok').style.display = n ? 'none' : 'block'; });
+})();
+</script>
+<?php return ob_get_clean();
+    }
+    public static function robot_lgs() { return class_exists('LGS_Tercih_Robotu') && method_exists('LGS_Tercih_Robotu', 'robot_url') ? LGS_Tercih_Robotu::robot_url() : ''; }
+    public static function robot_yks() { return class_exists('YKS_Tercih_Robotu') && method_exists('YKS_Tercih_Robotu', 'robot_url') ? YKS_Tercih_Robotu::robot_url() : ''; }
+    public function robotlar() {
+        $l = self::robot_lgs(); $y = self::robot_yks();
+        $hub = function_exists('si_hub_url') ? si_hub_url() : home_url('/hesaplamalar/');
+        ob_start(); ?>
+<div class="osp">
+  <section class="osp-hero">
+    <span class="osp-ust">🎓 Ücretsiz · üyelik gerekmez</span>
+    <h1>Tercih <span>robotları</span></h1>
+    <p>Puanını ya da başarı sıranı gir; geçen yılın taban puanlarına göre girebileceğin okul ve bölümleri hemen gör.</p>
+  </section>
+  <div class="osp-rb">
+    <a class="osp-rk" style="--r:#2F80ED" data-k="LGS" href="<?php echo esc_url($l ? $l : home_url('/lgs-tercih-robotu/')); ?>"><small>8. sınıf</small><b>LGS Tercih Robotu</b><ul><li>Puan ve yüzdelik dilime göre liseler</li><li>İl, ilçe ve okul türüne göre süzme</li><li>Taban puan ve kontenjan bilgisi</li></ul><i>LGS robotunu aç →</i></a>
+    <a class="osp-rk" style="--r:#7C3AED" data-k="YKS" href="<?php echo esc_url($y ? $y : home_url('/yks-tercih-robotu/')); ?>"><small>12. sınıf ve mezun</small><b>YKS Tercih Robotu</b><ul><li>Başarı sırasına göre üniversite ve bölümler</li><li>SAY, EA, SÖZ, DİL ve TYT puan türleri</li><li>Devlet ve vakıf üniversiteleri</li></ul><i>YKS robotunu aç →</i></a>
+  </div>
+  <div class="osp-ek">
+    <a href="<?php echo esc_url($hub); ?>"><span>🧮</span>Puanını önce hesapla</a>
+    <a href="<?php echo esc_url(get_category_link(get_category_by_slug('8-sinif')) ?: home_url('/')); ?>"><span>📝</span>8. sınıf LGS denemeleri</a>
+    <a href="<?php echo esc_url(home_url('/test-coz/')); ?>"><span>✅</span>Online test çöz</a>
+  </div>
+  <div class="osp-bilgi"><b>Nasıl çalışır?</b> Robotlar, ÖSYM ve MEB’in açıkladığı son yerleştirme sonuçlarındaki taban puan ve başarı sıralarını kullanır. Sonuçlar yol göstericidir; kontenjan ve puanlar her yıl değişir.</div>
+</div>
+<?php return ob_get_clean();
+    }
+}
+new OSC_Sayfalar();
 }

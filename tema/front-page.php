@@ -458,12 +458,12 @@ $grades = array(
     );
     $sx4_kart = array(
         array('test', 'Online test çöz', 'Deneme, yaprak test ve LGS–YKS sorularını ekranda çöz; puanını ve yanlışlarını anında gör.', $test_page_url, '#E9F7EF'),
-        array('indir', 'İndir & yazdır', 'Tüm kategoriler: deneme, çalışma kâğıdı, etkinlik ve evraklar; PDF ve Word olarak.', '#sph2-kat', '#EAF2FD'),
+        array('indir', 'İndir & yazdır', 'Tüm kategoriler: deneme, çalışma kâğıdı, etkinlik ve evraklar; PDF ve Word olarak.', class_exists('OSC_Sayfalar') ? OSC_Sayfalar::url('kategoriler') : home_url('/kategoriler/'), '#EAF2FD'),
         array('yazili', 'Yazılı soruları', 'Senaryolara uygun 1. ve 2. dönem yazılıları; sınıf ve derse göre.', home_url('/category/yazili-sorulari/'), '#FFF6E5'),
         array('plan', 'Yıllık planlar', 'Tüm sınıf ve dersler için güncel, ünitelendirilmiş yıllık planlar.', $sx4_om ? OSC_Masa::url() . '#yillik' : home_url('/category/yillik-planlar/'), '#FDEDEA'),
     );
     if ($sx4_om) $sx4_kart[] = array('masa', 'Öğretmen Masası', 'Yazılı hazırla, tutanak, BEP, kulüp evrakı ve OYS çizelgesi; dakikalar içinde.', OSC_Masa::url(), '#EEF0FE');
-    if ($sx4_lgs || $sx4_yks) $sx4_kart[] = array('tercih', 'Tercih robotları', 'LGS ve YKS taban puanlarıyla puanına uygun okul ve bölümleri gör.', $sx4_lgs ? $sx4_lgs : $sx4_yks, '#E8F6F8');
+    if ($sx4_lgs || $sx4_yks) $sx4_kart[] = array('tercih', 'Tercih robotları', 'LGS ve YKS taban puanlarıyla puanına uygun okul ve bölümleri gör.', class_exists('OSC_Sayfalar') ? OSC_Sayfalar::url('tercih-robotlari') : ($sx4_lgs ? $sx4_lgs : $sx4_yks), '#E8F6F8');
     $sx4_kart[] = array('zumre', 'Zümre tutanakları', 'Şube, zümre ve öğretmenler kurulu tutanakları; düzenlenebilir Word.', home_url('/category/zumre-toplanti-tutanaklari/'), '#F3ECFB');
     $sx4_kart[] = array('hesap', 'Puan hesaplama', 'LGS, YKS, AGS, KPSS ve daha fazlası için puan hesaplama araçları.', function_exists('si_hub_url') ? si_hub_url() : home_url('/hesaplamalar/'), '#EEF6E8');
     if (count($sx4_kart) % 2) array_pop($sx4_kart);

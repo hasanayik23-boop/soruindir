@@ -5,7 +5,7 @@ python3 yama_a.py
 python3 yama_b.py
 python3 yama_c.py
 python3 - <<'E'
-d='./'
+d='/home/claude/work/osc/'
 s=open(d+'onlinesorucoz.php',encoding='utf-8').read()
 k=open(d+'parca/sinif.php',encoding='utf-8').read()
 k=k.replace('/*__EK_METODLAR__*/',open(d+'parca/ek.php',encoding='utf-8').read())
@@ -29,6 +29,9 @@ k=k+'\n'+open(d+'parca/yzapi.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_arka.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/havuz_uret.php',encoding='utf-8').read()
 k=k+'\n'+open(d+'parca/admin_test.php',encoding='utf-8').read()
+for _f in ('sayfalar.php','oyun.php','forum.php','istatistik.php'):
+    import os
+    if os.path.exists(d+'parca/'+_f): k=k+'\n'+open(d+'parca/'+_f,encoding='utf-8').read()
 y=open(d+'parca/yazili.php',encoding='utf-8').read()
 y=y.replace('/*__YAZILI_CSS__*/',open(d+'parca/yazili.css',encoding='utf-8').read()).replace('/*__YAZILI_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/yazili.js',encoding='utf-8').read())
 y=y.replace("'/*__DIGER_JSON__*/'", q(open('/home/claude/work/dersler/diger.json',encoding='utf-8').read()))
