@@ -45,7 +45,7 @@ ev=open(d+'parca/evrak.php',encoding='utf-8').read()
 for ph,c in (('/*__EVRAK_CSS__*/',open(d+'parca/evrak.css',encoding='utf-8').read()),('/*__EVRAK_JS__*/',open(d+'parca/docx.js',encoding='utf-8').read()+'\n'+open(d+'parca/bgh.js',encoding='utf-8').read()+'\n'+open(d+'parca/evrak.js',encoding='utf-8').read())):
     assert ev.count(ph)==1 and '<?' not in c.replace('<?xml',''), ph
     ev=ev.replace(ph,c)
-om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read().replace('/*__YP_MEB__*/',open(d+'veri/yp_meb.b64').read().strip()).replace('/*__YPXLSX__*/',open(d+'parca/ypxlsx.js',encoding='utf-8').read())
+om=om+'\n'+ev+'\n'+open(d+'parca/masa.php',encoding='utf-8').read()+'\n'+open(d+'parca/yplan.php',encoding='utf-8').read().replace('/*__YP_MEB__*/',open(d+'veri/yp_meb.b64').read().strip()).replace('/*__YP_MTAL__*/',open(d+'veri/yp_mtal.b64').read().strip()).replace('/*__YP_MTAL_IDX__*/',open(d+'veri/yp_mtal_idx.b64').read().strip()).replace('/*__YPXLSX__*/',open(d+'parca/ypxlsx.js',encoding='utf-8').read())
 import re as _re, subprocess as _sp
 _ev=open(d+'parca/evrak.js',encoding='utf-8').read(); _a=_ev.index('var TURLER = ['); _b=_ev.index('\n  ];',_a)
 _tl=[{'id':m.group(1),'ad':m.group(2),'ik':m.group(3),'ac':m.group(4)} for m in _re.finditer(r"\{ id: '([a-z_]+)'(?:, grup: '[a-z]+')?, ad: '([^']+)', ik: '([^']+)'(?:, yatay: true)?, ac: '([^']+)'", _ev[_a:_b])]

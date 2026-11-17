@@ -22,13 +22,44 @@ class OSC_YPlan {
         if (!is_array($d)) { $g = base64_decode('/*__YP_MEB__*/'); $d = $g && function_exists('gzdecode') ? json_decode((string) gzdecode($g), true) : array(); if (!is_array($d)) $d = array(); }
         return self::$meb_c = $d;
     }
+    /* Mesleki ve Teknik Anadolu Lisesi: MEB MTEGM çerçeve öğretim programlarından (meslek.meb.gov.tr) üretilmiş
+     * alan dersi planları. Ayrı tutulur, yalnızca gerektiğinde açılır. Sınıf M = 11 ve 12. sınıf seçmeli meslek dersleri. */
+    private static $mtal_c = null; private static $mtal_i = null;
+    public static function mtal_dizin() { if (self::$mtal_i === null) { $g = base64_decode('/*__YP_MTAL_IDX__*/'); $d = $g && function_exists('gzdecode') ? json_decode((string) gzdecode($g), true) : array(); self::$mtal_i = is_array($d) ? $d : array(); } return self::$mtal_i; }
+    private static function mtal() { if (self::$mtal_c === null) { $g = base64_decode('/*__YP_MTAL__*/'); $d = $g && function_exists('gzdecode') ? json_decode((string) gzdecode($g), true) : array(); self::$mtal_c = is_array($d) ? $d : array(); } return self::$mtal_c; }
+    /** öğrenme birimlerini kazanım sayısıyla orantılı olarak haftalara dağıt */
+    private static function mtal_ac($v, $hafta = 36) {
+        $bs = isset($v['u']) ? $v['u'] : array(); if (!$bs) return $v; $saat = (string) (isset($v['s']) ? $v['s'] : '');
+        $ag = array(); foreach ($bs as $b) $ag[] = max(1, count($b[1])); $top = array_sum($ag);
+        $pay = array(); foreach ($ag as $a) $pay[] = max(1, (int) round($hafta * $a / $top));
+        while (array_sum($pay) > $hafta) { $k = array_search(max($pay), $pay); $pay[$k]--; }
+        $ag2 = $ag; while (array_sum($pay) < $hafta) { $k = array_search(max($ag2), $ag2); $pay[$k]++; $ag2[$k] -= 0.5; }
+        $h = array(); $n = 1; $olc = 'Uygulama faaliyetleri, kontrol listesi ve dereceli puanlama anahtarı ile süreç değerlendirmesi; öğrenme birimi sonunda performansa dayalı değerlendirme.';
+        foreach ($bs as $i => $b) {
+            $p = $pay[$i]; $ck = $b[1] ? $b[1] : ($b[2] ? $b[2] : array($b[0])); $ic = $b[2];
+            for ($w = 0; $w < $p; $w++) {
+                $a = intdiv($w * count($ck), $p); $z = max($a + 1, intdiv(($w + 1) * count($ck), $p));
+                $cik = implode(' ', array_map(function ($x) { return preg_match('/\.$/u', $x) ? $x : $x . '.'; }, array_slice($ck, $a, $z - $a)));
+                if ($ic) { $ia = intdiv($w * count($ic), $p); $iz = max($ia + 1, intdiv(($w + 1) * count($ic), $p)); $konu = implode(', ', array_slice($ic, $ia, $iz - $ia)); } else $konu = $b[0];
+                $h[] = array($n++, $saat, $b[0], $konu, $cik, isset($b[3]) ? $b[3] : '', $olc, '', '', '', '', false);
+            }
+        }
+        $v['h'] = $h; return $v;
+    }
+    private static function mtal_bul($sinif, $ders) {
+        $ix = self::mtal_dizin(); $t = 'Mesleki ve Teknik Anadolu Lisesi';
+        foreach (array((string) $sinif, (int) $sinif >= 11 ? 'M' : null, 'M') as $sx) { if ($sx === null) continue; $k = $t . '|' . $sx . '|' . $ders; if (isset($ix[$k])) { $m = self::mtal(); if (isset($m[$k])) return array($k, self::mtal_ac($m[$k])); } }
+        return null;
+    }
     private static function meb_bul($tur, $sinif, $ders) {
+        if ((int) $sinif >= 9 && $tur === 'Mesleki ve Teknik Anadolu Lisesi' && ($r = self::mtal_bul($sinif, $ders))) return $r;
         $m = self::meb(); $lise = (int) $sinif >= 9; $turlar = array($tur, '');
         if ($lise) $turlar[] = 'Anadolu Lisesi';   // MTAL, AİHL ve diğer liseler: Anadolu Lisesi planı
         $oo = (int) $sinif >= 5 && (int) $sinif <= 8;
         foreach (array((string) $sinif, $lise ? 'L' : ($oo ? 'O' : null)) as $sx) { if ($sx === null) continue; foreach ($turlar as $t) { $k = $t . '|' . $sx . '|' . $ders; if (isset($m[$k])) return array($k, $m[$k]); } }
         // başka okul türünün planı (ör. İmam Hatip Ortaokulu Arapça) varsa onu kullan
         foreach ($m as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) === 3 && $p3[2] === $ders && ($p3[1] === (string) $sinif || ($lise && $p3[1] === 'L') || ($oo && $p3[1] === 'O'))) return array($k, $v); }
+        if ($lise && ($r = self::mtal_bul($sinif, $ders))) return $r;
         return null;
     }
     public function ajax_meb_kaydet() {
@@ -91,6 +122,7 @@ class OSC_YPlan {
             }
         }
         foreach (self::meb() as $k => $v) { $p3 = explode('|', $k, 3); if (count($p3) < 3) continue; foreach ($p3[1] === 'L' ? range(9, 12) : ($p3[1] === 'O' ? range(5, 8) : array((int) $p3[1])) as $si) { if ($si < 1) continue; $var = false; if (isset($c[$si])) foreach ($c[$si] as $l2) if (in_array($p3[2], $l2, true)) $var = true; if (!$var) $ekle('MEB yıllık planı olan diğer dersler', $p3[2], array($si)); } }
+        foreach (self::mtal_dizin() as $k => $alan) { $p3 = explode('|', $k, 3); if (count($p3) < 3) continue; foreach ($p3[1] === 'M' ? array(11, 12) : array((int) $p3[1]) as $si) { $var = false; if (isset($c[$si])) foreach ($c[$si] as $l2) if (in_array($p3[2], $l2, true)) $var = true; if (!$var) $ekle('Meslek: ' . $alan, $p3[2], array($si)); } }
         foreach (self::kutuphane() as $k => $v) { list($s, $ad) = explode('|', $k, 2); $var = false; if (isset($c[(int) $s])) foreach ($c[(int) $s] as $l) if (in_array($ad, $l, true)) $var = true; if (!$var) $ekle('Diğer', $ad, array((int) $s)); }
         $out = array(); ksort($c);
         foreach ($c as $s => $gr) { $o2 = array(); foreach ($gr as $g => $l) { usort($l, function ($a, $b) { return strcmp(OSC_YPlan::tr_sira($a), OSC_YPlan::tr_sira($b)); }); $o2[] = array('g' => $g, 'd' => $l); } $out[$s] = $o2; }
@@ -135,7 +167,7 @@ class OSC_YPlan {
             }
             $sy = array_count_values(array_filter($saat)); arsort($sy);
             $p3 = explode('|', $mb[0], 3);
-            wp_send_json_success(array('kaynak' => 'meb', 'haftalar' => $mb[1]['h'], 'uniteler' => $u, 'saat' => $sy ? (int) key($sy) : 0, 'mebTur' => $p3[0]));
+            wp_send_json_success(array('kaynak' => 'meb', 'haftalar' => $mb[1]['h'], 'uniteler' => $u, 'saat' => $sy ? (int) key($sy) : 0, 'mebTur' => $p3[0], 'cop' => isset($mb[1]['u'])));
         }
         $k = self::kutuphane(); $anah = $sinif . '|' . $ders;
         if (isset($k[$anah]) && (empty($k[$anah]['durum']) || $k[$anah]['durum'] === 'onayli' || current_user_can('manage_options'))) wp_send_json_success(array_merge(array('kaynak' => 'program'), $k[$anah]));
@@ -225,6 +257,7 @@ class OSC_YPlan {
 <p><b>Her yıl:</b> MEB’in yayımladığı <b>.zip</b> ya da <b>.xlsx</b> taslak yıllık plan dosyalarını seçin (birden çok dosya seçilebilir). Excel’deki her sayfa (Hazırlık, 9, 10, 11, 12…) ayrı sınıf olarak okunur; okul türü (Anadolu, Fen, Sosyal Bilimler Lisesi) dosya adından anlaşılır. Mesleki ve Teknik Anadolu Lisesi, İmam Hatip ve diğer liselerde Anadolu Lisesi planı kullanılır.</p>
 <p><input type="file" id="yp-meb-f" multiple accept=".zip,.xlsx,.xlsm,.xls,.ods,.csv"> <label><input type="checkbox" id="yp-meb-ilk"> Önce mevcut planları sil (yeni eğitim yılı)</label> <button class="button button-primary" id="yp-meb-oku">Dosyaları oku</button> <button class="button" id="yp-meb-sif" title="Yüklediklerinizi silip eklentiyle gelen 2026-2027 planlarına döner">Varsayılana dön</button> <span id="yp-meb-d"></span></p>
 <div id="yp-meb-l"></div>
+<p style="margin-top:10px">🛠️ <b>Meslek lisesi alan dersleri:</b> <?php $mi = OSC_YPlan::mtal_dizin(); echo count($mi); ?> plan, <?php echo count(array_unique($mi)); ?> alan — MEB MTEGM çerçeve öğretim programlarındaki öğrenme birimi ve kazanımlardan üretildi (meslek.meb.gov.tr, 2026-2027). Öğretmen okul türünü “Mesleki ve Teknik Anadolu Lisesi” seçince gelir.</p>
 <details style="margin-top:10px"><summary><b>Yüklü planların listesi (1–12. sınıf, tüm okul türleri)</b></summary>
 <?php $ls = array(); foreach ($mb as $kk => $vv) { $p3 = explode('|', $kk, 3); if (count($p3) < 3) continue; $ls[] = array($p3[1], $p3[2], $p3[0], isset($vv['h']) ? count($vv['h']) : 0, isset($vv['d']) ? $vv['d'] : ''); }
 $sir = function ($s) { return $s === 'H' ? 8.5 : ($s === 'O' ? 4.5 : ($s === 'L' ? 12.5 : (float) $s)); };

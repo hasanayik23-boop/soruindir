@@ -389,7 +389,7 @@
   }
   function ypFormHtml() {
     var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []);
-    var kay = { meb: '✅ MEB ' + (P.mebTur ? P.mebTur + ' ' : '') + 'taslak yıllık planından (hafta hafta; tarihler çalışma takvimine göre)', program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
+    var kay = { meb: P.cop ? '✅ MEB MTEGM çerçeve öğretim programındaki öğrenme birimleri ve kazanımlardan (haftalara dağıtıldı; tarihler çalışma takvimine göre; zümrede düzenleyebilirsiniz)' : '✅ MEB ' + (P.mebTur ? P.mebTur + ' ' : '') + 'taslak yıllık planından (hafta hafta; tarihler çalışma takvimine göre)', program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
     var h = '<div class="ev-oys"><h3>1. Ders ve süre</h3><div class="ev-form">' +
       '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
       '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
@@ -410,7 +410,7 @@
     var ders = P.ders === '__' ? P.dersAd : P.ders; if (!P.sinif || !ders) return;
     P.yukleniyor = 1; P.metin = null;
     var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders); fd.append('tur', +P.sinif >= 9 ? (P.tur || ORT.okulturu || 'Anadolu Lisesi') : '');
-    fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; P.haftalar = d.haftalar || null; P.mebTur = d.mebTur || ''; if (d.saat && !P.saatElle) P.saat = d.saat; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
+    fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.cop = !!d.cop; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; P.haftalar = d.haftalar || null; P.mebTur = d.mebTur || ''; if (d.saat && !P.saatElle) P.saat = d.saat; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
   }
   function ypBagla() {
     var P = ypDurum(S.veri);
