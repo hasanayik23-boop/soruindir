@@ -295,8 +295,8 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
         .sx-ara-hap kbd { font:600 11px/1 inherit; font-family:inherit; padding:4px 7px; border-radius:6px; background:#fff; border:1px solid #E3EBF3; color:#8AA2BA; }
         .sx-header .sx-cta { border-radius:99px; background:linear-gradient(135deg,#2F80ED,#1E5AA8); box-shadow:0 10px 20px -12px rgba(47,128,237,.8); }
         .sx-header .sx-uye-btn { border-radius:99px; }
-        @media (max-width:1340px) { .sx-header .sx-cta { display:none; } .sx-header .sx-nav-link { padding:10px 11px; } }
-        @media (max-width:1240px) { .sx-ara-hap span, .sx-ara-hap kbd { display:none; } .sx-header .sx-ara-hap { width:42px; padding:0; justify-content:center; } }
+        @media (max-width:1280px) { .sx-header .sx-nav-link { padding:10px 8px; font-size:14.5px; } .sx-header-in { gap:10px; } .sx-uye-ad, .sx-uye-yazi, .sx-header .sx-uye-btn .sx-chev { display:none; } .sx-header .sx-uye-btn { width:42px; padding:0; justify-content:center; } .sx-header .sx-uye-btn.has-av { padding:0; } }
+        @media (max-width:1440px) { .sx-ara-hap span, .sx-ara-hap kbd { display:none; } .sx-header .sx-ara-hap { width:42px; padding:0; justify-content:center; } }
         @media (prefers-reduced-motion: reduce) { .sx-header *, .sx-page * { transition:none !important; } }
     </style>
 </head>
@@ -333,7 +333,6 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                         </div>
                     </div>
                 </div>
-                <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/test-coz/'); ?>" href="https://soruindir.net/test-coz/">Online testler</a>
                 <?php if ($sx_om_on): ?><a class="sx-nav-link sx-yz-link<?php echo $sx_active($sx_om); ?>" href="<?php echo esc_url($sx_om); ?>">Öğretmen Masası<?php if ($sx_om_yeni): ?> <span class="sx-yeni">YENİ</span><?php endif; ?></a><?php elseif ($sx_yz_on): ?><a class="sx-nav-link sx-yz-link" href="<?php echo esc_url($sx_yz); ?>">Yazılı Hazırla <span class="sx-yeni">YENİ</span></a><?php endif; ?>
                 <a class="sx-nav-link<?php echo $sx_active(home_url('/soru-cevap/')); ?>" href="<?php echo esc_url(home_url('/soru-cevap/')); ?>">Soru-Cevap</a>
                 <div class="sx-dd sx-mega" data-sx-dd>
@@ -350,6 +349,7 @@ $sx_user_ico = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
                         </div>
                     </div>
                 </div>
+                <a class="sx-nav-link<?php echo $sx_active('https://soruindir.net/icerik-gonder/'); ?>" href="https://soruindir.net/icerik-gonder/">İçerik Gönder</a>
             </nav>
 
             <div class="sx-actions">

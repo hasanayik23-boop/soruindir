@@ -2543,14 +2543,37 @@ window.OSC_BGH = [
 (function () {
   function BASLAT() {
   var C = window.OSC_EV || {}, kok = document.getElementById('osc-ev'); if (!kok) return;
-  // ders listesi tek parça (ilkokul/ortaokul/lise ayrımı yok); yalnızca meslek alanları gruplu
-  function dersSecHtml(dl, sec) {
-    var duz = [], mes = [], gor = {};
-    (dl || []).forEach(function (g) { if (/meslek|alan/i.test(g.g)) mes.push(g); else g.d.forEach(function (x) { if (!gor[x]) { gor[x] = 1; duz.push(x); } }); });
-    duz.sort(function (a, b) { return a.localeCompare(b, 'tr'); });
-    var o = function (x) { return '<option' + (sec === x ? ' selected' : '') + '>' + esc(x) + '</option>'; };
-    return duz.map(o).join('') + mes.map(function (g) { return '<optgroup label="' + esc(g.g) + '">' + g.d.filter(function (x) { return !gor[x]; }).map(o).join('') + '</optgroup>'; }).join('');
+  /* okul türü → sınıflar → dersler (genel kültür, seçmeli, meslek sırasıyla) */
+  var OKUL_TUR = [['İlkokul', 1, 4], ['Ortaokul', 5, 8], ['İmam Hatip Ortaokulu', 5, 8], ['Anadolu Lisesi', 9, 12], ['Fen Lisesi', 9, 12], ['Sosyal Bilimler Lisesi', 9, 12], ['Anadolu İmam Hatip Lisesi', 9, 12], ['Mesleki ve Teknik Anadolu Lisesi', 9, 12], ['Güzel Sanatlar Lisesi', 9, 12], ['Spor Lisesi', 9, 12]];
+  function turAralik(t) { for (var i = 0; i < OKUL_TUR.length; i++) if (OKUL_TUR[i][0] === t) return OKUL_TUR[i]; return null; }
+  function turSec(P) { var t = P.tur || ''; if (!turAralik(t) && ORT.okulturu && turAralik(ORT.okulturu)) t = ORT.okulturu; if (!turAralik(t) && P.sinif) t = +P.sinif <= 4 ? 'İlkokul' : +P.sinif <= 8 ? 'Ortaokul' : 'Anadolu Lisesi'; return turAralik(t) ? t : ''; }
+  function grupTur(g) { return /^Ortak/i.test(g) ? 'ortak' : /seçmeli|^Diğer$|diğer dersler/i.test(g) ? 'secmeli' : 'meslek'; }
+  function meslekUygun(g, tur) {
+    if (tur === 'İmam Hatip Ortaokulu') return /İmam Hatip Ortaokulu/i.test(g);
+    if (tur === 'Anadolu İmam Hatip Lisesi') return /İmam Hatip Lisesi/i.test(g);
+    if (tur === 'Mesleki ve Teknik Anadolu Lisesi') return /^Meslek:/.test(g);
+    if (tur === 'Güzel Sanatlar Lisesi') return /Güzel sanatlar/i.test(g);
+    if (tur === 'Spor Lisesi') return /Spor lisesi/i.test(g);
+    return false;
   }
+  function dersSecHtml(dl, sec, tur) {
+    var ortak = [], secm = [], mes = [], gor = {}, mesAd = {};
+    (dl || []).forEach(function (g) { if (grupTur(g.g) === 'meslek' && meslekUygun(g.g, tur)) g.d.forEach(function (x) { mesAd[x] = 1; }); });
+    (dl || []).forEach(function (g) {
+      var k = grupTur(g.g);
+      if (k === 'meslek') { if (meslekUygun(g.g, tur)) mes.push(g); return; }
+      if (k === 'secmeli') g = { g: g.g, d: g.d.filter(function (x) { return !mesAd[x]; }) };
+      if (k === 'secmeli' && /Ortaokul seçmeli/i.test(g.g) && turAralik(tur) && turAralik(tur)[1] >= 9) return;
+      g.d.forEach(function (x) { if (gor[x]) return; gor[x] = 1; (k === 'ortak' ? ortak : secm).push(x); });
+    });
+    var sir = function (a, b) { return a.localeCompare(b, 'tr'); }; ortak.sort(sir); secm.sort(sir);
+    var o = function (x) { return '<option' + (sec === x ? ' selected' : '') + '>' + esc(x) + '</option>'; };
+    var grup = function (ad, l) { return l.length ? '<optgroup label="' + esc(ad) + '">' + l.map(o).join('') + '</optgroup>' : ''; };
+    mes.sort(function (a, b) { return sir(a.g, b.g); });
+    return grup('Genel kültür dersleri', ortak) + grup('Seçmeli dersler', secm) + mes.map(function (g) { return grup(g.g.replace(/^Meslek: /, 'Meslek dersleri – '), g.d.filter(function (x) { if (gor[x]) return false; gor[x] = 1; return true; })); }).join('');
+  }
+  function turSecHtml(P) { var t = turSec(P); return '<label><span>Okul türü</span><select data-yp="tur"><option value="">Seçin…</option>' + OKUL_TUR.map(function (x) { return '<option' + (t === x[0] ? ' selected' : '') + '>' + x[0] + '</option>'; }).join('') + '</select></label>'; }
+  function sinifSecHtml(P, sin) { var a = turAralik(turSec(P)); var l = a ? sin.filter(function (x) { return x >= a[1] && x <= a[2]; }) : []; return '<label><span>Sınıf</span><select data-yp="sinif"' + (a ? '' : ' disabled') + '><option value="">' + (a ? 'Seçin…' : 'Önce okul türü') + '</option>' + l.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>'; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
   function trUp(s) { return String(s || '').replace(/i/g, 'İ').replace(/ı/g, 'I').toUpperCase(); }
@@ -2927,10 +2950,10 @@ window.OSC_BGH = [
     var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []);
     var kay = { meb: P.cop ? '✅ MEB MTEGM çerçeve öğretim programındaki öğrenme birimleri ve kazanımlardan (haftalara dağıtıldı; tarihler çalışma takvimine göre; zümrede düzenleyebilirsiniz)' : '✅ MEB ' + (P.mebTur ? P.mebTur + ' ' : '') + 'taslak yıllık planından (hafta hafta; tarihler çalışma takvimine göre)', program: '✅ MEB öğretim programından', senaryo: '📋 MEB senaryo tablolarındaki öğrenme çıktılarından', taslak: '🤖 Yapay zekâ taslağı (yönetici kontrolü bekliyor; programla karşılaştırın)', yok: '✍️ Bu ders için kayıtlı program yok: üniteleri ve öğrenme çıktılarını aşağıya yazın', elle: '✍️ Sizin düzenlemeniz' }[P.kaynak] || '';
     var h = '<div class="ev-oys"><h3>1. Ders ve süre</h3><div class="ev-form">' +
-      '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
-      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
+      turSecHtml(P) + sinifSecHtml(P, sin) +
+      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders, turSec(P)) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.dersElle || P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
-      (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
+
       '<label><span>Haftalık ders saati</span><input type="number" min="1" max="20" data-yp="saat" value="' + esc(P.saat || '') + '" placeholder="ör. 5"></label>' +
       '<label><span>Okul temelli planlama (toplam saat)</span><input type="number" min="0" max="100" data-yp="otp" value="' + esc(P.otp || '') + '" placeholder="0"></label></div>' +
       '<p class="ev-not">📅 Takvim: ' + esc(TK.yil || '') + ' — ' + esc(String(TK.baslangic || '').split('-').reverse().join('.')) + ' / ' + esc(String(TK.bitis || '').split('-').reverse().join('.')) + '. Tatil haftaları ve resmî tatiller plana otomatik işlenir.</p>';
@@ -2945,13 +2968,13 @@ window.OSC_BGH = [
   function ypYukle(P) {
     var ders = P.ders === '__' ? P.dersAd : P.ders; if (!P.sinif || !ders) return;
     P.yukleniyor = 1; P.metin = null;
-    var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders); fd.append('tur', +P.sinif >= 9 ? (P.tur || ORT.okulturu || 'Anadolu Lisesi') : '');
+    var fd = new FormData(); fd.append('action', 'osc_yp_program'); fd.append('sinif', P.sinif); fd.append('ders', ders); var tr0 = turSec(P); fd.append('tur', /Lise|İmam Hatip Ortaokulu/.test(tr0) ? tr0 : '');
     fetch(C.ajax, { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { var d = j.data || {}; P.kaynak = d.kaynak || 'yok'; P.cop = !!d.cop; P.uniteler = d.uniteler || []; P.donemler = d.donemler || null; P.haftalar = d.haftalar || null; P.mebTur = d.mebTur || ''; if (d.saat && !P.saatElle) P.saat = d.saat; }).catch(function () { P.kaynak = 'yok'; }).then(function () { P.yukleniyor = 0; sakla(); vForm(); });
   }
   function ypBagla() {
     var P = ypDurum(S.veri);
     kok.querySelectorAll('[data-yp]').forEach(function (e) {
-      e.onchange = function () { var k = e.dataset.yp; P[k] = /sinif|saat|otp/.test(k) ? (+e.value || '') : e.value; if (k === 'saat') P.saatElle = 1; if (k === 'tur') { ORT.okulturu = e.value; if (typeof ortakKaydet === 'function') ortakKaydet('okulturu', e.value); } if (k === 'sinif') { P.ders = ''; P.uniteler = []; P.kaynak = ''; P.haftalar = null; } sakla(); if (k === 'sinif' || (k === 'ders' && P.ders !== '__') || k === 'dersAd' || (k === 'tur' && P.ders)) { ypYukle(P); } vForm(); };
+      e.onchange = function () { var k = e.dataset.yp; P[k] = /sinif|saat|otp/.test(k) ? (+e.value || '') : e.value; if (k === 'saat') P.saatElle = 1; if (k === 'tur') { ORT.okulturu = e.value; if (typeof ortakKaydet === 'function') ortakKaydet('okulturu', e.value); var ar = turAralik(e.value); if (!ar || +P.sinif < ar[1] || +P.sinif > ar[2]) { P.sinif = ''; } P.ders = ''; P.uniteler = []; P.kaynak = ''; P.haftalar = null; } if (k === 'sinif') { P.ders = ''; P.uniteler = []; P.kaynak = ''; P.haftalar = null; } sakla(); if (k === 'sinif' || (k === 'ders' && P.ders !== '__') || k === 'dersAd' || (k === 'tur' && P.ders && P.sinif)) { ypYukle(P); } vForm(); };
     });
     var t = document.getElementById('yp-u'); if (t) t.oninput = function () { P.metin = t.value; P.uniteler = ypCoz(t.value); P.haftalar = null; if (P.kaynak !== 'elle') { P.kaynak0 = P.kaynak0 || P.kaynak; } sakla(); };
     var y = document.getElementById('yp-yenile'); if (y) y.onclick = function () { ypYukle(P); vForm(); };
@@ -2965,10 +2988,10 @@ window.OSC_BGH = [
   function gpFormHtml() {
     var P = ypDurum(S.veri), sin = Object.keys(KAT).map(Number).sort(function (a, b) { return a - b; }), dl = (KAT[P.sinif] || []), U = P.uniteler || [];
     var h = '<div class="ev-oys"><h3>1. Ders ve öğrenme çıktıları</h3><div class="ev-form">' +
-      '<label><span>Sınıf</span><select data-yp="sinif"><option value="">Seçin…</option>' + sin.map(function (x) { return '<option value="' + x + '"' + (+P.sinif === x ? ' selected' : '') + '>' + x + '. sınıf</option>'; }).join('') + '</select></label>' +
-      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
+      turSecHtml(P) + sinifSecHtml(P, sin) +
+      '<label><span>Ders</span><select data-yp="ders"><option value="">' + (P.sinif ? 'Seçin…' : 'Önce sınıf') + '</option>' + dersSecHtml(dl, P.ders, turSec(P)) + (P.sinif ? '<option value="__">Listede yok (kendim yazacağım)</option>' : '') + '</select></label>' +
       (P.ders === '__' ? '<label><span>Ders adı</span><input data-yp="dersAd" value="' + esc(P.dersAd || '') + '"></label>' : '') +
-      (+P.sinif >= 9 ? '<label><span>Okul türü</span><select data-yp="tur">' + ['Anadolu Lisesi', 'Fen Lisesi', 'Sosyal Bilimler Lisesi', 'Anadolu İmam Hatip Lisesi', 'Mesleki ve Teknik Anadolu Lisesi', 'Diğer lise'].map(function (x) { return '<option' + ((P.tur || ORT.okulturu || 'Anadolu Lisesi') === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' : '') +
+
       (U.length ? '<label><span>Ünite / tema</span><select data-gp="unite">' + U.map(function (u, i) { return '<option value="' + i + '"' + (+P.gu === i ? ' selected' : '') + '>' + esc(u.ad) + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
     if (P.yukleniyor) h += '<p class="ev-not">Program yükleniyor…</p>';
     else if (U.length) { var u = U[+P.gu || 0] || U[0], sec = P.gc || []; h += '<div class="ev-gp-c">' + (u.ciktilar || []).map(function (c, j) { return '<label><input type="checkbox" data-gc="' + j + '"' + (sec.indexOf(j) >= 0 ? ' checked' : '') + '> <b>' + esc(c.kod || '') + '</b> ' + esc(c.ad) + '</label>'; }).join('') + '</div><p class="ev-not">Bu derste işleyeceğiniz öğrenme çıktılarını işaretleyin.</p>'; }
