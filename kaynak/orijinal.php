@@ -1559,7 +1559,8 @@ if (!class_exists('OnlineSoruCozProV20')) {
                     .osc-print-para { font-style: italic; margin-bottom: 10px; text-align: justify; display: block; clear: both; padding-top: 2px; }
                     .osc-print-root { font-weight: bold; margin-bottom: 12px; text-align: justify; display: block; clear: both; }
                     .osc-print-opts { display: flex; flex-direction: column; gap: 6px; margin-left: 20px; }
-                    .osc-print-opts span { display: block; }
+                    .osc-print-opts > span { display: block; }
+                    #osc-print-area .osc-kesir { display:inline-flex !important; flex-direction:column; vertical-align:middle; } #osc-print-area .osc-kesir > span { display:block; padding:0 2px; text-align:center; } #osc-print-area .osc-sut, #osc-print-area .osc-sut-bas { display:inline-grid; } #osc-print-area .osc-num { display:inline-flex !important; } #osc-print-area .osc-num > span { display:block; }
                 }
             </style>
 
