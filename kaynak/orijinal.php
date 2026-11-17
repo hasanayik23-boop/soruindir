@@ -3589,7 +3589,7 @@ var OSCExtract = (function () {
                 return tb.filter(function (t) {
                     if (used[t.i]) return false;
                     var hgt = t.y1 - t.y0, d = isUp ? t.y0 - y : y - t.y1;
-                    return t.x0 >= p.x0 - 4 && t.x1 <= p.x1 + 4 && d >= -hgt * 0.35 && d <= Math.max(6, hgt * 0.9) && t.s.trim().length <= 14;
+                    return t.x0 >= p.x0 - 4 && t.x1 <= p.x1 + 4 && d >= -hgt * 0.35 && d <= Math.max(6, hgt * 0.9) && t.s.trim().length <= 14 && !/^[,;.:]$/.test(t.s.trim());
                 }).sort(function (a, b) { return a.x0 - b.x0; });
             }
             var up = grab(true), dn = grab(false);
@@ -4815,7 +4815,10 @@ var OSCExtract = (function () {
                 if (!s || typeof s !== 'object') return;
                 var resim = { oncul: [], kok: [], A: [], B: [], C: [], D: [], E: [] };
                 (Array.isArray(s.sekiller) ? s.sekiller : []).forEach(function (f) { if (!f || !Array.isArray(f.kutu) || f.kutu.length !== 4) return; var u = kes(sp, f.kutu); if (!u) return; var yer = resim[f.yer] ? f.yer : 'oncul'; resim[yer].push('<img src="' + u + '" alt="">'); });
-                var sec = s.secenekler && typeof s.secenekler === 'object' ? s.secenekler : {}, op = {};
+                var sec0 = s.secenekler || s.siklar || s.options || {}, sec = {}, op = {};
+                if (Array.isArray(sec0)) sec0.forEach(function (v, i) { if (i < 5) sec['ABCDE'.charAt(i)] = typeof v === 'object' && v ? (v.metin || v.text || '') : v; });
+                else if (typeof sec0 === 'object') Object.keys(sec0).forEach(function (k) { var h = String(k).trim().toUpperCase().charAt(0); if (/[A-E]/.test(h)) sec[h] = sec0[k]; });
+                ['A', 'B', 'C', 'D', 'E'].forEach(function (h) { if (typeof sec[h] === 'string') sec[h] = sec[h].replace(new RegExp('^\\s*' + h + '\\s*[)\\.:]\\s*'), ''); });
                 ['A', 'B', 'C', 'D', 'E'].forEach(function (h) { var t = yzGuvenli(sec[h] || ''); op[h] = (resim[h].length ? resim[h].join('') + (t ? '<br>' + t : '') : t); });
                 var q = { no: +s.no || 0, type: 'multiple', paragraph: resim.oncul.join('<br>') + (resim.oncul.length && s.oncul ? '<br>' : '') + yzGuvenli(s.oncul), root: yzGuvenli(s.kok) + (resim.kok.length ? '<br>' + resim.kok.join('<br>') : ''), options: op, correct: String(s.dogru || '').trim().toUpperCase().charAt(0) };
                 if (opts.mod === 'yazili') { var yq = yaziliSoru(s, q, op); if (!yq) return; if (!yq.no && qs.length) { yaziliBirlestir(qs[qs.length - 1], yq); return; } qs.push(yq); return; }
@@ -4834,6 +4837,31 @@ var OSCExtract = (function () {
             });
         });
         if (opts.mod === 'yazili') return yaziliSonuc(qs, sonuc.map(function (sp) { return sp.yz.anahtar || {}; }));
+        // PDF'te metin katmanı varsa: yapay zekânın şıklarını eksik bıraktığı soruları PDF'in kendi metninden tamamla
+        if (!pdf.resim && typeof OSCImport !== 'undefined' && qs.some(function (q) { return Object.keys(q.options).filter(function (k) { return q.options[k]; }).length < 2; })) {
+            try {
+                var pr = await pdfToText(pdf, function () {}, null, { OPS: OPS });
+                if (pr && !pr.ocr && pr.text && pr.text.length > 80) {
+                    var tq = OSCImport.parse(pr.text).questions || [];
+                    var norm = function (h) { return String(h || '').replace(/<[^>]*>/g, ' ').replace(/&(lt|gt|amp|nbsp);/g, ' ').replace(/§[^§]*§/g, ' ').toLocaleLowerCase('tr-TR').replace(/[^0-9a-zçğıöşü]+/g, ''); };
+                    var kul = {};
+                    qs.forEach(function (q, qi) {
+                        if (Object.keys(q.options).filter(function (k) { return q.options[k]; }).length >= 2) return;
+                        var tam = norm(q.paragraph) + norm(q.root), hedef = tam.slice(0, 40), en = -1, eb = 0;
+                        tq.forEach(function (t, ti) {
+                            if (kul[ti] || !t.options || Object.keys(t.options).filter(function (k) { return t.options[k]; }).length < 2) return;
+                            var tr = norm(t.paragraph) + norm(t.root), puan = 0;
+                            if (tam && tr === tam) puan = 5; else if (hedef && tr.indexOf(hedef) === 0) puan = 4; else if (hedef && tr.indexOf(hedef) > -1) puan = 3; else if (hedef.length > 12 && tr.indexOf(hedef.slice(0, 18)) > -1) puan = 2;
+                            if (puan > eb) { eb = puan; en = ti; }
+                        });
+                        if (en < 0) return;
+                        kul[en] = 1; var t = tq[en];
+                        ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { if (t.options[k]) q.options[k] = restoreImages(t.options[k], pr.images || [], pr.tables || []); });
+                        q.type = 'multiple'; if (!q.correct && t.correct) q.correct = t.correct;
+                    });
+                }
+            } catch (e) { /* metin katmanı okunamadı: yapay zekâ sonucuyla devam */ }
+        }
         qs.forEach(function (q) { if (!q.correct && anahtar[q.no]) q.correct = anahtar[q.no]; });
         var keyed = qs.filter(function (q) { return q.correct; }).length;
         var cnt = { multiple: 0, truefalse: 0, gap: 0, classic: 0 }; qs.forEach(function (q) { cnt[q.type] = (cnt[q.type] || 0) + 1; delete q.no; });
