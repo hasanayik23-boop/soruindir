@@ -3592,6 +3592,7 @@ var OSCExtract = (function () {
                 }).sort(function (a, b) { return a.x0 - b.x0; });
             }
             var up = grab(true), dn = grab(false);
+            if (up.some(function (t) { return /[A-Za-zÇĞİÖŞÜçğıöşü]{4,}/.test(t.s); }) || dn.some(function (t) { return /[A-Za-zÇĞİÖŞÜçğıöşü]{4,}/.test(t.s); })) return;
             // altı çizili sütun başlığı ("A  B  C" şık tablosu) kesir değildir
             if (up.length === 1 && /^[A-EIV]{1,3}$/.test(up[0].s.trim()) && paths.some(function (q) { return q !== p && hline(q) && Math.abs((q.y0 + q.y1) / 2 - y) < 1.5 && q.x1 - q.x0 < 90 && Math.abs(q.x0 - p.x0) > 10; })) return;
             function wrap(s) { s = s.replace(/\s+/g, ' ').trim(); return /[\s+\-−×÷·*\/]/.test(s) && s.length > 1 ? '(' + s + ')' : s; }
@@ -3917,7 +3918,7 @@ var OSCExtract = (function () {
         var rows = [];
         sorted.forEach(function (it) {
             var row = rows.length ? rows[rows.length - 1] : null;
-            if (row && Math.abs(row.y - it.y) <= Math.max(2, it.h * 0.45)) { row.items.push(it); }
+            if (row && Math.abs(row.y - it.y) <= Math.max(2, Math.max(it.h, medH) * 0.45)) { row.items.push(it); }
             else rows.push({ y: it.y, items: [it] });
         });
 
@@ -3994,12 +3995,20 @@ var OSCExtract = (function () {
             // segs -> satırlar (y gruplu), her satır: {s, left, right, y, h}
             var ss = segs.slice().sort(function (a, b) { return b.y - a.y || a.x - b.x; });
             var out = [];
+            var gr = [];
             ss.forEach(function (sg) {
-                var l = out.length ? out[out.length - 1] : null;
-                if (l && Math.abs(l.y - sg.y) <= Math.max(2, sg.h * 0.45)) {
-                    var gap = sg.x - l.right;
-                    l.s += (gap > medH * 0.12 ? ' ' : '') + sg.s; l.right = Math.max(l.right, sg.right);
-                } else out.push({ s: sg.s, left: sg.x, right: sg.right, y: sg.y, h: sg.h });
+                var l = gr.length ? gr[gr.length - 1] : null;
+                if (l && Math.abs(l.y - sg.y) <= Math.max(2, sg.h * 0.45)) l.segs.push(sg);
+                else gr.push({ y: sg.y, h: sg.h, segs: [sg] });
+            });
+            // aynı satıra düşen parçaları soldan sağa diz (büyük parantez/küme işareti gibi farklı taban çizgili glifler araya karışmasın)
+            gr.forEach(function (g) {
+                g.segs.sort(function (a, b) { return a.x - b.x; });
+                var l = null;
+                g.segs.forEach(function (sg) {
+                    if (l) { var gap = sg.x - l.right; l.s += (gap > medH * 0.12 ? ' ' : '') + sg.s; l.right = Math.max(l.right, sg.right); }
+                    else { l = { s: sg.s, left: sg.x, right: sg.right, y: g.y, h: sg.h }; out.push(l); }
+                });
             });
             return out;
         }
@@ -4120,7 +4129,9 @@ var OSCExtract = (function () {
     // Word'ün özel alana (U+F020–F0FF) yazdığı Symbol karakterleri
     function symPUA(t) { return String(t || '').replace(/[-]/g, function (c) { return symChar(c.charCodeAt(0)); }); }
     var MM_MAP = [
-        [/MMVariableA/i, { '^': '(', 'h': ')', '6': '[', '@': ']' }],
+        [/MMVariableA/i, { '^': '(', 'h': ')', '6': '[', '@': ']', '"': '{', ',': '}', "'": '{', '1': '}', ')': '{', '3': '}' }],
+        [/MMRelation/i, { '!': '∈', '"': '∉', '#': '≤', '$': '≥', ';': '|', '%': '≠', '&': '≈' }],
+        [/MMa?Fermat/i, { 'R': 'ℝ', 'N': 'ℕ', 'Z': 'ℤ', 'Q': 'ℚ', 'C': 'ℂ', 'I': 'ℐ' }],
         [/MMVariableB/i, { '6': '[', '@': ']', '^': '(', 'h': ')' }],
         [/MMBinary/i, { '$': '·', '#': '×', '\'': '÷', '!': '±' }],
         [/MMExtra/i, { '9': '△', '4': '□', '1': '<', '2': '>', '3': '≤', '5': '≥', '0': '○' }],
@@ -4137,11 +4148,11 @@ var OSCExtract = (function () {
             if (!map && !/^[A-Z]{6}\+MM/.test(n)) { out.push(it); return; }
             map = map || {};
             var s = it.str, L = s.length, w = it.width || 0, t = it.transform;
-            if (L <= 1) { var c0 = map[s]; out.push(Object.assign({}, it, { str: c0 || s, _mm: 1 })); return; }
+            if (L <= 1) { var c0 = map[s]; out.push(Object.assign({}, it, { str: c0 || s, _mm: 1, height: Math.abs(it.transform[3]) || it.height })); return; }
             for (var k = 0; k < L; k++) {
                 var ch = s.charAt(k); if (!ch.trim()) continue;
                 var nt = t.slice(); nt[4] = t[4] + w * k / L;
-                out.push(Object.assign({}, it, { str: map[ch] || ch, width: w / L, transform: nt, _mm: 1 }));
+                out.push(Object.assign({}, it, { str: map[ch] || ch, width: w / L, transform: nt, _mm: 1, height: Math.abs(t[3]) || it.height }));
             }
         });
         function sz(it) { var t = it.transform; return Math.hypot(t[2], t[3]) || Math.abs(t[3]) || 10; }
@@ -4153,6 +4164,13 @@ var OSCExtract = (function () {
             for (var k = 0; k < L; k++) { var ch = s.charAt(k); if (!ch.trim()) continue; var nt = t.slice(); nt[4] = t[4] + w * k / L; acc.push(Object.assign({}, it, { str: ch, width: w / L, transform: nt })); }
             return acc;
         }, []);
+        // matematik yazı tipindeki büyük parantez / küme işaretleri farklı taban çizgisinde durur: aynı satırdaki yazıya hizala
+        out.forEach(function (it) {
+            if (!it._mm || !/^[{}()\[\]|]$/.test(it.str)) return;
+            var z = sz(it), y = it.transform[5], best = null, bd = 1e9;
+            out.forEach(function (o) { if (o._mm || !o.str || !o.str.trim()) return; var dy = Math.abs(o.transform[5] - y), dx = Math.min(Math.abs(o.transform[4] - it.transform[4]), Math.abs(o.transform[4] + (o.width || 0) - it.transform[4])); if (dy < z * 0.7 && dx < 80 && dy < bd) { bd = dy; best = o; } });
+            if (best && bd > 0.5) { it.transform = it.transform.slice(); it.transform[5] = best.transform[5]; }
+        });
         // üsler: küçük puntolu, yukarıda duran rakamlar -> ⁰¹²³
         var SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻', '−': '⁻', '–': '⁻', 'n': 'ⁿ' };
         out.forEach(function (it) {
