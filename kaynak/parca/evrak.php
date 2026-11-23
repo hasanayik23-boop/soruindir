@@ -12,6 +12,10 @@ class OSC_Evrak {
         add_action('template_redirect', array($this, 'kaynak_servis'), 0);
         add_action('template_redirect', array($this, 'yayin_kontrol'), 1);
         add_action('template_redirect', array($this, 'tam_sayfa'), 20);
+        // her evrakın kendi adresi: /evrak-hazirla/yillik-plan/ …
+        add_filter('request', array($this, 'yol_coz'));
+        add_action('template_redirect', array($this, 'eski_adres'), 2);
+        add_action('wp', array($this, 'seo_kur'));
         add_action('admin_menu', array($this, 'ayar_menu'), 31);
         add_action('admin_init', array($this, 'ayar_kayit'));
     }
@@ -63,6 +67,66 @@ class OSC_Evrak {
     public static $turler = array('zumre' => 'Zümre öğretmenler kurulu tutanağı', 'ogr_kurul' => 'Öğretmenler kurulu toplantı tutanağı', 'sok' => 'Şube öğretmenler kurulu (ŞÖK) tutanağı', 'veli' => 'Veli toplantısı tutanağı', 'bep' => 'BEP planı',
         'kulup_plan' => 'Sosyal kulüp: yıllık çalışma planı', 'kulup_tutanak' => 'Sosyal kulüp: ilk toplantı ve seçim tutanağı', 'kulup_aylik' => 'Sosyal kulüp: aylık çalışma raporu', 'kulup_rapor' => 'Sosyal kulüp: dönem sonu çalışma raporu',
         'yillik' => 'Ünitelendirilmiş yıllık plan', 'gunluk_plan' => 'Günlük ders planı', 'performans' => 'Performans görevi ve rubrik', 'dyk' => 'DYK kurs planı ve devam çizelgesi', 'rehberlik' => 'Sınıf rehberlik planı / raporu', 'veli_gorusme' => 'Veli görüşme formu', 'nobet' => 'Nöbet çizelgesi', 'karne' => 'Karne görüşleri', 'egzersiz' => 'Ders dışı egzersiz planı', 'belirli_gun' => 'Belirli gün ve haftalar programı', 'gezi' => 'Gezi planı (Ek-9)', 'dilekce' => 'Dilekçe', 'oys' => 'OYS puan çizelgesi');
+    /** evrak türü → adres parçası (Türkçe, Google'da aranan biçimde) */
+    public static $yollar = array('zumre' => 'zumre-ogretmenler-kurulu-tutanagi', 'ogr_kurul' => 'ogretmenler-kurulu-tutanagi', 'sok' => 'sube-ogretmenler-kurulu-tutanagi', 'veli' => 'veli-toplantisi-tutanagi', 'bep' => 'bep-plani',
+        'kulup_plan' => 'kulup-yillik-calisma-plani', 'kulup_tutanak' => 'kulup-ilk-toplanti-tutanagi', 'kulup_aylik' => 'kulup-aylik-calisma-raporu', 'kulup_rapor' => 'kulup-donem-sonu-raporu',
+        'yillik' => 'yillik-plan', 'gunluk_plan' => 'gunluk-ders-plani', 'performans' => 'performans-gorevi', 'dyk' => 'dyk-kurs-plani', 'rehberlik' => 'sinif-rehberlik-plani', 'veli_gorusme' => 'veli-gorusme-formu', 'nobet' => 'nobet-cizelgesi', 'karne' => 'karne-gorusleri', 'egzersiz' => 'ders-disi-egzersiz-plani', 'belirli_gun' => 'belirli-gun-ve-haftalar-programi', 'gezi' => 'gezi-plani', 'dilekce' => 'dilekce', 'oys' => 'oys-puan-cizelgesi');
+    public static $baslik = array('zumre' => 'Zümre Öğretmenler Kurulu Tutanağı Hazırla', 'ogr_kurul' => 'Öğretmenler Kurulu Tutanağı Hazırla', 'sok' => 'Şube Öğretmenler Kurulu (ŞÖK) Tutanağı Hazırla', 'veli' => 'Veli Toplantısı Tutanağı Hazırla', 'bep' => 'BEP Planı Hazırla',
+        'kulup_plan' => 'Sosyal Kulüp Yıllık Çalışma Planı Hazırla', 'kulup_tutanak' => 'Kulüp İlk Toplantı ve Seçim Tutanağı Hazırla', 'kulup_aylik' => 'Kulüp Aylık Çalışma Raporu Hazırla', 'kulup_rapor' => 'Kulüp Dönem Sonu Çalışma Raporu Hazırla',
+        'yillik' => 'Yıllık Plan Hazırla (Ünitelendirilmiş)', 'gunluk_plan' => 'Günlük Ders Planı Hazırla', 'performans' => 'Performans Görevi ve Rubrik Hazırla', 'dyk' => 'DYK Kurs Planı Hazırla', 'rehberlik' => 'Sınıf Rehberlik Planı Hazırla', 'veli_gorusme' => 'Veli Görüşme Formu Hazırla', 'nobet' => 'Nöbet Çizelgesi Hazırla', 'karne' => 'Karne Görüşleri Hazırla', 'egzersiz' => 'Ders Dışı Egzersiz Planı Hazırla', 'belirli_gun' => 'Belirli Gün ve Haftalar Programı Hazırla', 'gezi' => 'Gezi Planı (Ek-9) Hazırla', 'dilekce' => 'Öğretmen Dilekçesi Hazırla', 'oys' => 'OYS Puan Çizelgesi Hazırla');
+    public static $grup_yol = 'sosyal-kulup-evraklari';
+    private static $aktif = null;   // adresteki evrak türü
+    public static function taban_yol() { return trim((string) wp_parse_url(self::url(), PHP_URL_PATH), '/'); }
+    public static function tur_url($tur) { return isset(self::$yollar[$tur]) ? trailingslashit(self::url()) . self::$yollar[$tur] . '/' : self::url(); }
+    public static function aktif_tur() { return self::$aktif; }
+    /** /evrak-hazirla/{evrak}/ isteğini Evrak Hazırla sayfasına yönlendir (yeniden yazma kuralı gerekmez) */
+    public function yol_coz($q) {
+        if (is_admin() || !isset($_SERVER['REQUEST_URI'])) return $q;
+        $id = (int) get_option('osc_ev_sayfa'); if (!$id) return $q;
+        $yol = trim((string) strtok(wp_unslash($_SERVER['REQUEST_URI']), '?'), '/'); $taban = self::taban_yol();
+        if ($taban === '' || strpos($yol, $taban . '/') !== 0) return $q;
+        $parca = substr($yol, strlen($taban) + 1);
+        if ($parca === self::$grup_yol) { self::$aktif = 'kulup'; return array('page_id' => $id); }
+        $tur = array_search($parca, self::$yollar, true);
+        if ($tur === false || !in_array($tur, self::acik_turler(), true)) return $q;
+        self::$aktif = $tur; return array('page_id' => $id);
+    }
+    /** eski ?evrak=zumre adreslerini kalıcı olarak yeni adrese taşı */
+    public function eski_adres() {
+        $id = (int) get_option('osc_ev_sayfa');
+        if (!$id || !is_page($id) || empty($_GET['evrak'])) return;
+        $t = sanitize_key($_GET['evrak']); if (!isset(self::$yollar[$t])) return;
+        $u = self::tur_url($t); if (!empty($_GET['gun'])) $u = add_query_arg('gun', rawurlencode(wp_unslash($_GET['gun'])), $u);
+        wp_safe_redirect($u, 301); exit;
+    }
+    /** evrak adresinde başlık, açıklama ve kanonik adres o evraka göre */
+    public function seo_kur() {
+        $t = self::$aktif; if (!$t) return;
+        $yil = (int) wp_date('n') >= 7 ? wp_date('Y') . '-' . ((int) wp_date('Y') + 1) : ((int) wp_date('Y') - 1) . '-' . wp_date('Y');
+        if ($t === 'kulup') { $bas = 'Sosyal Kulüp Evrakları Hazırla ' . $yil . ' – Plan, Tutanak, Rapor'; $ac = 'Sosyal kulüp yıllık çalışma planı, ilk toplantı ve seçim tutanağı, aylık ve dönem sonu çalışma raporlarını ücretsiz hazırlayın, Word olarak indirin.'; $kan = trailingslashit(self::url()) . self::$grup_yol . '/'; }
+        else {
+            $bas = self::$baslik[$t] . ' ' . $yil . ' – Ücretsiz, Word İndir'; $kan = self::tur_url($t);
+            $ac = isset(self::$turler[$t]) ? self::$turler[$t] : '';
+            if (class_exists('OSC_Seo')) foreach (OSC_Seo::evraklar() as $e) if ($e['id'] === $t && !empty($e['ac'])) { $ac = $e['ac']; break; }
+            $ac = rtrim($ac, '. ') . '. ' . $yil . ' güncel; bilgileri girin, taslağı düzenleyin, Word olarak ücretsiz indirin.';
+        }
+        $tam = $bas . ' | ' . get_bloginfo('name');
+        add_filter('pre_get_document_title', function () use ($tam) { return $tam; }, 99);
+        add_filter('wpseo_title', function () use ($tam) { return $tam; }, 99); add_filter('rank_math/frontend/title', function () use ($tam) { return $tam; }, 99);
+        add_filter('wpseo_metadesc', function () use ($ac) { return $ac; }, 99); add_filter('rank_math/frontend/description', function () use ($ac) { return $ac; }, 99);
+        add_filter('wpseo_canonical', function () use ($kan) { return $kan; }, 99); add_filter('rank_math/frontend/canonical', function () use ($kan) { return $kan; }, 99);
+        add_filter('wpseo_opengraph_url', function () use ($kan) { return $kan; }, 99); add_filter('wpseo_opengraph_title', function () use ($bas) { return $bas; }, 99);
+        remove_action('wp_head', 'rel_canonical');
+        $seo_eklentisi = defined('WPSEO_VERSION') || class_exists('RankMath');
+        add_action('wp_head', function () use ($ac, $kan, $bas, $seo_eklentisi) {
+            if (!$seo_eklentisi) echo '<meta name="description" content="' . esc_attr($ac) . '">' . "
+" . '<link rel="canonical" href="' . esc_url($kan) . '">' . "
+" . '<meta property="og:title" content="' . esc_attr($bas) . '"><meta property="og:url" content="' . esc_url($kan) . '"><meta property="og:description" content="' . esc_attr($ac) . '">' . "
+";
+            echo '<script type="application/ld+json">' . wp_json_encode(array('@context' => 'https://schema.org', '@type' => 'WebApplication', 'name' => $bas, 'url' => $kan, 'description' => $ac, 'applicationCategory' => 'EducationalApplication', 'operatingSystem' => 'Web', 'inLanguage' => 'tr', 'offers' => array('@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'TRY')), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "
+";
+        }, 2);
+    }
     public static function acik_turler() {
         $v = get_option('osc_ev_turler', false); $hep = array_keys(self::$turler); if (!is_array($v)) return $hep;
         // ayar kaydedildikten sonra eklenen yeni evrak türleri varsayılan olarak açık gelsin
@@ -185,12 +249,15 @@ class OSC_Evrak {
     public function kisa_kod() {
         if (!self::gorebilir()) return '';
         $u = wp_get_current_user();
-        $cfg = array('ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler(), 'takvim' => class_exists('OSC_YPlan') ? OSC_YPlan::takvim() : null, 'katalog' => class_exists('OSC_YPlan') ? OSC_YPlan::katalog() : null);
+        $yl = array(); foreach (self::acik_turler() as $t0) if (isset(self::$yollar[$t0])) $yl[$t0] = self::$yollar[$t0];
+        $cfg = array('taban' => '/' . self::taban_yol() . '/', 'yollar' => $yl, 'grupYol' => self::$grup_yol, 'aktif' => self::$aktif ? self::$aktif : '',
+            'ajax' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('osc_ev'), 'yz' => self::yz_acik() && is_user_logged_in() ? 1 : 0, 'yzUye' => self::yz_acik() ? 1 : 0, 'uye' => is_user_logged_in() ? 1 : 0, 'pnonce' => wp_create_nonce('osc_om'), 'profil' => self::profil(), 'giris' => is_user_logged_in() ? '' : (class_exists('OSC_Sinav') ? OSC_Sinav::sayfa_url('osc_sp_uye_sayfa', array('rol' => 'ogretmen', 'git' => self::url())) : wp_login_url(self::url())), 'site' => preg_replace('#^https?://(www\.)?#', '', untrailingslashit(home_url())), 'ad' => $u->display_name, 'okul' => (string) get_user_meta($u->ID, 'osc_okul', true), 'turler' => self::acik_turler(), 'takvim' => class_exists('OSC_YPlan') ? OSC_YPlan::takvim() : null, 'katalog' => class_exists('OSC_YPlan') ? OSC_YPlan::katalog() : null);
         $rk = array(self::reklam('ev_ust'), self::reklam('ev_alt')); $rf = self::reklam('ev_form'); $ry = self::reklam('ev_yan');
         ob_start(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <?php echo $rk[0]; ?>
-<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Evrak Hazırla'); ?>
+<?php if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti(self::$aktif && isset(self::$baslik[self::$aktif]) ? 'Evrak Hazırla › ' . preg_replace('/ Hazırla.*$/u', '', self::$baslik[self::$aktif]) : 'Evrak Hazırla'); ?>
+<?php if (self::$aktif && isset(self::$baslik[self::$aktif])) echo '<h1 class="osc-ev-sh1" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">' . esc_html(self::$baslik[self::$aktif]) . '</h1>'; ?>
 <div id="osc-ev" class="osc-ev"><div class="ev-yuk">Yükleniyor…</div></div>
 <?php if ($rf) echo '<div id="osc-ev-rk-form">' . $rf . '</div>'; if ($ry) echo '<div id="osc-ev-rk-yan">' . $ry . '</div>'; ?>
 <link rel="stylesheet" href="<?php echo esc_url(self::kaynak_url('css')); ?>">

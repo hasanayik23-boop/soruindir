@@ -785,6 +785,26 @@
   /* tanıtım sayfalarından gelen bağlantı: ?evrak=zumre  /  ?evrak=belirli_gun&gun=Gün adı */
   try { var QS = new URLSearchParams(location.search), QT = QS.get('evrak'); if (QT && TURLER.some(function (t) { return t.id === QT; })) { S = { ekran: 'form', tur: QT, veri: {}, ic: null, id: 0 }; if (QT === 'belirli_gun' && QS.get('gun')) { S.veri.program = 'kutlama'; S.veri.gun = QS.get('gun'); } history.replaceState(null, '', location.pathname + location.hash); } } catch (e) {}
   function istat(k) { try { var f = new FormData(); f.append('action', 'osc_istat'); f.append('k', k); navigator.sendBeacon ? navigator.sendBeacon(C.ajax, f) : fetch(C.ajax, { method: 'POST', body: f, keepalive: true }); } catch (e) {} }
+  /* her evrakın kendi adresi: /evrak-hazirla/yillik-plan/ */
+  var YOL = C.yollar || {}, TABAN = C.taban || '';
+  function yoldanTur() {
+    if (!TABAN) return ''; var p = decodeURIComponent(location.pathname); if (p.indexOf(TABAN) !== 0) return '';
+    var g = p.slice(TABAN.length).replace(/\/+$/, ''); if (!g) return '';
+    if (g === C.grupYol) return 'kulup';
+    for (var k in YOL) if (YOL[k] === g) return k; return '';
+  }
+  function yolUygula(t) {
+    if (t === 'kulup') { if (S.ekran !== 'kulup') S = { ekran: 'kulup', tur: '', veri: {}, ic: null, id: 0 }; }
+    else if (t) { if (!(S.tur === t && (S.ekran === 'form' || S.ekran === 'onizle'))) { S = { ekran: 'form', tur: t, veri: {}, ic: null, id: 0 }; } }
+    else if (S.ekran === 'form' || S.ekran === 'onizle' || S.ekran === 'kulup') S.ekran = 'sec';
+  }
+  try { yolUygula(yoldanTur()); var QG = new URLSearchParams(location.search).get('gun'); if (QG && S.tur === 'belirli_gun') { S.veri.program = 'kutlama'; S.veri.gun = QG; history.replaceState(null, '', location.pathname + location.hash); } } catch (e) {}
+  function adresEsle() {
+    if (!TABAN || !history.pushState) return;
+    var h = TABAN; if ((S.ekran === 'form' || S.ekran === 'onizle') && YOL[S.tur]) h = TABAN + YOL[S.tur] + '/'; else if (S.ekran === 'kulup' && C.grupYol) h = TABAN + C.grupYol + '/';
+    if (decodeURIComponent(location.pathname) !== h) { try { history.pushState({ ev: 1 }, '', h + location.hash); var t = tur(S.tur); document.title = (h === TABAN || !t ? 'Evrak Hazırla' : t.ad + ' Hazırla') + ' | ' + (document.title.split(' | ').pop()); } catch (e) {} }
+  }
+  window.addEventListener('popstate', function () { yolUygula(yoldanTur()); sakla(); ciz(); });
   var AKT = ls('osc_ev_aktar'); if (AKT && AKT.tur) { ls('osc_ev_aktar', null); S = { ekran: 'form', tur: AKT.tur, veri: AKT.veri || {}, ic: null, id: 0 }; }
   /* ortak bilgiler (okul, müdür, öğretmen…): yalnızca üyelerde hesaba kaydedilir ve tüm evraklara işlenir */
   var ORTAK_K = { okul: 'okul', il: 'il', mudur: 'mudur', ogretmen: 'ogretmen', adsoyad: 'ogretmen', gorev: 'gorev', kademe: 'kademe', okulturu: 'okulturu' };
@@ -805,7 +825,8 @@
     kok.innerHTML = '<header class="ev-hero"><div><span class="ev-et">Öğretmen evrakları</span><h1>Evrakınız <em>dakikalar içinde</em> hazır</h1><p>Kurul ve toplantı tutanakları, BEP planı, sosyal kulüp evrakları, gezi ve egzersiz planları, dilekçe ve puan çizelgeleri. Bilgileri doldurun, taslağı düzenleyin, Word olarak indirin.</p></div><nav><button data-ek="sec" class="' + (S.ekran !== 'liste' ? 'on' : '') + '">✨ Yeni evrak</button><button data-ek="liste" class="' + (S.ekran === 'liste' ? 'on' : '') + '">📁 Evraklarım</button></nav></header>' + ic;
     kok.querySelectorAll('[data-ek]').forEach(function (b) { b.onclick = function () { S.ekran = b.dataset.ek; sakla(); ciz(); }; });
   }
-  function ciz() { if (S.ekran === 'liste') return vListe(); if (S.ekran === 'form' && tur(S.tur)) return vForm(); if (S.ekran === 'onizle' && tur(S.tur) && S.ic) return vOnizle(); if (S.ekran !== 'kulup') S.ekran = 'sec'; vSec(); }
+  function ciz() { cizIc(); adresEsle(); }
+  function cizIc() { if (S.ekran === 'liste') return vListe(); if (S.ekran === 'form' && tur(S.tur)) return vForm(); if (S.ekran === 'onizle' && tur(S.tur) && S.ic) return vOnizle(); if (S.ekran !== 'kulup') S.ekran = 'sec'; vSec(); }
 
   function vSec() {
     var kul = TURLER.filter(function (t) { return t.grup === 'kulup'; }), alt = S.ekran === 'kulup' && kul.length;

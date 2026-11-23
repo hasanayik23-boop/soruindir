@@ -24,7 +24,11 @@ class OSC_Seo {
         if (self::$bgh === null) { self::$bgh = array(); foreach (json_decode('/*__SEO_BGH__*/', true) as $i => $g) { $s = sanitize_title(remove_accents(preg_replace('/^[\d\s\.\-–]+(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)?\s*/u', '', $g[1]))); if ($s === '' || isset(self::$bgh[$s])) $s = sanitize_title(remove_accents($g[1])); self::$bgh[$s] = array('i' => $i, 'tarih' => $g[0], 'ad' => $g[1], 'tur' => $g[2], 'oneri' => $g[3], 'metin' => $g[4], 'slug' => $s); } }
         return self::$bgh;
     }
-    private static function arac_url($args) { $u = class_exists('OSC_Evrak') ? OSC_Evrak::url() : home_url('/'); return add_query_arg(array_map('rawurlencode', $args), $u); }
+    private static function arac_url($args) {
+        if (!class_exists('OSC_Evrak')) return add_query_arg(array_map('rawurlencode', $args), home_url('/'));
+        $u = OSC_Evrak::url(); if (!empty($args['evrak'])) { $u = OSC_Evrak::tur_url($args['evrak']); unset($args['evrak']); }
+        return $args ? add_query_arg(array_map('rawurlencode', $args), $u) : $u;
+    }
     public function yonlendir() {
         if (!is_404()) return; $y = OSC_Seo_Yol::yol();
         if ($y === self::EV) $this->ev_index();
@@ -120,6 +124,7 @@ class OSC_Seo_Harita extends WP_Sitemaps_Provider {
         if (class_exists('OSC_Forum')) $l[] = array('loc' => home_url('/soru-cevap/'));
         if (function_exists('si_hub_url')) $l[] = array('loc' => si_hub_url());
         foreach (OSC_Seo::evraklar() as $e) $l[] = array('loc' => home_url('/' . OSC_Seo::EV . '/' . $e['slug'] . '/'));
+        if (class_exists('OSC_Evrak') && get_option('osc_ev_sayfa')) { $l[] = array('loc' => OSC_Evrak::url()); foreach (OSC_Evrak::acik_turler() as $t) if (isset(OSC_Evrak::$yollar[$t])) $l[] = array('loc' => OSC_Evrak::tur_url($t)); }
         foreach (OSC_Seo::gunler() as $g) $l[] = array('loc' => home_url('/' . OSC_Seo::BG . '/' . $g['slug'] . '/'));
         return $l;
     }
