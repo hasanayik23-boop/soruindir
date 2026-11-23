@@ -136,6 +136,11 @@ class OSC_Masa {
     <p>Okulunuzun ve toplantının bilgilerini girin; gündem, görüşmeler ve kararlar yönetmeliğe uygun taslakla gelsin. Kâğıt üzerinde düzenleyip Word olarak indirin.</p>
     <ul><li>Zümre, öğretmenler kurulu, ŞÖK ve veli toplantısı tutanakları</li><li>BEP planı, kulüp evrakları, gezi ve egzersiz planları</li><li>OYS puan çizelgesi: senaryo seçin, e-Okul listesini yapıştırın</li><li>Evraklarınız yalnızca kendi tarayıcınızda saklanır</li></ul>
     <span class="om-git">Evrak hazırla →</span></a>
+<?php endif; if (class_exists('OSC_Ekders')): $ekk = OSC_Ekders::ayar('katsayi'); ?>
+  <a class="om-arac ek" href="<?php echo esc_url(OSC_Ekders::url()); ?>">
+    <div class="om-arac-ust"><span class="om-ik">🧾</span><div><small>Ek Ders Hesaplama · <?php echo esc_html(OSC_Ekders::ayar('donem')); ?></small><h2>Bu ayki net ek ders ücretiniz ne kadar?</h2></div></div>
+    <p>Kadronuzu seçin, saatlerinizi girin: gündüz <b><?php echo esc_html(OSC_Ekders::tl(140 * $ekk)); ?></b>, gece <b><?php echo esc_html(OSC_Ekders::tl(150 * $ekk)); ?></b> brüt saat ücretiyle; DYK, nöbet, özel eğitim, yüksek lisans artırımı ve vergi kesintileriyle net tutar anında hesaplansın.</p>
+    <span class="om-git">Ek dersimi hesapla →</span></a>
 <?php endif; ?>
 </section>
 
@@ -178,6 +183,9 @@ class OSC_Masa {
 .om-say div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 10px}
 .om-say b{display:block;font-size:24px;color:#fff}.om-say span{display:block;font-size:12.5px;line-height:1.4;color:#cbd5e1}
 .om-araclar{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:-30px;position:relative}
+.om-arac.ek{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) auto;gap:8px 26px;align-items:center}.om-arac.ek p{margin:0}.om-arac.ek .om-git{margin:0;white-space:nowrap}
+.om-arac.ek .om-ik{background:linear-gradient(135deg,#4f46e5,#7c3aed)}.om-arac.ek small{color:#4f46e5}.om-arac.ek .om-git{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+@media(max-width:860px){.om-arac.ek{grid-template-columns:1fr}.om-arac.ek .om-git{justify-self:start}}
 .om-arac{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid #e5e8f0;border-radius:24px;padding:28px;text-decoration:none!important;color:#0b1220!important;box-shadow:0 30px 60px -40px rgba(15,23,42,.6);transition:transform .2s,box-shadow .2s}
 .om-arac:hover{transform:translateY(-3px);box-shadow:0 40px 70px -40px rgba(15,23,42,.7)}
 .om-arac-ust{display:flex;gap:14px;align-items:center;margin-bottom:12px}
@@ -230,6 +238,7 @@ class OSC_Masa {
       <?php if ($yz): ?><a class="om-ana-kart yz" href="<?php echo esc_url(OSC_Yazili::url()); ?>"><span>📄</span><div><b>Yazılı Hazırla</b><small>5–12. sınıf · senaryoya uygun · cevap anahtarlı</small></div><em>→</em></a><?php endif; ?>
       <?php if ($ev): ?><a class="om-ana-kart ev" href="<?php echo esc_url(OSC_Evrak::url()); ?>"><span>🗂️</span><div><b>Evrak Hazırla</b><small>Zümre, ŞÖK, veli tutanağı · BEP · kulüp evrakları</small></div><em>→</em></a>
       <a class="om-ana-kart oy" href="<?php echo esc_url(OSC_Evrak::url()); ?>"><span>🧮</span><div><b>OYS Puan Çizelgesi</b><small>Senaryoya göre soru bazlı puanlar · e-Okul listesi</small></div><em>→</em></a><?php endif; ?>
+      <?php if (class_exists('OSC_Ekders')): ?><a class="om-ana-kart ek" href="<?php echo esc_url(OSC_Ekders::url()); ?>"><span>🧾</span><div><b>Ek Ders Hesaplama</b><small>Güncel katsayıyla brüt ve net ek ders ücreti</small></div><em>→</em></a><?php endif; ?>
     </div>
   </div>
 <style>
@@ -245,7 +254,7 @@ class OSC_Masa {
 .om-ana-kart{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:14px 16px;color:#fff!important;text-decoration:none!important;transition:background .2s,transform .2s}
 .om-ana-kart:hover{background:rgba(255,255,255,.14);transform:translateX(3px)}
 .om-ana-kart>span{flex:none;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.om-ana-kart.yz>span{background:linear-gradient(135deg,#5b5bf6,#c026d3)}.om-ana-kart.ev>span{background:linear-gradient(135deg,#0f766e,#2563eb)}.om-ana-kart.oy>span{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.om-ana-kart.yz>span{background:linear-gradient(135deg,#5b5bf6,#c026d3)}.om-ana-kart.ev>span{background:linear-gradient(135deg,#0f766e,#2563eb)}.om-ana-kart.oy>span{background:linear-gradient(135deg,#f59e0b,#ef4444)}.om-ana-kart.ek>span{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
 .om-ana-kart b{display:block;font-size:16px;line-height:1.3}.om-ana-kart small{display:block;color:#cbd5e1;font-size:12.5px;line-height:1.45}
 .om-ana-kart>div{flex:1;min-width:0}.om-ana-kart em{font-style:normal;font-weight:800;color:#5eead4}
 @media(max-width:860px){.om-ana-kap{grid-template-columns:1fr;padding:26px 22px}}

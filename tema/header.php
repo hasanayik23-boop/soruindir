@@ -17,6 +17,7 @@ $sx_calc = array(
     array('DİB-MBSTS Puan Hesaplama', 'https://soruindir.net/dib-mbsts-puan-hesaplama/'),
     array('DUS Puan Hesaplama', 'https://soruindir.net/dus-puan-hesaplama/'),
     array('Ehliyet Sınavı Hesaplama', 'https://soruindir.net/ehliyet-sinavi-puan-hesaplama/'),
+    array('Ek Ders Hesaplama', 'https://soruindir.net/ek-ders-hesaplama/'),
     array('EKPSS Puan Hesaplama', 'https://soruindir.net/ekpss-puan-hesaplama/'),
     array('MEB EKYS Puan Hesaplama', 'https://soruindir.net/ekys-puan-hesapla/'),
     array('Hakim Savcı Yard. Hesaplama', 'https://soruindir.net/hakim-ve-savci-yardimciligi-sinavi-puan-hesaplama/'),

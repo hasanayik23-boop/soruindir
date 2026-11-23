@@ -124,6 +124,7 @@ class OSC_Seo_Harita extends WP_Sitemaps_Provider {
         if (class_exists('OSC_Forum')) $l[] = array('loc' => home_url('/soru-cevap/'));
         if (function_exists('si_hub_url')) $l[] = array('loc' => si_hub_url());
         foreach (OSC_Seo::evraklar() as $e) $l[] = array('loc' => home_url('/' . OSC_Seo::EV . '/' . $e['slug'] . '/'));
+        if (class_exists('OSC_Ekders')) $l[] = array('loc' => OSC_Ekders::url());
         if (class_exists('OSC_Evrak') && get_option('osc_ev_sayfa')) { $l[] = array('loc' => OSC_Evrak::url()); foreach (OSC_Evrak::acik_turler() as $t) if (isset(OSC_Evrak::$yollar[$t])) $l[] = array('loc' => OSC_Evrak::tur_url($t)); }
         foreach (OSC_Seo::gunler() as $g) $l[] = array('loc' => home_url('/' . OSC_Seo::BG . '/' . $g['slug'] . '/'));
         return $l;

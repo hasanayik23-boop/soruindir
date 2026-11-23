@@ -54,6 +54,11 @@ _bg=_sp.check_output(['node','-e',"global.window={};require('"+d+"parca/bgh.js')
 _seo=open(d+'parca/seo.php',encoding='utf-8').read().replace("'/*__SEO_EVRAK__*/'", q(_j.dumps(_tl,ensure_ascii=False))).replace("'/*__SEO_BGH__*/'", q(_bg))
 assert '__SEO_' not in _seo
 om=om+'\n'+_seo
+_ek=open(d+'parca/ekders.php',encoding='utf-8').read()
+for _ph,_f in (('/*__EDH_CSS__*/','edh.css'),('/*__EDH_JS__*/','edh.js')):
+    assert _ek.count("'"+_ph+"'")==1
+    _ek=_ek.replace("'"+_ph+"'", q(open(d+'parca/'+_f,encoding='utf-8').read()))
+om=om+'\n'+_ek
 bas=open(d+'parca/masa_bas.php',encoding='utf-8').read()
 assert bas.count('/*__GOVDE__*/')==1
 open(d+'ogretmen-masasi.php','w',encoding='utf-8').write(bas.replace('/*__GOVDE__*/',om))

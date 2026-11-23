@@ -3049,6 +3049,7 @@ function si_hub_araclar() {
         array('yds', 'YDS', 'YDS Puan Hesaplama', 'Yabancı dil sınavı doğru sayısından puan ve seviye.', 'yds_hesapla', $h . 'yds-puan-hesaplama/', 'lisans', '#C2410C'),
         array('kpss', 'KPSS', 'KPSS Puan Hesaplama', 'Lisans, ön lisans ve ortaöğretim KPSS P puanları.', 'kpss_hesapla', $h . 'kpss-puan-hesaplama/', 'kamu', '#DC2626'),
         array('ekpss', 'EKPSS', 'EKPSS Puan Hesaplama', 'Engelli kamu personeli seçme sınavı puanı.', 'ekpss_hesapla', $h . 'ekpss-puan-hesaplama/', 'kamu', '#9333EA'),
+        array('ekders', 'EK', 'Ek Ders Ücreti Hesaplama', 'Öğretmenler için güncel katsayıyla brüt ve net ek ders ücreti.', 'ek_ders_hesaplama', $h . 'ek-ders-hesaplama/', 'kamu', '#4F46E5'),
         array('ags', 'AGS', 'MEB AGS Puan Hesaplama', 'Akademi Giriş Sınavı (öğretmenlik) puanı.', 'ags_hesapla', $h . 'ags-puan-hesaplama/', 'kamu', '#1E4E79'),
         array('ekys', 'EKYS', 'MEB EKYS Puan Hesaplama', 'Eğitim kurumlarına yönetici görevlendirme sınavı.', '', $h . 'ekys-puan-hesapla/', 'kamu', '#0F766E'),
         array('hsy', 'HSY', 'Hâkim – Savcı Yardımcılığı', 'Adlî ve idarî yargı yazılı sınav puanı.', 'hsy_hesapla', $h . 'hakim-ve-savci-yardimciligi-sinavi-puan-hesaplama/', 'kamu', '#7F1D1D'),

@@ -3842,6 +3842,11 @@ class OSC_Masa {
     <p>Okulunuzun ve toplantının bilgilerini girin; gündem, görüşmeler ve kararlar yönetmeliğe uygun taslakla gelsin. Kâğıt üzerinde düzenleyip Word olarak indirin.</p>
     <ul><li>Zümre, öğretmenler kurulu, ŞÖK ve veli toplantısı tutanakları</li><li>BEP planı, kulüp evrakları, gezi ve egzersiz planları</li><li>OYS puan çizelgesi: senaryo seçin, e-Okul listesini yapıştırın</li><li>Evraklarınız yalnızca kendi tarayıcınızda saklanır</li></ul>
     <span class="om-git">Evrak hazırla →</span></a>
+<?php endif; if (class_exists('OSC_Ekders')): $ekk = OSC_Ekders::ayar('katsayi'); ?>
+  <a class="om-arac ek" href="<?php echo esc_url(OSC_Ekders::url()); ?>">
+    <div class="om-arac-ust"><span class="om-ik">🧾</span><div><small>Ek Ders Hesaplama · <?php echo esc_html(OSC_Ekders::ayar('donem')); ?></small><h2>Bu ayki net ek ders ücretiniz ne kadar?</h2></div></div>
+    <p>Kadronuzu seçin, saatlerinizi girin: gündüz <b><?php echo esc_html(OSC_Ekders::tl(140 * $ekk)); ?></b>, gece <b><?php echo esc_html(OSC_Ekders::tl(150 * $ekk)); ?></b> brüt saat ücretiyle; DYK, nöbet, özel eğitim, yüksek lisans artırımı ve vergi kesintileriyle net tutar anında hesaplansın.</p>
+    <span class="om-git">Ek dersimi hesapla →</span></a>
 <?php endif; ?>
 </section>
 
@@ -3884,6 +3889,9 @@ class OSC_Masa {
 .om-say div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 10px}
 .om-say b{display:block;font-size:24px;color:#fff}.om-say span{display:block;font-size:12.5px;line-height:1.4;color:#cbd5e1}
 .om-araclar{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:-30px;position:relative}
+.om-arac.ek{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) auto;gap:8px 26px;align-items:center}.om-arac.ek p{margin:0}.om-arac.ek .om-git{margin:0;white-space:nowrap}
+.om-arac.ek .om-ik{background:linear-gradient(135deg,#4f46e5,#7c3aed)}.om-arac.ek small{color:#4f46e5}.om-arac.ek .om-git{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+@media(max-width:860px){.om-arac.ek{grid-template-columns:1fr}.om-arac.ek .om-git{justify-self:start}}
 .om-arac{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid #e5e8f0;border-radius:24px;padding:28px;text-decoration:none!important;color:#0b1220!important;box-shadow:0 30px 60px -40px rgba(15,23,42,.6);transition:transform .2s,box-shadow .2s}
 .om-arac:hover{transform:translateY(-3px);box-shadow:0 40px 70px -40px rgba(15,23,42,.7)}
 .om-arac-ust{display:flex;gap:14px;align-items:center;margin-bottom:12px}
@@ -3936,6 +3944,7 @@ class OSC_Masa {
       <?php if ($yz): ?><a class="om-ana-kart yz" href="<?php echo esc_url(OSC_Yazili::url()); ?>"><span>📄</span><div><b>Yazılı Hazırla</b><small>5–12. sınıf · senaryoya uygun · cevap anahtarlı</small></div><em>→</em></a><?php endif; ?>
       <?php if ($ev): ?><a class="om-ana-kart ev" href="<?php echo esc_url(OSC_Evrak::url()); ?>"><span>🗂️</span><div><b>Evrak Hazırla</b><small>Zümre, ŞÖK, veli tutanağı · BEP · kulüp evrakları</small></div><em>→</em></a>
       <a class="om-ana-kart oy" href="<?php echo esc_url(OSC_Evrak::url()); ?>"><span>🧮</span><div><b>OYS Puan Çizelgesi</b><small>Senaryoya göre soru bazlı puanlar · e-Okul listesi</small></div><em>→</em></a><?php endif; ?>
+      <?php if (class_exists('OSC_Ekders')): ?><a class="om-ana-kart ek" href="<?php echo esc_url(OSC_Ekders::url()); ?>"><span>🧾</span><div><b>Ek Ders Hesaplama</b><small>Güncel katsayıyla brüt ve net ek ders ücreti</small></div><em>→</em></a><?php endif; ?>
     </div>
   </div>
 <style>
@@ -3951,7 +3960,7 @@ class OSC_Masa {
 .om-ana-kart{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:14px 16px;color:#fff!important;text-decoration:none!important;transition:background .2s,transform .2s}
 .om-ana-kart:hover{background:rgba(255,255,255,.14);transform:translateX(3px)}
 .om-ana-kart>span{flex:none;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.om-ana-kart.yz>span{background:linear-gradient(135deg,#5b5bf6,#c026d3)}.om-ana-kart.ev>span{background:linear-gradient(135deg,#0f766e,#2563eb)}.om-ana-kart.oy>span{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.om-ana-kart.yz>span{background:linear-gradient(135deg,#5b5bf6,#c026d3)}.om-ana-kart.ev>span{background:linear-gradient(135deg,#0f766e,#2563eb)}.om-ana-kart.oy>span{background:linear-gradient(135deg,#f59e0b,#ef4444)}.om-ana-kart.ek>span{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
 .om-ana-kart b{display:block;font-size:16px;line-height:1.3}.om-ana-kart small{display:block;color:#cbd5e1;font-size:12.5px;line-height:1.45}
 .om-ana-kart>div{flex:1;min-width:0}.om-ana-kart em{font-style:normal;font-weight:800;color:#5eead4}
 @media(max-width:860px){.om-ana-kap{grid-template-columns:1fr;padding:26px 22px}}
@@ -4553,6 +4562,7 @@ class OSC_Seo_Harita extends WP_Sitemaps_Provider {
         if (class_exists('OSC_Forum')) $l[] = array('loc' => home_url('/soru-cevap/'));
         if (function_exists('si_hub_url')) $l[] = array('loc' => si_hub_url());
         foreach (OSC_Seo::evraklar() as $e) $l[] = array('loc' => home_url('/' . OSC_Seo::EV . '/' . $e['slug'] . '/'));
+        if (class_exists('OSC_Ekders')) $l[] = array('loc' => OSC_Ekders::url());
         if (class_exists('OSC_Evrak') && get_option('osc_ev_sayfa')) { $l[] = array('loc' => OSC_Evrak::url()); foreach (OSC_Evrak::acik_turler() as $t) if (isset(OSC_Evrak::$yollar[$t])) $l[] = array('loc' => OSC_Evrak::tur_url($t)); }
         foreach (OSC_Seo::gunler() as $g) $l[] = array('loc' => home_url('/' . OSC_Seo::BG . '/' . $g['slug'] . '/'));
         return $l;
@@ -4562,6 +4572,583 @@ class OSC_Seo_Harita extends WP_Sitemaps_Provider {
 }
 class OSC_Seo_Yol { public static function yol() { return isset($_SERVER['REQUEST_URI']) ? trim(strtok(wp_unslash($_SERVER['REQUEST_URI']), '?'), '/') : ''; } }
 new OSC_Seo();
+}
+
+/* =====================================================================
+ * Öğretmen Masası: Ek Ders Ücreti Hesaplama  (/ek-ders-hesaplama/)
+ * Hesap tamamen tarayıcıda yapılır; hiçbir veri sunucuya gönderilmez.
+ * ===================================================================== */
+if (!class_exists('OSC_Ekders')) {
+class OSC_Ekders {
+    const YOL = 'ek-ders-hesaplama';
+    public static $kullan = false;
+    public function __construct() {
+        add_action('admin_menu', array($this, 'menu'), 40);
+        add_action('admin_init', array($this, 'ayar_kayit'));
+        add_action('init', function () { add_shortcode('ek_ders_hesaplama', array('OSC_Ekders', 'kisa_kod')); add_shortcode('ek_ders_hesaplama_modern', array('OSC_Ekders', 'kisa_kod')); }, 30);
+        add_action('template_redirect', array($this, 'tam_sayfa'), 7);
+        add_action('wp_footer', array($this, 'varlik'), 5);
+    }
+    public static function url() { return home_url('/' . self::YOL . '/'); }
+    public static function varsayilan() {
+        return array('donem' => 'Temmuz–Aralık 2026', 'katsayi' => '1,575512',
+            'gv_aylar' => '4.211,33; 4.211,33; 4.211,33; 4.211,33; 4.211,33; 4.211,33; 4.537,75; 5.615,10; 5.615,10; 5.615,10; 5.615,10; 5.615,10',
+            'dv_istisna' => '250,70', 'dilimler' => '190.000 / 400.000 / 1.500.000 / 5.300.000', 'sss' => 1);
+    }
+    public static function sayi($v) {
+        $v = trim((string) $v);
+        if (strpos($v, ',') !== false) $v = str_replace(array('.', ','), array('', '.'), $v);
+        elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $v)) $v = str_replace('.', '', $v);
+        return (float) $v;
+    }
+    public static function ayar($k) {
+        $a = wp_parse_args((array) get_option('edh_ayar', array()), self::varsayilan());
+        if ($k === 'donem') return (string) $a['donem'];
+        if ($k === 'sss') return (int) $a['sss'];
+        if ($k === 'dilimler') { $d = array_values(array_filter(array_map(array(__CLASS__, 'sayi'), explode('/', (string) $a['dilimler'])))); return count($d) === 4 ? $d : array(190000, 400000, 1500000, 5300000); }
+        if ($k === 'gv_aylar') { $d = array_map(array(__CLASS__, 'sayi'), explode(';', (string) $a['gv_aylar'])); return count($d) === 12 ? $d : array_fill(0, 12, 5615.10); }
+        return self::sayi($a[$k]);
+    }
+    public static function tl($n) { return number_format((float) $n, 2, ',', '.') . ' TL'; }
+
+    /* ---------- yönetim: Öğretmen Masası › Ek Ders Hesaplama ---------- */
+    public function menu() { add_submenu_page('osc-ogretmen-masasi', 'Ek Ders Hesaplama', 'Ek Ders Hesaplama', 'manage_options', 'osc-ek-ders', array($this, 'ayar_sayfa')); }
+    public function ayar_kayit() {
+        register_setting('osc_edh', 'edh_ayar', array('sanitize_callback' => function ($v) {
+            $v = (array) $v; $t = array();
+            foreach (OSC_Ekders::varsayilan() as $k => $vars) { if ($k === 'sss') { $t[$k] = empty($v[$k]) ? 0 : 1; continue; } $t[$k] = isset($v[$k]) && trim($v[$k]) !== '' ? sanitize_text_field($v[$k]) : $vars; }
+            if (OSC_Ekders::sayi($t['katsayi']) <= 0) { add_settings_error('edh_ayar', 'katsayi', 'Geçersiz katsayı; eski değer korundu.'); $eski = wp_parse_args((array) get_option('edh_ayar', array()), OSC_Ekders::varsayilan()); $t['katsayi'] = $eski['katsayi']; }
+            return $t;
+        }));
+    }
+    public function ayar_sayfa() {
+        if (!current_user_can('manage_options')) return;
+        $a = wp_parse_args((array) get_option('edh_ayar', array()), self::varsayilan());
+        $alan = function ($ad, $baslik, $acik, $gen = '160px') use ($a) { echo '<tr><th scope="row">' . esc_html($baslik) . '</th><td><input type="text" name="edh_ayar[' . esc_attr($ad) . ']" value="' . esc_attr($a[$ad]) . '" style="width:' . esc_attr($gen) . ';max-width:100%"><p class="description">' . wp_kses_post($acik) . '</p></td></tr>'; };
+        echo '<div class="wrap"><h1>Ek Ders Ücreti Hesaplama</h1>'; settings_errors('edh_ayar');
+        echo '<p>Araç <a href="' . esc_url(self::url()) . '" target="_blank">' . esc_html(self::url()) . '</a> adresinde yayında; Öğretmen Masası ve Hesaplamalar sayfasından bağlantı verilir. İsterseniz başka bir sayfaya <code>[ek_ders_hesaplama]</code> kısa kodunu da ekleyebilirsiniz. Memur aylık katsayısı her yıl <strong>Ocak</strong> ve <strong>Temmuz</strong>’da değişir; genelge yayımlanınca aşağıdan güncelleyin.</p>';
+        echo '<form method="post" action="options.php" style="background:#fff;border:1px solid #c3c4c7;padding:4px 20px 12px;max-width:900px">'; settings_fields('osc_edh'); echo '<table class="form-table" role="presentation">';
+        $alan('donem', 'Dönem adı', 'Araçta görünür. Örnek: Ocak–Haziran 2027', '260px');
+        $alan('katsayi', 'Memur aylık katsayısı', 'Temmuz–Aralık 2026: 1,575512');
+        $alan('gv_aylar', 'Aylık gelir vergisi istisnaları', 'Ocak’tan Aralık’a 12 ayın asgari ücret gelir vergisi istisnası, aralarında “;” ile. 2026: Ocak–Haziran 4.211,33 · Temmuz 4.537,75 · Ağustos–Aralık 5.615,10', '100%');
+        $alan('dv_istisna', 'Damga vergisi istisnası', '2026: 250,70 TL');
+        $alan('dilimler', 'Gelir vergisi dilimleri', '%15 / %20 / %27 / %35 / %40 dilimlerinin sınırları, aralarında “/” ile. 2026: 190.000 / 400.000 / 1.500.000 / 5.300.000', '320px');
+        echo '<tr><th scope="row">Sık sorulan sorular</th><td><label><input type="checkbox" name="edh_ayar[sss]" value="1" ' . checked((int) $a['sss'], 1, false) . '> Aracın altında kısa “Sık sorulan sorular” bölümü görünsün</label></td></tr></table>';
+        submit_button('Kaydet'); echo '</form></div>';
+    }
+
+    /* ---------- tam sayfa: /ek-ders-hesaplama/ ---------- */
+    public function tam_sayfa() {
+        $yol = isset($_SERVER['REQUEST_URI']) ? trim((string) strtok(wp_unslash($_SERVER['REQUEST_URI']), '?'), '/') : '';
+        if ($yol !== self::YOL || !is_404()) return;
+        global $wp_query; $wp_query->is_404 = false; status_header(200);
+        $k = self::ayar('katsayi'); $donem = self::ayar('donem'); $yil = wp_date('Y');
+        $bas = 'Ek Ders Ücreti Hesaplama ' . $yil . ' – Net Ek Ders Hesapla (' . $donem . ')';
+        $ac = 'Öğretmenler için ' . $donem . ' güncel ek ders ücreti hesaplama: gündüz ' . self::tl(140 * $k) . ', gece ' . self::tl(150 * $k) . ' brüt. Kadrolu, sözleşmeli, ücretli ve yönetici; DYK, nöbet, özel eğitim; vergi kesintileriyle net tutar.';
+        $kan = self::url();
+        add_filter('pre_get_document_title', function () use ($bas) { return $bas . ' | ' . get_bloginfo('name'); }, 99);
+        add_filter('wpseo_title', function () use ($bas) { return $bas . ' | ' . get_bloginfo('name'); }, 99); add_filter('rank_math/frontend/title', function () use ($bas) { return $bas . ' | ' . get_bloginfo('name'); }, 99);
+        remove_action('wp_head', 'rel_canonical');
+        add_action('wp_head', function () use ($ac, $kan, $bas) {
+            echo '<meta name="description" content="' . esc_attr($ac) . '">' . "\n" . '<link rel="canonical" href="' . esc_url($kan) . '">' . "\n" . '<meta property="og:title" content="' . esc_attr($bas) . '"><meta property="og:url" content="' . esc_url($kan) . '"><meta property="og:description" content="' . esc_attr($ac) . '">' . "\n";
+            echo '<script type="application/ld+json">' . wp_json_encode(array('@context' => 'https://schema.org', '@type' => 'WebApplication', 'name' => 'Ek Ders Ücreti Hesaplama', 'url' => $kan, 'description' => $ac, 'applicationCategory' => 'FinanceApplication', 'operatingSystem' => 'Web', 'inLanguage' => 'tr', 'offers' => array('@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'TRY')), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
+        }, 2);
+        get_header();
+        echo '<main class="edh-sayfa" style="max-width:1180px;margin:0 auto;padding:22px 16px 40px;font-family:Figtree,\'Plus Jakarta Sans\',system-ui,-apple-system,\'Segoe UI\',Roboto,sans-serif">';
+        if (class_exists('OSC_Masa')) echo OSC_Masa::kirinti('Ek Ders Hesaplama');
+        echo '<h1 style="margin:0 0 6px;font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.02em;font-weight:800;color:#0f172a">Ek Ders Ücreti Hesaplama ' . esc_html($yil) . '</h1>';
+        echo '<p style="margin:0 0 18px;color:#475569;font-size:16px;line-height:1.6;max-width:760px">Kadrolu, sözleşmeli, ücretli öğretmen ve yöneticiler için güncel katsayıyla brüt ve net ek ders ücreti. Hesap tarayıcınızda yapılır, girdiğiniz bilgiler hiçbir yere gönderilmez.</p>';
+        echo self::kisa_kod();
+        echo '</main>';
+        get_footer(); exit;
+    }
+    /** stil ve betik yalnızca araç kullanılan sayfada, sayfanın içine gömülü */
+    public function varlik() {
+        if (!self::$kullan) return;
+        echo '<style id="edh-css">' . self::CSS . '</style><script id="edh-js">' . self::JS . '</script>';
+    }
+    const CSS = '/* Ek Ders Ücreti Hesaplama — her temada aynı görünsün diye tüm stiller .edh içinde */
+.edh {
+	--edh-ana: #4f46e5;
+	--edh-ana2: #7c3aed;
+	--edh-acik: #eef2ff;
+	--edh-yazi: #0f172a;
+	--edh-gri: #64748b;
+	--edh-cizgi: #e2e8f0;
+	--edh-zemin: #f8fafc;
+	--edh-yesil: #16a34a;
+	--edh-sgk: #f59e0b;
+	--edh-gv: #ef4444;
+	--edh-dv: #a855f7;
+	--edh-r: 16px;
+	color: var(--edh-yazi);
+	font-family: Figtree, "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	font-size: 15px;
+	line-height: 1.5;
+	margin: 0 0 32px;
+	-webkit-font-smoothing: antialiased;
+}
+.edh *, .edh *::before, .edh *::after { box-sizing: border-box; }
+.edh [hidden] { display: none !important; }
+.edh h2, .edh h3 { color: var(--edh-yazi); margin: 0; line-height: 1.3; }
+
+/* Üst bant */
+.edh-ust { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 24px; border-radius: 20px; background: linear-gradient(120deg, var(--edh-ana), var(--edh-ana2)); color: #fff; margin-bottom: 20px; box-shadow: 0 12px 30px -12px rgba(79, 70, 229, .55); }
+.edh-ust__baslik p { margin: 8px 0 0; color: rgba(255, 255, 255, .9); max-width: 420px; }
+.edh-ust__baslik strong { color: #fff; }
+.edh-rozet { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .03em; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .18); }
+.edh-ust__fiyat { display: flex; gap: 10px; flex-wrap: wrap; }
+.edh-ust__fiyat div { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); border-radius: 14px; padding: 10px 14px; min-width: 128px; }
+.edh-ust__fiyat span { display: block; font-size: 12px; opacity: .85; }
+.edh-ust__fiyat strong { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+
+/* Gövde: sol form, sağ sonuç */
+.edh-govde { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; margin: 0; }
+.edh-sol { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.edh-kart { background: #fff; border: 1px solid var(--edh-cizgi); border-radius: 20px; padding: 20px 22px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+.edh-kart__t { display: flex; align-items: center; gap: 10px; font-size: 18px !important; font-weight: 800; margin-bottom: 14px !important; }
+.edh-kart__a { margin: -6px 0 14px; color: var(--edh-gri); font-size: 14px; }
+.edh-no { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; background: var(--edh-acik); color: var(--edh-ana); font-size: 14px; font-weight: 800; }
+.edh-etiket { display: block; font-size: 13px; font-weight: 700; color: #334155; margin: 12px 0 6px; }
+
+/* Segmentli seçim */
+.edh-secim { display: flex; flex-wrap: wrap; gap: 6px; background: var(--edh-zemin); border: 1px solid var(--edh-cizgi); border-radius: 14px; padding: 5px; }
+.edh-secim label { flex: 1 1 0; min-width: 92px; margin: 0; cursor: pointer; }
+.edh-secim input { position: absolute; opacity: 0; pointer-events: none; }
+.edh-secim span { display: block; text-align: center; padding: 9px 10px; border-radius: 10px; font-weight: 700; font-size: 14px; color: #475569; transition: background .15s, color .15s, box-shadow .15s; }
+.edh-secim small { font-weight: 600; color: var(--edh-yesil); }
+.edh-secim input:checked + span { background: #fff; color: var(--edh-ana); box-shadow: 0 1px 3px rgba(15, 23, 42, .12), 0 0 0 1px rgba(79, 70, 229, .25); }
+.edh-secim input:focus-visible + span { outline: 2px solid var(--edh-ana); outline-offset: 1px; }
+
+.edh-ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.edh-alan { display: block; margin: 0; }
+.edh select, .edh input[type=number] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--edh-cizgi); border-radius: 12px; background: #fff; color: var(--edh-yazi); font: inherit; font-size: 15px; box-shadow: none; margin: 0; }
+.edh select:focus, .edh input[type=number]:focus { outline: none; border-color: var(--edh-ana); box-shadow: 0 0 0 3px rgba(79, 70, 229, .15); }
+.edh-ipucu { margin: 10px 0 0; font-size: 13px; color: var(--edh-gri); background: var(--edh-zemin); border-radius: 10px; padding: 8px 12px; }
+
+/* Saat grupları */
+.edh-grup { border: 1px solid var(--edh-cizgi); border-radius: 14px; margin: 0 0 10px; overflow: hidden; background: #fff; }
+.edh-grup summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; padding: 12px 16px; font-weight: 800; list-style: none; background: var(--edh-zemin); }
+.edh-grup summary::-webkit-details-marker { display: none; }
+.edh-grup summary::after { content: ""; width: 9px; height: 9px; border-right: 2px solid var(--edh-gri); border-bottom: 2px solid var(--edh-gri); transform: rotate(45deg); margin-left: auto; transition: transform .2s; }
+.edh-grup[open] summary::after { transform: rotate(-135deg); }
+.edh-grup__top { font-size: 12px; font-weight: 700; color: var(--edh-ana); background: var(--edh-acik); border-radius: 999px; padding: 2px 9px; }
+.edh-grup__top:empty { display: none; }
+.edh-saatler { padding: 4px 16px 8px; }
+.edh-saat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--edh-cizgi); }
+.edh-saat:last-child { border-bottom: 0; }
+.edh-saat__ad { min-width: 0; }
+.edh-saat__ad strong { display: block; font-size: 14.5px; font-weight: 700; }
+.edh-saat__ad small { display: block; font-size: 12.5px; color: var(--edh-gri); }
+.edh-adim { display: flex; align-items: center; flex: none; border: 1px solid var(--edh-cizgi); border-radius: 12px; overflow: hidden; background: #fff; }
+.edh-adim button { width: 38px; height: 42px; border: 0; background: var(--edh-zemin); color: var(--edh-ana); font-size: 20px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; border-radius: 0; box-shadow: none; }
+.edh-adim button:hover { background: var(--edh-acik); }
+.edh .edh-adim input[type=number] { width: 64px; height: 42px; border: 0; border-radius: 0; text-align: center; font-weight: 800; font-size: 16px; padding: 0 4px; -moz-appearance: textfield; }
+.edh .edh-adim input::-webkit-outer-spin-button, .edh .edh-adim input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.edh .edh-adim input:focus { box-shadow: inset 0 0 0 2px rgba(79, 70, 229, .35); }
+
+.edh-onay { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0 0; font-size: 14px; cursor: pointer; }
+.edh-onay input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--edh-ana); flex: none; }
+
+/* Sonuç */
+.edh-sonuc { position: sticky; top: 24px; }
+.edh-sonuc__kart { background: #0f172a; color: #e2e8f0; border-radius: 22px; padding: 22px; box-shadow: 0 20px 40px -18px rgba(15, 23, 42, .6); }
+.edh-sonuc__ad { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; }
+.edh-sonuc__net { display: block; font-size: 36px; font-weight: 900; letter-spacing: -.03em; color: #fff; line-height: 1.15; margin: 4px 0 2px; }
+.edh--dolu .edh-sonuc__net { background: linear-gradient(90deg, #a5b4fc, #f0abfc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.edh-sonuc__alt { display: block; font-size: 13px; color: #94a3b8; }
+.edh-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #1e293b; margin: 16px 0 14px; }
+.edh-bar i { display: block; height: 100%; transition: width .35s ease; }
+.edh-bar [data-bar=net] { background: #22c55e; }
+.edh-bar [data-bar=sgk] { background: var(--edh-sgk); }
+.edh-bar [data-bar=gv] { background: var(--edh-gv); }
+.edh-bar [data-bar=dv] { background: var(--edh-dv); }
+.edh-kalem { margin: 0; }
+.edh-kalem div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
+.edh-kalem dt { display: flex; align-items: center; gap: 8px; color: #cbd5e1; margin: 0; font-weight: 500; }
+.edh-kalem dd { margin: 0; font-weight: 700; color: #fff; white-space: nowrap; }
+.edh-kalem__net { border-bottom: 0 !important; }
+.edh-kalem__net dt, .edh-kalem__net dd { color: #86efac !important; font-weight: 800; }
+.edh-nokta { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.edh-nokta--sgk { background: var(--edh-sgk); } .edh-nokta--gv { background: var(--edh-gv); } .edh-nokta--dv { background: var(--edh-dv); } .edh-nokta--net { background: #22c55e; }
+.edh-dugmeler { display: flex; gap: 8px; margin-top: 16px; }
+.edh .edh-btn { flex: 1; height: 42px; border: 0; border-radius: 12px; background: linear-gradient(120deg, var(--edh-ana), var(--edh-ana2)); color: #fff; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; padding: 0 12px; box-shadow: none; }
+.edh .edh-btn--ghost { flex: 0 0 auto; background: #1e293b; color: #cbd5e1; }
+.edh-dokun { display: none; }
+.edh-uyari { font-size: 12.5px; color: var(--edh-gri); margin: 12px 4px 0; }
+
+/* Tablo ve SSS */
+.edh-tablo, .edh-sss details { background: #fff; border: 1px solid var(--edh-cizgi); border-radius: 16px; margin-top: 18px; }
+.edh-tablo summary, .edh-sss summary { cursor: pointer; padding: 14px 18px; font-weight: 800; list-style: none; }
+.edh-tablo summary::-webkit-details-marker, .edh-sss summary::-webkit-details-marker { display: none; }
+.edh-tablo summary::before, .edh-sss summary::before { content: "+"; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-right: 10px; border-radius: 7px; background: var(--edh-acik); color: var(--edh-ana); font-weight: 800; }
+.edh-tablo[open] summary::before, .edh-sss details[open] summary::before { content: "–"; }
+.edh-tablo__kay { overflow-x: auto; padding: 0 18px; }
+.edh-tablo table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
+.edh-tablo th, .edh-tablo td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--edh-cizgi); border-top: 0; border-left: 0; border-right: 0; }
+.edh-tablo th { font-size: 12.5px; color: var(--edh-gri); font-weight: 700; background: none; }
+.edh-tablo .edh-ipucu { margin: 12px 18px 16px; }
+.edh-sss { margin-top: 28px; }
+.edh-sss h2 { font-size: 22px !important; font-weight: 800; margin-bottom: 4px !important; }
+.edh-sss details { margin-top: 10px; }
+.edh-sss p { margin: 0; padding: 0 18px 16px 50px; color: #334155; }
+
+/* Telefon ve tablet */
+@media (max-width: 900px) {
+	.edh-govde { grid-template-columns: minmax(0, 1fr); }
+	.edh-sonuc { position: sticky; top: auto; bottom: var(--edh-alt, 10px); z-index: 5; order: 2; }
+	.edh-sonuc__kart { padding: 16px 18px; border-radius: 18px; }
+	.edh-sonuc__net { font-size: 30px; }
+	.edh-kalem, .edh-dugmeler, .edh-bar { display: none; }
+	.edh-sonuc.edh-acik .edh-kalem, .edh-sonuc.edh-acik .edh-dugmeler { display: block; }
+	.edh-sonuc.edh-acik .edh-dugmeler { display: flex; }
+	.edh-sonuc.edh-acik .edh-bar { display: flex; }
+	.edh-uyari { display: none; }
+	.edh-dokun { display: inline; color: #a5b4fc; }
+	.edh-sonuc__kart { cursor: pointer; }
+}
+@media (max-width: 600px) {
+	.edh-ust { padding: 18px; border-radius: 18px; }
+	.edh-ust__fiyat { width: 100%; }
+	.edh-ust__fiyat div { flex: 1 1 30%; min-width: 0; padding: 8px 10px; }
+	.edh-ust__fiyat strong { font-size: 15px; }
+	.edh-kart { padding: 16px; border-radius: 18px; }
+	.edh-ikili { grid-template-columns: 1fr; gap: 0; }
+	.edh-secim label { min-width: 0; flex-basis: 45%; }
+	.edh-saatler { padding: 2px 12px 6px; }
+	.edh-saat__ad small { display: none; }
+}
+.edh button, .edh h1, .edh h2, .edh h3, .edh summary { font-family: inherit; }
+';
+    const JS = '/* Ek Ders Ücreti Hesaplama — tarayıcıda çalışır, sunucuya yük bindirmez */
+(function () {
+	\'use strict\';
+	function tl(n) {
+		return (Math.round(n * 100) / 100).toLocaleString(\'tr-TR\', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + \' TL\';
+	}
+	function sayi(el) {
+		var v = parseFloat(String(el && el.value || \'\').replace(\',\', \'.\'));
+		return isFinite(v) && v > 0 ? v : 0;
+	}
+	function yaz(n) { return String(Math.round(n * 10) / 10).replace(\'.\', \',\'); }
+	var ORAN = [0.15, 0.20, 0.27, 0.35, 0.40];
+	function vergi(m, sinir) {
+		var v = 0, alt = 0;
+		for (var i = 0; i < ORAN.length; i++) {
+			var ust = i < sinir.length ? sinir[i] : Infinity;
+			if (m > alt) v += (Math.min(m, ust) - alt) * ORAN[i];
+			alt = ust;
+		}
+		return v;
+	}
+
+	document.querySelectorAll(\'.edh[data-edh]\').forEach(function (kok) {
+		var A;
+		try { A = JSON.parse(kok.getAttribute(\'data-edh\')); } catch (e) { return; }
+		var f = kok.querySelector(\'form\');
+		var o = function (ad) { return kok.querySelector(\'[data-o="\' + ad + \'"]\'); };
+		var saatler = f.querySelectorAll(\'input[data-g]\');
+		var r2 = function (x) { return Math.round(x * 100 + 1e-7) / 100; };
+		var son = \'\';
+
+		function deger(ad) { var el = f.querySelector(\'[name="\' + ad + \'"]:checked\') || f.querySelector(\'[name="\' + ad + \'"]\'); return el ? el.value : \'\'; }
+
+		function hesapla() {
+			var statu = deger(\'statu\'), ucretli = statu === \'ucretli\';
+			kok.querySelectorAll(\'[data-yalniz]\').forEach(function (el) {
+				el.hidden = el.getAttribute(\'data-yalniz\').split(\' \').indexOf(statu) === -1;
+			});
+			kok.querySelector(\'[data-oto]\').hidden = f.dilim.value !== \'oto\';
+
+			var k = A.k, e = ucretli ? 1 : (parseFloat(deger(\'egitim\')) || 1);
+			var brut = 0, toplam = 0, ders = 0, grup = {};
+			saatler.forEach(function (el) {
+				var kap = el.closest(\'[data-yalniz]\');
+				var s = kap && kap.hidden ? 0 : sayi(el);
+				var g = el.getAttribute(\'data-grup\');
+				grup[g] = (grup[g] || 0) + s;
+				if (!s) return;
+				toplam += s;
+				if (el.hasAttribute(\'data-ders\')) ders += s;
+				var lu = el.getAttribute(\'data-lu\');
+				var art = (lu === \'ders\' || (lu === \'edyg\' && statu === \'yonetici\')) ? e : 1;
+				brut += r2(s * parseFloat(el.getAttribute(\'data-g\')) * parseFloat(el.getAttribute(\'data-c\')) * art * k);
+			});
+			var ilave = ucretli && f.destek.checked ? Math.floor(ders / 5) : 0;
+			brut += r2(ilave * 140 * k);
+			brut = r2(brut);
+
+			var sgk = r2(brut * (ucretli ? 0.15 : (statu === \'sozlesmeli\' ? 0.14 : 0)));
+			var matrah = brut - sgk, gv;
+			if (f.dilim.value === \'oto\') {
+				var kum = sayi(f.kumulatif);
+				gv = vergi(kum + matrah, A.dilimler) - vergi(kum, A.dilimler);
+			} else {
+				gv = matrah * (parseFloat(f.dilim.value) || 0.15);
+			}
+			var dv = brut * 0.00759;
+			if (f.istisna.checked) {
+				gv = Math.max(0, gv - (A.gvAylar[(parseInt(f.ay.value, 10) || 1) - 1] || 0));
+				dv = Math.max(0, dv - A.dvIst);
+			}
+			gv = r2(gv); dv = r2(dv);
+			var net = r2(brut - sgk - gv - dv);
+
+			o(\'saat\').textContent = yaz(toplam) + (ilave ? \' + \' + ilave + \' ilave\' : \'\');
+			o(\'saatbasi\').textContent = tl(toplam + ilave ? net / (toplam + ilave) : 0);
+			o(\'brut\').textContent = tl(brut);
+			o(\'sgkad\').textContent = ucretli ? \'SGK + işsizlik (%15)\' : \'SGK primi (%14)\';
+			o(\'sgk\').textContent = tl(sgk);
+			o(\'gv\').textContent = tl(gv);
+			o(\'dv\').textContent = tl(dv);
+			o(\'net\').textContent = tl(net);
+			o(\'net2\').textContent = tl(net);
+			Object.keys(grup).forEach(function (g) {
+				var el = kok.querySelector(\'.edh-grup__top[data-grup="\' + g + \'"]\');
+				if (el) el.textContent = grup[g] ? yaz(grup[g]) + \' saat\' : \'\';
+			});
+			// Dağılım çubuğu
+			var b = brut || 1;
+			[[\'net\', net], [\'sgk\', sgk], [\'gv\', gv], [\'dv\', dv]].forEach(function (x) {
+				var el = kok.querySelector(\'[data-bar="\' + x[0] + \'"]\');
+				if (el) el.style.width = (brut ? (x[1] / b * 100) : (x[0] === \'net\' ? 100 : 0)) + \'%\';
+			});
+			kok.classList.toggle(\'edh--dolu\', toplam > 0);
+			son = \'Ek ders (\' + yaz(toplam) + \' saat): brüt \' + tl(brut) + \', net \' + tl(net);
+		}
+
+		// +/- düğmeleri
+		kok.addEventListener(\'click\', function (ev) {
+			var b = ev.target.closest(\'[data-adim]\');
+			if (b) {
+				var inp = b.parentNode.querySelector(\'input\');
+				var v = Math.max(0, Math.min(400, sayi(inp) + parseFloat(b.getAttribute(\'data-adim\'))));
+				inp.value = v ? v : \'\';
+				hesapla();
+				return;
+			}
+			if (ev.target.closest(\'[data-sifirla]\')) {
+				saatler.forEach(function (el) { el.value = \'\'; });
+				hesapla();
+				return;
+			}
+			// Telefonda sonuç kartına dokununca ayrıntılar açılır
+			var sk = ev.target.closest(\'.edh-sonuc__kart\');
+			if (sk && !ev.target.closest(\'button\')) { sk.parentNode.classList.toggle(\'edh-acik\'); return; }
+			var kb = ev.target.closest(\'[data-kopyala]\');
+			if (kb && navigator.clipboard) {
+				navigator.clipboard.writeText(son).then(function () {
+					var eski = kb.textContent; kb.textContent = \'Kopyalandı ✓\';
+					setTimeout(function () { kb.textContent = eski; }, 1500);
+				});
+			}
+		});
+		f.addEventListener(\'input\', hesapla);
+		f.addEventListener(\'change\', hesapla);
+		hesapla();
+	});
+})();
+';
+
+	public static function kisa_kod() {
+	self::$kullan = true;
+	$k = self::ayar( 'katsayi' );
+	$donem = self::ayar( 'donem' );
+
+	$veri = array(
+		'k'        => $k,
+		'gvAylar'  => self::ayar( 'gv_aylar' ),
+		'dvIst'    => self::ayar( 'dv_istisna' ),
+		'dilimler' => self::ayar( 'dilimler' ),
+		'ay'       => (int) wp_date( 'n' ),
+	);
+
+	// Saat alanları: ad => [etiket, açıklama, gösterge, çarpan, lisansüstü (ders|edyg|''), ücretli ilavesine esas mı, kimlere]
+	$gruplar = array(
+		'ders' => array( 'Ders ve görevler', 'fa-chalkboard', array(
+			'gunduz'   => array( 'Gündüz ek ders', 'Hafta içi gündüz girilen dersler', 140, 1, 'ders', 1, '' ),
+			'gece'     => array( 'Gece / hafta sonu ek ders', 'Saat 18.00 sonrası ve hafta sonu', 150, 1, 'ders', 1, '' ),
+			'edygg'    => array( 'Ek ders yerine geçen görev (gündüz)', 'Yönetim, rehberlik, belleticilik dışı görevler', 140, 1, 'edyg', 0, 'kadrolu yonetici sozlesmeli' ),
+			'edygn'    => array( 'Ek ders yerine geçen görev (gece)', 'Gece / hafta sonu yürütülen görevler', 150, 1, 'edyg', 0, 'kadrolu yonetici sozlesmeli' ),
+			'nobet'    => array( 'Nöbet', 'Haftada en fazla 3 saat', 140, 1, '', 0, '' ),
+			'bellet'   => array( 'Belleticilik', 'Yatılı okullarda', 140, 1, '', 0, '' ),
+			'egzersiz' => array( 'Egzersiz (sosyal etkinlik)', 'Ders dışı egzersiz çalışmaları', 140, 1, '', 0, '' ),
+			'sinav'    => array( 'Okul sınav görevi', 'Sorumluluk, beceri sınavları vb.', 140, 1, '', 0, '' ),
+		) ),
+		'ozel' => array( 'Özel eğitim (%25 fazla)', 'fa-hand-holding-heart', array(
+			'ozg'      => array( 'Gündüz ek ders', 'Özel eğitim sınıfı / okulu', 140, 1.25, 'ders', 1, '' ),
+			'ozn'      => array( 'Gece / hafta sonu ek ders', '', 150, 1.25, 'ders', 1, '' ),
+			'oznobet'  => array( 'Nöbet', '', 140, 1.25, '', 0, '' ),
+		) ),
+		'kurs' => array( 'Kurslar', 'fa-book-open', array(
+			'dykg'     => array( 'DYK – gündüz', 'Destekleme ve yetiştirme kursu (%100 fazla)', 140, 2, 'ders', 1, '' ),
+			'dykn'     => array( 'DYK – gece / hafta sonu', '%100 fazla ödenir', 150, 2, 'ders', 1, '' ),
+			'iyepg'    => array( 'İYEP – gündüz', 'İlkokullarda yetiştirme programı', 140, 1, 'ders', 1, '' ),
+			'iyepn'    => array( 'İYEP – gece / hafta sonu', '', 150, 1, 'ders', 1, '' ),
+		) ),
+	);
+	$aylar = array( 1 => 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık' );
+
+	ob_start();
+	?>
+	<div class="edh" data-edh="<?php echo esc_attr( wp_json_encode( $veri ) ); ?>">
+		<div class="edh-ust">
+			<div class="edh-ust__baslik">
+				<span class="edh-rozet"><?php echo esc_html( $donem ); ?></span>
+				<p>Kadronuzu seçin, bu ayki saatlerinizi girin; <strong>net ek ders ücretiniz</strong> anında hesaplansın.</p>
+			</div>
+			<div class="edh-ust__fiyat">
+				<div><span>Gündüz saat ücreti</span><strong><?php echo esc_html( self::tl( 140 * $k ) ); ?></strong></div>
+				<div><span>Gece saat ücreti</span><strong><?php echo esc_html( self::tl( 150 * $k ) ); ?></strong></div>
+				<div><span>Katsayı</span><strong><?php echo esc_html( number_format( $k, 6, ',', '.' ) ); ?></strong></div>
+			</div>
+		</div>
+
+		<form class="edh-govde" onsubmit="return false" novalidate>
+			<div class="edh-sol">
+				<section class="edh-kart">
+					<h3 class="edh-kart__t"><span class="edh-no">1</span> Kadro ve bilgiler</h3>
+					<div class="edh-etiket">Kadro durumunuz</div>
+					<div class="edh-secim" role="radiogroup" aria-label="Kadro durumu">
+						<label><input type="radio" name="statu" value="kadrolu" checked><span>Kadrolu</span></label>
+						<label><input type="radio" name="statu" value="yonetici"><span>Yönetici</span></label>
+						<label><input type="radio" name="statu" value="sozlesmeli"><span>Sözleşmeli</span></label>
+						<label><input type="radio" name="statu" value="ucretli"><span>Ücretli</span></label>
+					</div>
+					<div class="edh-ipucu" data-yalniz="yonetici">Müdür ve müdür yardımcılarında yüksek lisans / doktora artırımı, ek ders yerine geçen yönetim görevine de uygulanır.</div>
+
+					<div data-yalniz="kadrolu yonetici sozlesmeli">
+						<div class="edh-etiket">Eğitim durumunuz</div>
+						<div class="edh-secim" role="radiogroup" aria-label="Eğitim durumu">
+							<label><input type="radio" name="egitim" value="1" checked><span>Lisans</span></label>
+							<label><input type="radio" name="egitim" value="1.07"><span>Yüksek lisans <small>+%7</small></span></label>
+							<label><input type="radio" name="egitim" value="1.20"><span>Doktora <small>+%20</small></span></label>
+						</div>
+					</div>
+
+					<div class="edh-ikili">
+						<label class="edh-alan"><span class="edh-etiket">Ödeme ayı</span>
+							<select name="ay">
+								<?php foreach ( $aylar as $i => $ad ) echo '<option value="' . (int) $i . '"' . selected( (int) wp_date( 'n' ), $i, false ) . '>' . esc_html( $ad ) . '</option>'; ?>
+							</select>
+						</label>
+						<label class="edh-alan"><span class="edh-etiket">Gelir vergisi dilimi</span>
+							<select name="dilim">
+								<option value="0.15" selected>%15</option>
+								<option value="0.20">%20</option>
+								<option value="0.27">%27</option>
+								<option value="0.35">%35</option>
+								<option value="oto">Bilmiyorum – matrahtan hesapla</option>
+							</select>
+						</label>
+					</div>
+					<label class="edh-alan" data-oto hidden><span class="edh-etiket">Yılbaşından bu yana kümülatif vergi matrahınız</span>
+						<input type="number" name="kumulatif" min="0" step="0.01" inputmode="decimal" placeholder="e-Bordro’daki “Kümülatif vergi matrahı”, örn. 420000">
+					</label>
+				</section>
+
+				<section class="edh-kart">
+					<h3 class="edh-kart__t"><span class="edh-no">2</span> Bu ayki saatleriniz</h3>
+					<p class="edh-kart__a">Ay boyunca girdiğiniz toplam saatleri yazın. Boş bıraktıklarınız hesaba katılmaz.</p>
+					<?php $ilk = true; foreach ( $gruplar as $gk => $g ) : ?>
+						<details class="edh-grup" <?php echo $ilk ? 'open' : ''; ?>>
+							<summary><?php echo esc_html( $g[0] ); ?><span class="edh-grup__top" data-grup="<?php echo esc_attr( $gk ); ?>"></span></summary>
+							<div class="edh-saatler">
+							<?php foreach ( $g[2] as $ad => $s ) : ?>
+								<div class="edh-saat"<?php echo $s[6] ? ' data-yalniz="' . esc_attr( $s[6] ) . '"' : ''; ?>>
+									<div class="edh-saat__ad"><strong><?php echo esc_html( $s[0] ); ?></strong><?php if ( $s[1] ) echo '<small>' . esc_html( $s[1] ) . '</small>'; ?></div>
+									<div class="edh-adim">
+										<button type="button" data-adim="-1" aria-label="Azalt">−</button>
+										<input type="number" name="<?php echo esc_attr( $ad ); ?>" data-grup="<?php echo esc_attr( $gk ); ?>" data-g="<?php echo (int) $s[2]; ?>" data-c="<?php echo esc_attr( $s[3] ); ?>" data-lu="<?php echo esc_attr( $s[4] ); ?>"<?php echo $s[5] ? ' data-ders' : ''; ?> min="0" max="400" step="1" inputmode="decimal" placeholder="0" aria-label="<?php echo esc_attr( $s[0] ); ?> saati">
+										<button type="button" data-adim="1" aria-label="Artır">+</button>
+									</div>
+								</div>
+							<?php endforeach; ?>
+							</div>
+						</details>
+					<?php $ilk = false; endforeach; ?>
+					<label class="edh-onay" data-yalniz="ucretli"><input type="checkbox" name="destek" checked> <span>Her 5 ders saatine 1 saat ilave ücret ekle (ücretli öğretmenlere ödenir)</span></label>
+					<label class="edh-onay"><input type="checkbox" name="istisna" checked> <span>Asgari ücret vergi istisnası bu ek derse uygulansın</span></label>
+					<p class="edh-ipucu">Bordronuzda istisna maaştan düşülmüşse işareti kaldırın. Emin değilseniz işaretli bırakın; çoğu bordroda istisna önce ek derse uygulanır.</p>
+				</section>
+			</div>
+
+			<aside class="edh-sonuc" aria-live="polite">
+				<div class="edh-sonuc__kart">
+					<span class="edh-sonuc__ad">Tahmini net ek ders ücreti</span>
+					<strong class="edh-sonuc__net" data-o="net">0,00 TL</strong>
+					<span class="edh-sonuc__alt"><span data-o="saat">0</span> saat · saat başı net <span data-o="saatbasi">0,00 TL</span><span class="edh-dokun"> · ayrıntı için dokunun</span></span>
+					<div class="edh-bar" aria-hidden="true"><i data-bar="net"></i><i data-bar="sgk"></i><i data-bar="gv"></i><i data-bar="dv"></i></div>
+					<dl class="edh-kalem">
+						<div><dt>Brüt tutar</dt><dd data-o="brut">0,00 TL</dd></div>
+						<div data-yalniz="ucretli sozlesmeli"><dt><i class="edh-nokta edh-nokta--sgk"></i><span data-o="sgkad">SGK primi</span></dt><dd data-o="sgk">0,00 TL</dd></div>
+						<div><dt><i class="edh-nokta edh-nokta--gv"></i>Gelir vergisi</dt><dd data-o="gv">0,00 TL</dd></div>
+						<div><dt><i class="edh-nokta edh-nokta--dv"></i>Damga vergisi</dt><dd data-o="dv">0,00 TL</dd></div>
+						<div class="edh-kalem__net"><dt><i class="edh-nokta edh-nokta--net"></i>Net</dt><dd data-o="net2">0,00 TL</dd></div>
+					</dl>
+					<div class="edh-dugmeler">
+						<button type="button" class="edh-btn" data-kopyala>Sonucu kopyala</button>
+						<button type="button" class="edh-btn edh-btn--ghost" data-sifirla>Sıfırla</button>
+					</div>
+				</div>
+				<p class="edh-uyari">Sonuçlar mevzuattaki gösterge ve katsayılarla hesaplanmış <strong>tahmini</strong> tutarlardır. Kesin tutar için e-Bordro’ya bakınız. Merkezî sınav görev ücretleri dahil değildir.</p>
+			</aside>
+		</form>
+
+		<details class="edh-tablo">
+			<summary>Saat ücretleri tablosu (<?php echo esc_html( $donem ); ?>)</summary>
+			<div class="edh-tablo__kay">
+			<table>
+				<thead><tr><th>Görev</th><th>Lisans</th><th>Yüksek lisans</th><th>Doktora</th></tr></thead>
+				<tbody>
+				<?php
+				$satir = array(
+					array( 'Gündüz ek ders', 140, 1, true ),
+					array( 'Gece / hafta sonu ek ders', 150, 1, true ),
+					array( 'Nöbet, belleticilik, egzersiz, okul sınav görevi', 140, 1, false ),
+					array( 'Özel eğitim – gündüz (%25 fazla)', 140, 1.25, true ),
+					array( 'Özel eğitim – gece (%25 fazla)', 150, 1.25, true ),
+					array( 'DYK – gündüz (%100 fazla)', 140, 2, true ),
+					array( 'DYK – gece / hafta sonu (%100 fazla)', 150, 2, true ),
+				);
+				foreach ( $satir as $s ) {
+					echo '<tr><td>' . esc_html( $s[0] ) . '</td><td><strong>' . esc_html( self::tl( $s[1] * $s[2] * $k ) ) . '</strong></td>';
+					echo '<td>' . ( $s[3] ? esc_html( self::tl( $s[1] * $s[2] * 1.07 * $k ) ) : '—' ) . '</td>';
+					echo '<td>' . ( $s[3] ? esc_html( self::tl( $s[1] * $s[2] * 1.20 * $k ) ) : '—' ) . '</td></tr>';
+				}
+				?>
+				</tbody>
+			</table>
+			</div>
+			<p class="edh-ipucu">Tutarlar brüttür. Hesap: gösterge (gündüz 140, gece 150) × memur aylık katsayısı. Yüksek lisans %7, doktora %20 artırımı fiilen girilen derslere uygulanır.</p>
+		</details>
+
+		<?php if ( self::ayar( 'sss' ) ) echo self::sss( $k, $donem ); // phpcs:ignore ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+    /** Sık sorulan sorular (+ FAQPage yapılandırılmış verisi) */
+	public static function sss( $k, $donem ) {
+	$s = array(
+		array( 'Ek ders ücreti nasıl hesaplanır?', 'Bir saatlik brüt ek ders ücreti, gösterge rakamının memur aylık katsayısıyla çarpılmasıyla bulunur. Gündüz dersleri için gösterge 140, gece ve hafta sonu dersleri için 150’dir. ' . $donem . ' döneminde gündüz saat ücreti ' . self::tl( 140 * $k ) . ', gece saat ücreti ' . self::tl( 150 * $k ) . ' (brüt) olarak uygulanır.' ),
+		array( 'Yüksek lisans ve doktora ek ders ücretini artırır mı?', 'Evet. Yüksek lisans mezunlarına %7, doktora mezunlarına %20 fazla ödenir. Bu artırım fiilen girilen derslere uygulanır; okul müdürü ve müdür yardımcılarında ek ders yerine geçen yönetim görevine de uygulanır.' ),
+		array( 'Nöbet ücreti kaç saat ek ders sayılır?', 'Nöbet görevi, ek ders yerine geçen görev olarak gündüz ek ders ücretinden ödenir. Nöbet ücretine lisansüstü artırımı uygulanmaz.' ),
+		array( 'Ek dersten hangi kesintiler yapılır?', 'Kadrolu öğretmenlerin ek dersinden gelir vergisi ve damga vergisi kesilir. Sözleşmeli öğretmenlerde ayrıca %14 SGK primi, ücretli öğretmenlerde %14 SGK ve %1 işsizlik primi kesilir. Asgari ücret istisnası gelir ve damga vergisini azaltır.' ),
+		array( 'DYK kurs ücreti normal ek dersten farklı mı?', 'Destekleme ve yetiştirme kurslarında (DYK) ek ders ücreti %100 fazlasıyla, yani iki katı olarak ödenir. Özel eğitim sınıflarında görev yapan öğretmenlere ise %25 fazla ödenir.' ),
+	);
+	$h = '<section class="edh-sss"><h2>Sık sorulan sorular</h2>';
+	$json = array( '@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array() );
+	foreach ( $s as $x ) {
+		$h .= '<details><summary>' . esc_html( $x[0] ) . '</summary><p>' . esc_html( $x[1] ) . '</p></details>';
+		$json['mainEntity'][] = array( '@type' => 'Question', 'name' => $x[0], 'acceptedAnswer' => array( '@type' => 'Answer', 'text' => $x[1] ) );
+	}
+	$h .= '</section><script type="application/ld+json">' . wp_json_encode( $json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>';
+	return $h;
+}
+}
+new OSC_Ekders();
 }
 
 }
