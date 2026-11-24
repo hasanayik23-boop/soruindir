@@ -2159,6 +2159,7 @@ class OSC_Evrak {
 .ev-nb select{width:100%;min-width:120px;border:1px solid var(--ev-c);border-radius:8px;padding:6px;font:inherit;font-size:13.5px;background:#fff}.ev-nb select.cift{border-color:#dc2626;background:#fef2f2;color:#b91c1c}.ev-nb .ev-kb-tablo th{color:var(--ev-k)}
 .ev-nb-ogr{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.ev-nb-ogr span{border:1px solid var(--ev-c);border-radius:999px;padding:3px 4px 3px 11px;font-size:13px;background:#fff}.ev-nb-ogr b{display:inline-block;min-width:22px;text-align:center;border-radius:999px;padding:1px 6px;margin-left:4px;background:#e2e8f0}.ev-nb-ogr .ok b{background:#ccfbf1;color:#0f766e}.ev-nb-ogr .fazla{border-color:#fca5a5}.ev-nb-ogr .fazla b{background:#dc2626;color:#fff}.ev-nb-ogr .yok{color:#64748b}
 .ev-nb-max select{width:auto;min-width:0;display:inline-block;padding:3px 6px}
+.ev-yt td.no{color:var(--ev-g);width:40px}.ev-yt td.top,.ev-yt tr.genel td{font-weight:800}.ev-yt tr.genel td{background:#f0fdfa}.ev-yt input[type=number]{width:90px}.ev-yt select{min-width:80px}.ev-yt td input:not([type]){margin-top:4px}
 <?php }
     public static function js_cikti() { ?>/* =====================================================================
  * OSC_DOCX — yazılı kâğıdını gerçek Word (.docx) dosyası olarak üretir.
@@ -2726,9 +2727,8 @@ window.OSC_BGH = [
       { k: 'gunsaat', ad: 'Gün ve saat', ph: 'Cumartesi 09:00-11:40' }, { k: 'haftalik', ad: 'Haftalık ders saati', v: '4' }, { k: 'baslama', ad: 'Başlama tarihi', ph: '…/…/20…' }, { k: 'bitis', ad: 'Bitiş tarihi', ph: '…/…/20…' },
       { k: 'moduller', ad: 'Modüller / kazanımlar (her satıra bir tane; boş bırakırsanız örnek liste gelir)', tip: 'uzun', ph: 'Sesleri tanıma ve harf-ses ilişkisi\nHece ve kelime okuma' },
       { k: 'ogrenciler', ad: 'Öğrenciler (her satıra “Ad Soyad - Okul no”)', tip: 'uzun' }, { k: 'ogretmen', ad: 'Sınıf öğretmeni / İYEP öğretmeni', ph: 'Ad Soyad' }, { k: 'mudur', ad: 'Okul müdürü', ph: 'Ad Soyad' }]) },
-    { id: 'yazili_teslim', ad: 'Yazılı sınav kâğıdı teslim tutanağı', ik: '📥', ac: 'Okuttuğunuz şubelerin dönem sınav kâğıdı sayılarıyla okul müdürlüğüne teslim dilekçesi', yzYok: true, alan: ORTAK.concat([
-      { k: 'kapsam', ad: 'Dönem', tip: 'secim', l: ['I. ve II. dönem', 'I. dönem', 'II. dönem'], v: 'I. ve II. dönem' },
-      { k: 'satirlar', ad: 'Şube ve dersler (her satıra “Sınıf - Ders - I. dönem kâğıt sayısı - II. dönem kâğıt sayısı”; boş bırakırsanız boş tablo)', tip: 'uzun', ph: '9/A - Matematik - 56 - 54\n9/B - Matematik - 60 - 58' },
+    { id: 'yazili_teslim', ad: 'Yazılı sınav kâğıdı teslim tutanağı', ik: '📥', ac: 'Okuttuğunuz şubelerin dönem sınav kâğıdı sayılarıyla okul müdürlüğüne teslim dilekçesi', yzYok: true, ozel: 'yt', alan: ORTAK.concat([
+      { k: 'kapsam', ad: 'Dönem', tip: 'secim', l: ['I. ve II. dönem', 'I. dönem', 'II. dönem'], v: 'I. ve II. dönem', yenile: true },
       { k: 'tarih', ad: 'Tarih', v: bugun }, { k: 'ogretmen', ad: 'Ders öğretmeni', ph: 'Ad Soyad' }]) },
     { id: 'sinav_tutanak', ad: 'Yazılı sınav uygulama tutanağı', ik: '📋', ac: 'Sınavın yapıldığı şube, saat, gözetmen, sınava girmeyen öğrenciler ve olağan dışı durumlar', yzYok: true, alan: ORTAK.concat([
       { k: 'ders', ad: 'Ders', tip: 'secim', l: DERSLER }, { k: 'sube', ad: 'Sınıf / şube', ph: '7/A' }, { k: 'sinav', ad: 'Sınav', tip: 'secim', l: ['1. yazılı', '2. yazılı', '3. yazılı', 'Ortak yazılı', 'Mazeret sınavı', 'Uygulama sınavı'], v: '1. yazılı' },
@@ -2957,6 +2957,37 @@ window.OSC_BGH = [
       o.push({ no: say.length > 1 ? say[1] : (say[0] || ''), ad: ad.join(' ').replace(/\s+/g, ' '), p: [] });
     });
     return o;
+  }
+  /* ---------- YAZILI KÂĞIDI TESLİM: sınıf / ders seçimi, kâğıt sayıları, otomatik toplam ---------- */
+  var YT_DERS = DERSLER.filter(function (d) { return ['Sınıf Öğretmenliği', 'Rehberlik', 'Özel Eğitim', 'Okul Öncesi', 'Meslek Dersleri'].indexOf(d) < 0; }).concat(['Almanca', 'Arapça', 'Seçmeli ders', 'Meslek dersi']);
+  var YT_SINIF = ['Hazırlık', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], YT_SUBE = 'ABCÇDEFGHIİJKLMNOPRSŞTUVYZ'.split('');
+  function ytDurum(v) { if (!Array.isArray(v.yt)) { v.yt = satirlar(v.satirlar).map(function (x) { var p = parcala(x), sm = String(p[0] || '').split('/'); return { sinif: sm[0] || '', sube: sm[1] || '', ders: p[1] || '', d1: p[2] || '', d2: p[3] || '' }; }); if (!v.yt.length) v.yt.push({ sinif: '', sube: '', ders: '', d1: '', d2: '' }); } return v.yt; }
+  function ytSinifAd(r) { return r.sinif ? (r.sinif === 'Hazırlık' ? 'Hz.' : r.sinif) + (r.sube ? '/' + r.sube : '') : ''; }
+  function ytSay(x) { var n = parseInt(String(x || '').replace(/\D/g, ''), 10); return isNaN(n) ? 0 : n; }
+  function ytFormHtml() {
+    var v = S.veri, L = ytDurum(v), kp = v.kapsam || 'I. ve II. dönem', d1 = kp !== 'II. dönem', d2 = kp !== 'I. dönem', t1 = 0, t2 = 0;
+    var opt = function (l, s0, bos) { return '<option value="">' + bos + '</option>' + l.map(function (x) { return '<option' + (x === s0 ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); };
+    var sat = L.map(function (r, i) { var a = ytSay(r.d1), c = ytSay(r.d2); if (d1) t1 += a; if (d2) t2 += c; var diger = r.ders && YT_DERS.indexOf(r.ders) < 0;
+      return '<tr><td class="no">' + (i + 1) + '</td><td><select data-yt="' + i + '" data-k="sinif">' + opt(YT_SINIF, r.sinif, 'Sınıf') + '</select></td><td><select data-yt="' + i + '" data-k="sube">' + opt(YT_SUBE, r.sube, 'Şube') + '</select></td>' +
+        '<td><select data-yt="' + i + '" data-k="ders">' + opt(YT_DERS.concat(['Diğer…']), diger ? 'Diğer…' : r.ders, 'Ders seçin') + '</select>' + (diger || r.ders === 'Diğer…' ? '<input data-yt="' + i + '" data-k="dersAd" value="' + esc(diger ? r.ders : '') + '" placeholder="Dersin adı">' : '') + '</td>' +
+        (d1 ? '<td><input type="number" min="0" inputmode="numeric" data-yt="' + i + '" data-k="d1" value="' + esc(r.d1) + '" placeholder="0"></td>' : '') + (d2 ? '<td><input type="number" min="0" inputmode="numeric" data-yt="' + i + '" data-k="d2" value="' + esc(r.d2) + '" placeholder="0"></td>' : '') +
+        (d1 && d2 ? '<td class="top" data-yttop="' + i + '">' + (a + c || '') + '</td>' : '') + '<td><button type="button" class="ev-ekle" data-ytsil="' + i + '" title="Satırı sil">×</button></td></tr>'; }).join('');
+    return '<div class="ev-nb ev-yt"><h3>Şubeler ve kâğıt sayıları <small>toplamlar kendiliğinden hesaplanır</small></h3><div class="ev-kb-tablo"><table><tr><th>Sıra</th><th>Sınıf</th><th>Şube</th><th>Ders</th>' + (d1 ? '<th>I. dönem kâğıt</th>' : '') + (d2 ? '<th>II. dönem kâğıt</th>' : '') + (d1 && d2 ? '<th>Toplam</th>' : '') + '<th></th></tr>' + sat +
+      '<tr class="genel"><td></td><td colspan="3">TOPLAM</td>' + (d1 ? '<td id="yt-t1">' + t1 + '</td>' : '') + (d2 ? '<td id="yt-t2">' + t2 + '</td>' : '') + (d1 && d2 ? '<td id="yt-t">' + (t1 + t2) + '</td>' : '') + '<td></td></tr></table></div>' +
+      '<div class="ev-kb-dug"><button type="button" class="ev-ekle" id="yt-ekle">+ Şube ekle</button> · <button type="button" class="ev-ekle" id="yt-kopya">+ Son satırı kopyala (sonraki şube)</button></div></div>';
+  }
+  function ytBagla() {
+    var v = S.veri, L = ytDurum(v), yeni = function () { sakla(); vForm(); };
+    var toplam = function () { var kp = v.kapsam || 'I. ve II. dönem', d1 = kp !== 'II. dönem', d2 = kp !== 'I. dönem', t1 = 0, t2 = 0; L.forEach(function (r, i) { var a = d1 ? ytSay(r.d1) : 0, c = d2 ? ytSay(r.d2) : 0; t1 += a; t2 += c; var e = kok.querySelector('[data-yttop="' + i + '"]'); if (e) e.textContent = a + c || ''; }); var f = function (id, x) { var e = document.getElementById(id); if (e) e.textContent = x; }; f('yt-t1', t1); f('yt-t2', t2); f('yt-t', t1 + t2); };
+    kok.querySelectorAll('[data-yt]').forEach(function (e) {
+      var r = L[+e.dataset.yt], k = e.dataset.k;
+      if (k === 'd1' || k === 'd2' || k === 'dersAd') e.oninput = function () { if (k === 'dersAd') r.ders = e.value; else r[k] = e.value; sakla(); toplam(); };
+      else e.onchange = function () { r[k] = e.value; if (k === 'ders' && e.value === 'Diğer…') r.ders = 'Diğer…'; yeni(); };
+    });
+    kok.querySelectorAll('[data-ytsil]').forEach(function (b) { b.onclick = function () { L.splice(+b.dataset.ytsil, 1); if (!L.length) L.push({ sinif: '', sube: '', ders: '', d1: '', d2: '' }); yeni(); }; });
+    var x = function (id, f) { var e = document.getElementById(id); if (e) e.onclick = f; };
+    x('yt-ekle', function () { L.push({ sinif: '', sube: '', ders: '', d1: '', d2: '' }); yeni(); });
+    x('yt-kopya', function () { var s0 = L[L.length - 1] || {}, i = YT_SUBE.indexOf(s0.sube); L.push({ sinif: s0.sinif || '', sube: i >= 0 && i < YT_SUBE.length - 1 ? YT_SUBE[i + 1] : '', ders: s0.ders || '', d1: '', d2: '' }); yeni(); });
   }
   /* ---------- NÖBET ÇİZELGESİ: kim, hangi gün, nerede — öğretmen belirler ---------- */
   var NB_GUN = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
@@ -3581,9 +3612,9 @@ window.OSC_BGH = [
       b.push({ t: 'bosluk', n: 300 }); TB(O + ' MÜDÜRLÜĞÜNE'); b.push({ t: 'bosluk', n: 240 });
       b.push({ t: 'p', s: '        ' + (ic.metin || ''), yol: 'metin', onek: '        ' }); b.push({ t: 'p', s: '        Gereğini arz ederim.' }); b.push({ t: 'bosluk', n: 360 });
       b.push({ t: 'sag', s: (v.tarih || '…/…/20…') + '\n' + (v.ogretmen || '………………….') + '\nDers Öğretmeni' }); b.push({ t: 'bosluk', n: 360 });
-      var ys = satirlar(v.satirlar), t1 = 0, t2 = 0; while (ys.length < 6) ys.push('');
+      var ys = ytDurum(v).filter(function (r) { return r.sinif || r.ders || r.d1 || r.d2; }).map(function (r) { return [ytSinifAd(r), r.ders === 'Diğer…' ? '' : r.ders, String(ytSay(r.d1) || r.d1 || ''), String(ytSay(r.d2) || r.d2 || '')]; }), t1 = 0, t2 = 0; while (ys.length < 6) ys.push('');
       var ybas = ['SIRA', 'SINIF', 'DERSLER'].concat(d1 ? ['I. DÖNEM'] : [], d2 ? ['II. DÖNEM'] : [], d1 && d2 ? ['TOPLAM'] : []);
-      var ysat = ys.map(function (x, i) { var p = x ? parcala(x) : [], a = +p[2] || 0, c = +p[3] || 0; if (!d1) { c = +p[2] || 0; a = 0; } t1 += a; t2 += c; var r = [String(i + 1), p[0] || '', p[1] || '']; if (d1) r.push(p[2] || ''); if (d2) r.push(d1 ? p[3] || '' : p[2] || ''); if (d1 && d2) r.push(a || c ? String(a + c) : ''); return r; });
+      var ysat = ys.map(function (x, i) { var p = Array.isArray(x) ? x : x ? parcala(x) : [], a = +p[2] || 0, c = +p[3] || 0; if (!d1) { c = +p[2] || 0; a = 0; } t1 += a; t2 += c; var r = [String(i + 1), p[0] || '', p[1] || '']; if (d1) r.push(p[2] || ''); if (d2) r.push(d1 ? p[3] || '' : p[2] || ''); if (d1 && d2) r.push(a || c ? String(a + c) : ''); return r; });
       var tr = ['', '', 'TOPLAM']; if (d1) tr.push(t1 ? String(t1) : ''); if (d2) tr.push(t2 ? String(t2) : ''); if (d1 && d2) tr.push(t1 + t2 ? String(t1 + t2) : ''); ysat.push(tr);
       b.push({ t: 'tablo', bas: ybas, gen: d1 && d2 ? [9, 15, 28, 16, 16, 16] : [10, 20, 40, 30], sat: ysat });
     } else if (id === 'sinav_tutanak') {
@@ -3804,9 +3835,9 @@ window.OSC_BGH = [
   }
   function vForm() {
     var t = tur(S.tur), YZ = C.yz && !t.yzYok && !(S.tur === 'belirli_gun' && S.veri.program === 'yillik');
-    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'nb' ? nbFormHtml() : t.ozel === 'kb' ? kbFormHtml() : t.ozel === 'oys' ? oyFormHtml() : t.ozel === 'gp' ? gpFormHtml() : t.ozel === 'yp' ? ypFormHtml() : '') +
+    cerceve('<section class="ev-kart"><div class="ev-ust"><button class="ev-btn hafif" id="ev-geri">← Evrak türleri</button><h2>' + t.ik + ' ' + esc(t.ad) + '</h2></div>' + (C.uye ? '<p class="ev-uye ok">✓ Okul, müdür ve kendi bilgileriniz hesabınızdan otomatik dolduruldu. Burada değiştirirseniz tüm evrak ve yazılılarınızda güncellenir.</p>' : '<p class="ev-uye">💡 <b>Ücretsiz üye olursanız</b> okul adı, il/ilçe, müdür adı ve adınız gibi bilgileri bir kez yazmanız yeterli: tüm evraklarınıza ve yazılılarınıza otomatik işlenir' + (C.yzUye ? '; metinleri yapay zekâya da yazdırabilirsiniz' : '') + '. <a href="' + esc(C.giris || '#') + '">Üye ol / giriş yap →</a></p>') + '<div class="ev-form">' + t.alan.filter(function (a) { return !a.kosul || a.kosul(S.veri); }).map(alanHtml).join('') + '</div>' + (t.ozel === 'yt' ? ytFormHtml() : t.ozel === 'nb' ? nbFormHtml() : t.ozel === 'kb' ? kbFormHtml() : t.ozel === 'oys' ? oyFormHtml() : t.ozel === 'gp' ? gpFormHtml() : t.ozel === 'yp' ? ypFormHtml() : '') +
       '<div class="ev-cubuk"><span>' + (YZ ? '🤖 Yapay zekâ, bilgilerinize göre gündemi, görüşmeleri ve kararları özgün olarak yazar.' : 'Taslak içerik bilgilerinize göre otomatik oluşturulur; dilediğiniz gibi düzenleyebilirsiniz.') + '</span><div>' + (YZ ? '<button class="ev-btn" id="ev-hizli">Hazır taslakla oluştur</button><button class="ev-btn ana" id="ev-yz">🤖 Yapay zekâ ile oluştur</button>' : '<button class="ev-btn ana" id="ev-hizli">Evrakı oluştur →</button>') + '</div></div></section>');
-    if (t.ozel === 'nb') nbBagla(); if (t.ozel === 'kb') kbBagla(); if (t.ozel === 'oys') oyBagla(); if (t.ozel === 'yp') ypBagla(); if (t.ozel === 'gp') gpBagla();
+    if (t.ozel === 'yt') ytBagla(); if (t.ozel === 'nb') nbBagla(); if (t.ozel === 'kb') kbBagla(); if (t.ozel === 'oys') oyBagla(); if (t.ozel === 'yp') ypBagla(); if (t.ozel === 'gp') gpBagla();
     kok.querySelectorAll('[data-a]').forEach(function (e) { e.oninput = e.onchange = function (ev) { S.veri[e.dataset.a] = e.value; if (ev.type === 'change' && (t.alan.filter(function (a) { return a.k === e.dataset.a; })[0] || {}).yenile) { sakla(); return vForm(); } ortakKaydet(e.dataset.a, e.value); sakla(); }; });
     document.getElementById('ev-geri').onclick = function () { S.ekran = t.grup === 'kulup' ? 'kulup' : 'sec'; sakla(); ciz(); };
     kok.querySelectorAll('[data-coklu]').forEach(function (d) { var k = d.dataset.coklu, guncel = function () { S.veri[k] = [].map.call(d.querySelectorAll('input:checked'), function (i) { return i.value; }); sakla(); }; d.querySelectorAll('input').forEach(function (i) { i.onchange = guncel; }); d.querySelectorAll('[data-hep]').forEach(function (b) { b.onclick = function () { d.querySelectorAll('input').forEach(function (i) { i.checked = b.dataset.hep === '1'; }); guncel(); }; }); });
